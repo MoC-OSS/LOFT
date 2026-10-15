@@ -29,7 +29,8 @@ export class ChatHistoryRepositoryConstructor implements Interface.BaseComponent
     this.coreRepositoryContainer.bind<Kysely<Database>>(CHAT_HISTORY_DI_TYPES.ChatHistoryDatabase).toConstantValue(
       new Kysely<Database>({
         dialect: this.dialect,
-        plugins: [new CamelCasePlugin()]
+        // Only column names are converted; keys inside jsonb columns (content, ctx) are user data and stay as written
+        plugins: [new CamelCasePlugin({ maintainNestedObjectKeys: true })]
       })
     );
     this.coreRepositoryContainer

@@ -33,7 +33,8 @@ export class SessionRepositoryConstructor implements Interface.BaseComponentCons
     this.sessionRepositoryContainer.bind<Kysely<Database>>(SESSION_DI_TYPES.SessionRepositoryDatabase).toConstantValue(
       new Kysely<Database>({
         dialect: this.dialect,
-        plugins: [new CamelCasePlugin()]
+        // Only column names are converted; keys inside jsonb columns (content, ctx) are user data and stay as written
+        plugins: [new CamelCasePlugin({ maintainNestedObjectKeys: true })]
       })
     );
 
