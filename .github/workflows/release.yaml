@@ -19,6 +19,7 @@ jobs:
     permissions:
       contents: write # push the version commit and tags
       pull-requests: write # open the Version Packages pull request
+      id-token: write # npm trusted publishing (OIDC)
     steps:
       # Keeps the checkout credentials: changesets/action pushes the version branch with `git push origin`
       - name: Checkout Repo
@@ -60,4 +61,4 @@ jobs:
           publish: pnpm run publish-packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.MOCG_NPMJS_TOKEN }}
+          #NPM_TOKEN: ${{ secrets.MOCG_NPMJS_TOKEN }}
