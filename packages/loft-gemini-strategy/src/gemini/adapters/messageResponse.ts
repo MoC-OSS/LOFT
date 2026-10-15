@@ -1,6 +1,7 @@
 import type { GenerateContentResponse } from '@google/genai';
 import { InteractiveOutputMessage, Strategy, Type } from '@moc-global/loft-definitions';
 
+import { thoughtSignatureMeta } from './thoughtSignature';
 import { convertGeminiFunctionCallToUnifiedToolCall } from './toolResponse';
 
 export interface ResponseConversionOptions {
@@ -22,15 +23,17 @@ function convertGeminiContentToUnifiedParts(response: GenerateContentResponse): 
   }
 
   for (const part of candidates[0].content.parts) {
-    if (part.text) {
+    // A thought summary (includeThoughts) is the model's reasoning, not its answer
+    if (part.text && !part.thought) {
       parts.push({
         type: 'text',
-        text: part.text
+        text: part.text,
+        ...thoughtSignatureMeta(part.thoughtSignature)
       } as Type.Entity.TextContent);
     }
 
     if (part.functionCall) {
-      parts.push(convertGeminiFunctionCallToUnifiedToolCall(part.functionCall));
+      parts.push(convertGeminiFunctionCallToUnifiedToolCall(part.functionCall, part.thoughtSignature));
     }
   }
 

@@ -72,6 +72,8 @@ The model and its settings come from the manifest entry with the same LLM name. 
 
 `modelPreset` also takes `topP`, `topK`, `stopSequences`, `safetySettings`, `toolConfig`, `responseMimeType` and `responseSchema`.
 
+Gemini 3 models sign their thinking and reject a request whose earlier function calls come back without their signatures. The strategy keeps each signature in the `_meta` of the content part (`geminiThoughtSignature`) and sends it back with the chat history, so a saved conversation can go on. Thought summaries are not part of the answer.
+
 ## Configuration
 
 | Mode | Fields | Credentials |

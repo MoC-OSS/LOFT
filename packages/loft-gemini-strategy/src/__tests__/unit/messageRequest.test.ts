@@ -1,3 +1,4 @@
+import { Type } from '@moc-global/loft-definitions';
 import { toolCallWithError, toolChainFixtures } from '@moc-global/loft-test-suite';
 import { describe, expect, it } from 'vitest';
 
@@ -18,5 +19,21 @@ describe('organizeMessagesForGemini with tool calls', () => {
 
     expect(ok.functionResponse?.response).toEqual({ result: '18°C, cloudy' });
     expect(failed.functionResponse?.response).toEqual({ error: toolCallWithError.errorText });
+  });
+});
+
+describe('organizeMessagesForGemini with thought signatures', () => {
+  it('sends the signature of a text answer back on its text part', () => {
+    const [, fixture] = toolChainFixtures;
+    const [first, ...rest] = fixture.messages;
+    const answer = {
+      ...first,
+      role: Type.LLM.UnifiedMessageRole.assistant,
+      content: [{ type: 'text' as const, text: 'Hi', _meta: { geminiThoughtSignature: 'sig-3' } }]
+    };
+
+    const contents = organizeMessagesForGemini([first, answer, ...rest]);
+
+    expect(contents[1].parts).toEqual([{ text: 'Hi', thoughtSignature: 'sig-3' }]);
   });
 });

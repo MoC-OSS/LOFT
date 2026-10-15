@@ -96,7 +96,20 @@ describe.runIf(hasKeys('LOFT_GEMINI_VERTEX_PROJECT'))('Loft Gemini MCP Integrati
     }
 
     await result.messages.save();
-  }, 60000);
+
+    // Gemini 3 rejects function calls sent back without their thought signatures; the saved history keeps them, so
+    // the next turn, which sends that history, is accepted
+    const history = [...(await loft.chat.getChatHistory(session.id))];
+    expect(
+      history.flatMap((msg) => msg.content).some((c: any) => c.type === 'tool_call' && c._meta?.geminiThoughtSignature)
+    ).toBe(true);
+
+    const followUp = await loft.chat.generate({
+      sessionId: session.id,
+      directMessages: [createTestMessage('Now add 5 to that result', session.id)]
+    });
+    expect(followUp.messages.llmResponse.topChoice.content.length).toBeGreaterThan(0);
+  }, 90000);
 
   it('should handle parallel tool calls with Gemini', async () => {
     const chatConstructor = createChatConstructor(testDb);
