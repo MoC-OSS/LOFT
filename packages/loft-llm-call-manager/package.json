@@ -1,0 +1,66 @@
+{
+  "name": "@moc-global/loft-llm-call-manager",
+  "version": "1.0.21",
+  "description": "Rate limiting, retries and queued LLM calls for the LOFT framework",
+  "keywords": [
+    "loft",
+    "llm",
+    "llm-orchestration",
+    "typescript",
+    "rate-limiting",
+    "queue"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-llm-call-manager#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft-llm-call-manager"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs",
+    "test": "echo 'No tests implemented yet'",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "dependencies": {
+    "@dqbd/tiktoken": "^1.0.13",
+    "p-queue": "6.6.2"
+  },
+  "peerDependencies": {
+    "@moc-global/loft-definitions": "workspace:^"
+  },
+  "devDependencies": {
+    "@moc-global/loft-definitions": "workspace:*",
+    "zod": "3.25.67"
+  }
+}

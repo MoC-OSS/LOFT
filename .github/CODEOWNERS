@@ -1,0 +1,7 @@
+# Each pull request needs a review from a code owner. Later rules override earlier ones.
+# Code owners need write access to the repository.
+
+*                   @andrii-borodin-moc @andrii-smahin-moc
+
+# Workflows build, test and publish the packages
+/.github/workflows/ @andrii-borodin-moc @andrii-smahin-moc

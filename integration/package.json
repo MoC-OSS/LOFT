@@ -1,0 +1,66 @@
+{
+  "name": "loft-integration-tests",
+  "version": "1.0.1",
+  "description": "Integration tests for LOFT framework packages",
+  "private": true,
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:esm": "vitest run --config vitest.esm.config.mts",
+    "test:cjs": "vitest run --config vitest.cjs.config.mts",
+    "db-reset": "docker compose -f docker-compose.dev.yml down && rm -rf ./pgdata && docker compose -f docker-compose.dev.yml up -d && sleep 3",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/integration#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@electric-sql/pglite": "0.5.8",
+    "@electric-sql/pglite-socket": "0.2.11",
+    "@google/genai": "^1.52.0",
+    "@moc-global/loft": "workspace:^",
+    "@moc-global/loft-agents": "workspace:^",
+    "@moc-global/loft-anthropic-strategy": "workspace:^",
+    "@moc-global/loft-chat-history-pg-repository": "workspace:^",
+    "@moc-global/loft-definitions": "workspace:^",
+    "@moc-global/loft-gemini-strategy": "workspace:^",
+    "@moc-global/loft-llm-call-manager": "workspace:^",
+    "@moc-global/loft-openai-strategy": "workspace:^",
+    "@moc-global/loft-session-pg-repository": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dotenv": "^16.4.5",
+    "inversify": "^6.2.2",
+    "langfuse": "^3.39.2",
+    "openai": "^4.91.1",
+    "pg": "^8.11.4",
+    "reflect-metadata": "^0.2.2",
+    "uuid": "^9.0.1",
+    "zod": "3.25.67"
+  },
+  "devDependencies": {
+    "@moc-global/loft-pglite": "workspace:*",
+    "@moc-global/loft-test-suite": "workspace:*",
+    "@types/node": "^20.14.2",
+    "@types/pg": "^8.23.1",
+    "@typescript-eslint/eslint-plugin": "^7.9.0",
+    "@typescript-eslint/parser": "^7.9.0",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-simple-import-sort": "^12.0.0",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.7"
+  }
+}

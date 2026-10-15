@@ -1,0 +1,70 @@
+{
+  "name": "@moc-global/loft-openai-strategy",
+  "version": "1.2.13",
+  "description": "OpenAI and Azure OpenAI strategy for the LOFT framework",
+  "keywords": [
+    "loft",
+    "llm",
+    "llm-orchestration",
+    "typescript",
+    "openai",
+    "azure-openai"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-openai-strategy#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft-openai-strategy"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.6.0"
+  },
+  "peerDependencies": {
+    "@moc-global/loft-definitions": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "openai": "^4.91.1",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-test-suite": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "openai": "^4.91.1",
+    "zod": "3.25.67"
+  }
+}

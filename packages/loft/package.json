@@ -1,0 +1,84 @@
+{
+  "name": "@moc-global/loft",
+  "version": "2.8.0",
+  "description": "LLM-Orchestrator (LOFT) is framework designed for high-throughput, scalable backend systems. It provides comprehensive features for handling chat completion, chat input/output middlewares, event detection, and more. LOFT is independent of any HTTP framework. LOFT supports rate-limiting and horizontal scaling, making it ideal for large-scale deployments.",
+  "keywords": [
+    "loft",
+    "llm",
+    "llm-orchestration",
+    "typescript",
+    "ai",
+    "chatbot",
+    "mcp",
+    "middleware",
+    "dependency-injection"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "dependencies": {
+    "uuid": "^9.0.1"
+  },
+  "peerDependencies": {
+    "@moc-global/loft-definitions": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "inversify": "^6.2.2",
+    "langfuse": "^3.38.4",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^3.25.67"
+  },
+  "peerDependenciesMeta": {
+    "langfuse": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-test-suite": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "inversify": "^6.2.2",
+    "langfuse": "^3.39.2",
+    "reflect-metadata": "^0.2.2",
+    "zod": "3.25.67"
+  }
+}

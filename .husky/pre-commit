@@ -1,0 +1,8 @@
+# Husky runs this with `sh -e`, so the first failing command aborts the commit.
+# Build, typecheck and tests run in CI (.github/workflows/ci.yml).
+
+# Lint and fix staged files
+npx lint-staged
+
+# Check version consistency across packages (fix with: pnpm versions:align)
+pnpm run versions:check

@@ -1,0 +1,16 @@
+{
+  "llmManifests": {
+    "my-assistant": {
+      "gpt-4o-mini": {
+        "systemMessage": "You are a helpful assistant. Be concise and clear in your responses.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0.7,
+          "max_tokens": 1000
+        }
+      }
+    }
+  },
+  "prompts": {},
+  "aiTasks": {}
+}

@@ -1,0 +1,4 @@
+npx tsc --noEmit
+npx eslint ./src --fix
+package-json-render && git add package.publish.json
+npm test

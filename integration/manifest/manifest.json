@@ -1,0 +1,218 @@
+{
+  "llmManifests": {
+    "test-bot": {
+      "gpt-4o-mini": {
+        "systemMessage": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0,
+          "top_p": 0.8,
+          "max_tokens": 100
+        },
+        "mcpConfig": {
+          "mcp-server-1": {
+            "allowedTools": {
+              "tool-1": {
+                "enabled": true,
+                "injectContext": {
+                  "serialize": false,
+                  "session": {
+                    "permissions": [
+                      "READ",
+                      "WRITE"
+                    ]
+                  },
+                  "chatHistory": {
+                    "permissions": [
+                      "READ"
+                    ]
+                  },
+                  "methods": {
+                    "generate": {
+                      "allowed": false
+                    },
+                    "aiTask": {
+                      "allowed": true
+                    }
+                  }
+                }
+              }
+            },
+            "allowedResources": {
+              "resource-1": {
+                "permissions": [
+                  "READ"
+                ]
+              }
+            },
+            "allowedPrompts": {
+              "prompt-1": true
+            }
+          }
+        }
+      },
+      "gpt-4o-mini-tooled-calculator": {
+        "systemMessage": "You are a calculator assistant. You have access to the basic calculator tools. You must use these tools to solve the user's problem.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0,
+          "top_p": 0.8,
+          "max_tokens": 100
+        }
+      },
+      "claude-3-7-sonnet": {
+        "systemMessage": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
+        "modelPreset": {
+          "model": "claude-haiku-5-5",
+          "max_tokens": 100
+        }
+      },
+      "claude-3-7-sonnet-tooled-calculator": {
+        "systemMessage": "You are a calculator assistant. You have access to the basic calculator tools. You must use these tools to solve the user's problem.",
+        "modelPreset": {
+          "model": "claude-haiku-5-5",
+          "max_tokens": 100
+        }
+      },
+      "gpt-4o-mini-test-mcp-host": {
+        "systemMessage": "You are a test assistant for MCP host integration testing. Use any available tools to help the user.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0,
+          "top_p": 0.8,
+          "max_tokens": 200
+        }
+      },
+      "gpt-4o-mini-nested-tracer-test": {
+        "systemMessage": "You are a helpful math assistant with calculator tools.\n\nWHEN SOLVING MATH PROBLEMS:\n1. Always use the calculator tools (add, subtract, multiply, divide) for ALL calculations\n2. Break down complex expressions step by step\n3. Use multiple tool calls in sequence to solve multi-step problems\n4. Show your work by calling tools for each operation\n\nFor example, to solve (10 + 5) * 2:\n- First call add(10, 5) to get 15\n- Then call multiply(15, 2) to get 30\n\nNEVER calculate mentally - ALWAYS use the tools.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0,
+          "max_tokens": 500
+        }
+      },
+      "gemini-3-1-flash-lite-tooled-calculator": {
+        "systemMessage": "Math assistant. Use calculator tools (add, subtract, multiply, divide) for ALL calculations. Independent operations: call in parallel. Dependent operations: call sequentially. Never calculate mentally.",
+        "modelPreset": {
+          "model": "gemini-3.1-flash-lite",
+          "temperature": 0,
+          "max_output_tokens": 500
+        }
+      },
+      "gpt-4o-mini-tool-calls": {
+        "systemMessage": "You are a travel assistant. Use the tools for every fact you report. When the user asks for several things, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0,
+          "max_tokens": 300
+        }
+      },
+      "claude-haiku-tool-calls": {
+        "systemMessage": "You are a travel assistant. Use the tools for every fact you report. When the user asks for several things, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": {
+          "model": "claude-haiku-5-5",
+          "max_tokens": 500
+        }
+      },
+      "scripted": {
+        "systemMessage": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
+        "modelPreset": {
+          "model": "scripted-model"
+        }
+      }
+    },
+    "model_with_test_tool": {
+      "gpt-4o-mini": {
+        "systemMessage": "You are a test agent. test_context_argument='test_context_argument_value'. Your task get and return test context using tool 'test_tool_get_context', and return this context in the answer as it is, without any modifications.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "max_tokens": 100,
+          "tools": [
+            {
+              "type": "function",
+              "function": {
+                "name": "test_tool_get_context",
+                "description": "Get test context",
+                "parameters": {
+                  "type": "object",
+                  "properties": {
+                    "test_context_argument": {
+                      "type": "string",
+                      "description": "The test context"
+                    }
+                  },
+                  "required": [
+                    "test_context_argument"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "agents": {
+      "planner": {
+        "systemMessage": "You are the planner agent.",
+        "modelPreset": {
+          "model": "scripted-model"
+        }
+      },
+      "flights": {
+        "systemMessage": "You are the flights agent.",
+        "modelPreset": {
+          "model": "scripted-model"
+        }
+      },
+      "hotels": {
+        "systemMessage": "You are the hotels agent.",
+        "modelPreset": {
+          "model": "scripted-model"
+        }
+      },
+      "checker": {
+        "systemMessage": "You are the checker agent.",
+        "modelPreset": {
+          "model": "scripted-model"
+        }
+      },
+      "editor": {
+        "systemMessage": "You are the editor agent.",
+        "modelPreset": {
+          "model": "scripted-model"
+        }
+      },
+      "summary": {
+        "systemMessage": "You are the summary agent.",
+        "modelPreset": {
+          "model": "scripted-model"
+        }
+      }
+    }
+  },
+  "prompts": {
+    "test-prompt": {
+      "gpt-4o-mini": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
+      "scripted": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications."
+    }
+  },
+  "aiTasks": {
+    "test-placeholder-ai-task": {
+      "gpt-4o-mini": {
+        "systemMessage": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0,
+          "top_p": 0.8,
+          "max_tokens": 100
+        }
+      },
+      "scripted": {
+        "systemMessage": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
+        "modelPreset": {
+          "model": "scripted-model"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+version: 2
+
+updates:
+  # The pnpm workspace: the root, packages/*, integration and examples/*
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # Raise a range only when the new version falls outside it, so the peer ranges of the published packages stay put
+    versioning-strategy: increase-if-necessary
+    # A new release must be a week old before it is proposed, so a compromised version has time to be caught
+    cooldown:
+      default-days: 7
+    groups:
+      # The NestJS packages declare each other as peers of the same major, so they move together
+      nestjs:
+        patterns:
+          - '@nestjs/*'
+      # One pull request for all minor and patch updates, so the workspace versions stay aligned (manypkg)
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Pinned on purpose; see Pinned Dependencies in docs/contributing/releasing.md
+      # zod 3.25.68 and later make MCP tool registration hit TS2589 under moduleResolution node
+      - dependency-name: zod
+        versions: ['>3.25.67']
+      # 0.29 is ESM-only and needs Node.js 22.12; a 0.x minor is a breaking release
+      - dependency-name: kysely
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: inversify
+        update-types: ['version-update:semver-major']
+      - dependency-name: p-queue
+        update-types: ['version-update:semver-major']
+      # Peer dependencies of the LLM strategies; a new major (a new minor for the 0.x Anthropic SDK) needs code changes
+      # and a wider peer range
+      - dependency-name: openai
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@anthropic-ai/sdk'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: '@google/genai'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns:
+          - '*'
+    ignore:
+      # v2 requires @changesets/cli 3; move both together
+      - dependency-name: changesets/action
+        update-types: ['version-update:semver-major']

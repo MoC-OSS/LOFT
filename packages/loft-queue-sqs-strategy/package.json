@@ -1,0 +1,70 @@
+{
+  "name": "@moc-global/loft-queue-sqs-strategy",
+  "version": "1.0.18",
+  "description": "AWS SQS queue strategy for queued generation in the LOFT framework",
+  "keywords": [
+    "loft",
+    "llm",
+    "llm-orchestration",
+    "typescript",
+    "aws",
+    "sqs",
+    "queue"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-queue-sqs-strategy#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft-queue-sqs-strategy"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs",
+    "test": "vitest run",
+    "test:local": "chmod +x ./run_tests.sh && ./run_tests.sh",
+    "test:local:coverage": "./run_tests.sh --coverage",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "dependencies": {
+    "sqs-consumer": "^10.3.0"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-sqs": "^3.1140.0",
+    "@moc-global/loft-definitions": "workspace:^"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-sqs": "^3.1147.0",
+    "@moc-global/loft-definitions": "workspace:*",
+    "zod": "3.25.67"
+  }
+}

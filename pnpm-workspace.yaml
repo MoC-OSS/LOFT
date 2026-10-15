@@ -1,0 +1,10 @@
+packages:
+  - 'packages/*'
+  - 'integration'
+  - 'examples/*'
+
+overrides:
+  'tinypool@<2.1.2': ^2.1.2
+  'multer@<2.3.0': ^2.3.0
+  'glob@>=10.2.0 <10.5.0': ^10.5.0
+  'picomatch@>=4.0.0 <4.0.4': ^4.0.4

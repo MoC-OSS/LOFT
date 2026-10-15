@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in a LOFT package does not work as documented
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Report security problems privately instead, as described in SECURITY.md.
+        Questions about using LOFT go to GitHub Discussions.
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which package has the bug? Pick the closest one if you are not sure.
+      options:
+        - '@moc-global/loft'
+        - '@moc-global/loft-definitions'
+        - '@moc-global/loft-agents'
+        - '@moc-global/loft-anthropic-strategy'
+        - '@moc-global/loft-openai-strategy'
+        - '@moc-global/loft-gemini-strategy'
+        - '@moc-global/loft-llm-call-manager'
+        - '@moc-global/loft-session-pg-repository'
+        - '@moc-global/loft-chat-history-pg-repository'
+        - '@moc-global/loft-aws-s3-repository'
+        - '@moc-global/loft-gcp-storage-repository'
+        - '@moc-global/loft-azure-blob-storage-repository'
+        - '@moc-global/loft-queue-sqs-strategy'
+        - An example in examples/
+        - Documentation
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce
+      description: The smallest code, manifest and steps that show the bug. A link to a repository is welcome.
+      render: typescript
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error and logs
+      description: The full error with its stack trace, and relevant log lines. Remove API keys and personal data.
+      render: text
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Versions
+      description: Output of `npm ls --depth=0 | grep @moc-global` (or the pnpm or yarn equivalent), your Node.js version, the module format (ESM or CommonJS) and the LLM provider and model.
+      placeholder: |
+        @moc-global/loft 2.8.0
+        @moc-global/loft-anthropic-strategy 1.0.17
+        Node.js 22.x, ESM, claude-sonnet-5-5
+    validations:
+      required: true

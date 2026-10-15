@@ -1,0 +1,64 @@
+{
+  "name": "@moc-global/loft-agents",
+  "version": "1.0.0",
+  "description": "Multi-agent orchestration layer for LOFT Framework",
+  "keywords": [
+    "loft",
+    "llm",
+    "llm-orchestration",
+    "typescript",
+    "ai",
+    "agents",
+    "multi-agent"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-agents#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft-agents"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "peerDependencies": {
+    "@moc-global/loft": "workspace:^",
+    "@moc-global/loft-definitions": "workspace:^"
+  },
+  "devDependencies": {
+    "@moc-global/loft": "workspace:*",
+    "@moc-global/loft-definitions": "workspace:*"
+  }
+}

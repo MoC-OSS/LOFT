@@ -1,0 +1,71 @@
+{
+  "name": "@moc-global/loft-gemini-strategy",
+  "version": "1.0.5",
+  "description": "Google Gemini strategy for the LOFT framework, for Vertex AI and Google AI Studio",
+  "keywords": [
+    "loft",
+    "llm",
+    "llm-orchestration",
+    "typescript",
+    "gemini",
+    "google",
+    "vertex-ai"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-gemini-strategy#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft-gemini-strategy"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs",
+    "build-watch": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "peerDependencies": {
+    "@google/genai": "^1.30.0",
+    "@moc-global/loft-definitions": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@google/genai": "^1.52.0",
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-test-suite": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@types/node": "^20.14.2",
+    "@types/uuid": "^9.0.8",
+    "zod": "3.25.67"
+  }
+}

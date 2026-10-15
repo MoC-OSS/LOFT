@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-loft_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-loft_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-loft_db}
+      PGDATA: /pgdata/postgres
+    volumes:
+      # - ./pgdata/postgres:/data/postgres
+      - ./init-multiple-schemas.sql:/docker-entrypoint-initdb.d/init-multiple-schemas.sql
+
+    ports:
+      - '5432:5432'
+    networks:
+      - loft_network
+    restart: unless-stopped
+
+networks:
+  loft_network:
+    driver: bridge

@@ -1,0 +1,12 @@
+{
+  "extends": "@moc-global/loft-base-tsconfig/base-tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./lib",
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

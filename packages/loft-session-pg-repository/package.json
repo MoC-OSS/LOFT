@@ -1,0 +1,86 @@
+{
+  "name": "@moc-global/loft-session-pg-repository",
+  "version": "1.2.5",
+  "description": "PostgreSQL session repository for the LOFT framework, with a migration CLI",
+  "keywords": [
+    "loft",
+    "llm",
+    "llm-orchestration",
+    "typescript",
+    "postgresql",
+    "kysely",
+    "session"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-session-pg-repository#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft-session-pg-repository"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "loft-session-pg-migrate": "./lib/bin/migrator.js"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs && chmod +x ./lib/bin/migrator.js",
+    "build-bin": "npx rimraf lib && npx tsc -p ./tsconfig.migrator.json && chmod +x ./lib/bin/migrator.js",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "kysely": "^0.28.17",
+    "pg": "^8.11.4",
+    "safe-stable-stringify": "^2.5.0",
+    "yargs": "^17.7.2"
+  },
+  "peerDependencies": {
+    "@moc-global/loft-definitions": "workspace:^",
+    "inversify": "^6.2.2",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@kristiandupont/recase": "^1.4.1",
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-kysely-pg-migrator": "workspace:*",
+    "@moc-global/loft-pglite": "workspace:*",
+    "inversify": "^6.2.2",
+    "kanel": "^4.0.4",
+    "kanel-kysely": "^0.3.3",
+    "kanel-zod": "^1.3.4",
+    "reflect-metadata": "^0.2.2",
+    "tagged-comment-parser": "^1.3.8",
+    "zod": "3.25.67"
+  }
+}

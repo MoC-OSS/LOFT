@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: ${DATABASE_POSTGRES_IMAGE}
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      # - ./pgdata/postgres:/data/postgres
+      - ./init-multiple-schemas.sql:/docker-entrypoint-initdb.d/init-multiple-schemas.sql
+    ports:
+      - '${DATABASE_PORT}:5432'

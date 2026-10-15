@@ -1,0 +1,78 @@
+{
+  "name": "@moc-global/loft-definitions",
+  "version": "1.7.0",
+  "description": "Shared types, interfaces and dependency injection symbols for the LOFT framework",
+  "keywords": [
+    "loft",
+    "llm",
+    "llm-orchestration",
+    "typescript",
+    "ai",
+    "types",
+    "mcp",
+    "dependency-injection"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-definitions#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft-definitions"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "log-format": "./bin/log-format.js"
+  },
+  "files": [
+    "lib",
+    "NOTICE"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "dependencies": {
+    "axios": "^1.20.0",
+    "fast-copy": "^3.1.0",
+    "json-colorizer": "^2.2.2",
+    "pino": "^8.19.0",
+    "uuid": "^9.0.1"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "inversify": "^6.2.2",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "inversify": "^6.2.2",
+    "zod": "3.25.67"
+  }
+}

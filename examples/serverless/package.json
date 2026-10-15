@@ -1,0 +1,38 @@
+{
+  "name": "@moc-global/example-serverless",
+  "version": "0.0.1",
+  "private": true,
+  "description": "AWS Lambda + LOFT + OpenAI serverless example with PGLite",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsx src/handler.ts",
+    "build": "tsup src/handler.ts --format cjs,esm --dts --outDir dist",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ./src --fix"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@electric-sql/pglite-socket": "0.2.11",
+    "@moc-global/loft": "workspace:*",
+    "@moc-global/loft-chat-history-pg-repository": "workspace:*",
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-llm-call-manager": "workspace:*",
+    "@moc-global/loft-openai-strategy": "workspace:*",
+    "@moc-global/loft-session-pg-repository": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dotenv": "^16.4.5",
+    "inversify": "^6.2.2",
+    "openai": "^4.91.1",
+    "pg": "^8.11.4",
+    "reflect-metadata": "^0.2.2",
+    "zod": "3.25.67"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.164",
+    "@types/node": "^20.14.2",
+    "@types/pg": "^8.23.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3"
+  }
+}

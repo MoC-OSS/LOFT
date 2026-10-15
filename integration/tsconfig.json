@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2022",
+    "moduleResolution": "node",
+    "types": ["node"],
+    "noEmit": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    // Type-checks against the sources, like the default test run (vitest.shared.mts)
+    "paths": {
+      "@moc-global/loft": ["../packages/loft/src"],
+      "@moc-global/loft-agents": ["../packages/loft-agents/src"],
+      "@moc-global/loft-anthropic-strategy": ["../packages/loft-anthropic-strategy/src"],
+      "@moc-global/loft-chat-history-pg-repository": ["../packages/loft-chat-history-pg-repository/src"],
+      "@moc-global/loft-definitions": ["../packages/loft-definitions/src"],
+      "@moc-global/loft-gemini-strategy": ["../packages/loft-gemini-strategy/src"],
+      "@moc-global/loft-llm-call-manager": ["../packages/loft-llm-call-manager/src"],
+      "@moc-global/loft-openai-strategy": ["../packages/loft-openai-strategy/src"],
+      "@moc-global/loft-session-pg-repository": ["../packages/loft-session-pg-repository/src"]
+    }
+  },
+  "include": ["src/**/*"]
+}

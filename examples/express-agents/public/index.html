@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant Agent Showcase — LOFT Agents</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace; background: #0d1117; color: #c9d1d9; height: 100vh; display: flex; flex-direction: column; }
+
+  header { background: #161b22; border-bottom: 1px solid #30363d; padding: 12px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 16px; color: #58a6ff; }
+  header .session { font-size: 13px; color: #8b949e; }
+  header button { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  header button:hover { background: #30363d; }
+  header button.primary { background: #238636; border-color: #2ea043; }
+  header button.primary:hover { background: #2ea043; }
+  header button.danger { background: #da3633; border-color: #f85149; }
+  header button.danger:hover { background: #f85149; }
+
+  .flow-bar { background: #161b22; border-bottom: 1px solid #30363d; padding: 8px 20px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .flow-bar .label { font-size: 12px; color: #8b949e; margin-right: 4px; }
+  .flow-chip { background: #21262d; border: 1px solid #30363d; color: #8b949e; padding: 4px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .flow-chip:hover { border-color: #58a6ff; color: #c9d1d9; }
+  .flow-chip.active { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  .chat-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #30363d; }
+  .messages { flex: 1; overflow-y: auto; padding: 16px; }
+  .msg { margin-bottom: 12px; max-width: 80%; }
+  .msg.user { margin-left: auto; }
+  .msg .bubble { padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .msg.user .bubble { background: #1f6feb; color: #fff; border-bottom-right-radius: 4px; }
+  .msg.assistant .bubble { background: #21262d; border: 1px solid #30363d; border-bottom-left-radius: 4px; }
+  .msg .label { font-size: 11px; color: #8b949e; margin-bottom: 3px; }
+  .msg.user .label { text-align: right; }
+
+  .input-bar { padding: 12px 16px; background: #161b22; border-top: 1px solid #30363d; display: flex; gap: 8px; }
+  .input-bar input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; }
+  .input-bar input:focus { border-color: #58a6ff; }
+  .input-bar button { background: #238636; border: none; color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .input-bar button:hover { background: #2ea043; }
+  .input-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .debug-panel { width: 480px; min-width: 480px; display: flex; flex-direction: column; background: #0d1117; }
+  .debug-header { padding: 10px 16px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
+  .debug-header h2 { font-size: 13px; color: #f0883e; }
+  .debug-header button { background: none; border: none; color: #8b949e; cursor: pointer; font-size: 12px; }
+  .debug-log { flex: 1; overflow-y: auto; padding: 8px; }
+  .debug-entry { margin-bottom: 8px; border: 1px solid #21262d; border-radius: 6px; font-size: 12px; }
+  .debug-entry summary { padding: 6px 10px; cursor: pointer; color: #8b949e; }
+  .debug-entry summary .method { font-weight: bold; }
+  .debug-entry summary .method.POST { color: #3fb950; }
+  .debug-entry summary .method.GET { color: #58a6ff; }
+  .debug-entry summary .status { margin-left: 8px; }
+  .debug-entry summary .status.ok { color: #3fb950; }
+  .debug-entry summary .status.err { color: #f85149; }
+  .debug-entry summary .time { float: right; color: #6e7681; }
+  .debug-entry pre { padding: 8px 10px; background: #161b22; overflow-x: auto; color: #c9d1d9; border-top: 1px solid #21262d; }
+
+  .typing { color: #8b949e; font-style: italic; padding: 8px 14px; font-size: 13px; }
+  .focus-bar { padding: 8px 16px; background: #161b22; border-top: 1px solid #30363d; font-size: 12px; color: #8b949e; }
+  .focus-bar .filled { color: #3fb950; }
+  .focus-bar .missing { color: #f0883e; }
+
+  .hint { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; margin: 8px 16px; font-size: 13px; color: #8b949e; line-height: 1.6; }
+  .hint strong { color: #58a6ff; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Restaurant Agent Showcase</h1>
+  <span class="session" id="session-label">No session</span>
+  <button class="primary" onclick="createSession()">New Session</button>
+  <button class="danger" onclick="resetSession()">Reset</button>
+  <button onclick="loadHistory()">History</button>
+</header>
+
+<div class="flow-bar">
+  <span class="label">Flows:</span>
+  <span class="flow-chip" data-hint="What wine pairs well with grilled salmon?" onclick="useHint(this)">1. Simple</span>
+  <span class="flow-chip" data-hint="Plan a romantic 3-course Italian dinner for two" onclick="useHint(this)">2. Chain</span>
+  <span class="flow-chip" data-hint="Organize catering for a company party, 50 people, Mediterranean theme" onclick="useHint(this)">3. Parallel</span>
+  <span class="flow-chip" data-hint="Write a detailed review of a fine dining French restaurant called Le Petit Bistro" onclick="useHint(this)">4. Team</span>
+  <span class="flow-chip" data-hint="I need to organize a banquet for my company anniversary" onclick="useHint(this)">5. Full</span>
+  <span class="flow-chip" data-hint="I'd like to book a table please" onclick="useHint(this)">6. Reservation</span>
+</div>
+
+<div class="main">
+  <div class="chat-panel">
+    <div class="messages" id="messages"></div>
+    <div class="focus-bar" id="focus-bar"></div>
+    <div class="input-bar">
+      <input type="text" id="input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')send()" />
+      <button id="send-btn" onclick="send()">Send</button>
+    </div>
+  </div>
+
+  <div class="debug-panel">
+    <div class="debug-header">
+      <h2>Debug</h2>
+      <button onclick="clearDebug()">Clear</button>
+    </div>
+    <div class="debug-log" id="debug-log"></div>
+  </div>
+</div>
+
+<script>
+let sessionId = null;
+const API = '';
+
+const $messages = document.getElementById('messages');
+const $input = document.getElementById('input');
+const $sendBtn = document.getElementById('send-btn');
+const $sessionLabel = document.getElementById('session-label');
+const $debugLog = document.getElementById('debug-log');
+const $focusBar = document.getElementById('focus-bar');
+
+function addMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="label">${role}</div><div class="bubble">${escapeHtml(text)}</div>`;
+  $messages.appendChild(div);
+  $messages.scrollTop = $messages.scrollHeight;
+}
+
+function addHint(html) {
+  const div = document.createElement('div');
+  div.className = 'hint';
+  div.innerHTML = html;
+  $messages.appendChild(div);
+  $messages.scrollTop = $messages.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.id = 'typing';
+  div.textContent = 'Agent is thinking...';
+  $messages.appendChild(div);
+  $messages.scrollTop = $messages.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typing');
+  if (el) el.remove();
+}
+
+function updateFocusBar(focusStatus) {
+  if (!focusStatus) { $focusBar.innerHTML = ''; return; }
+  const filled = Object.keys(focusStatus.filled || {});
+  const missing = focusStatus.missing || [];
+  $focusBar.innerHTML =
+    `<strong>Focus:</strong> ` +
+    (filled.length ? `<span class="filled">${filled.join(', ')}</span>` : '') +
+    (filled.length && missing.length ? ' | ' : '') +
+    (missing.length ? `<span class="missing">missing: ${missing.join(', ')}</span>` : '') +
+    (focusStatus.ready ? ' <span class="filled">READY</span>' : '');
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function useHint(el) {
+  document.querySelectorAll('.flow-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  $input.value = el.dataset.hint;
+  $input.focus();
+}
+
+async function apiCall(method, path, body) {
+  const start = Date.now();
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+
+  let res, data, error;
+  try {
+    res = await fetch(API + path, opts);
+    data = await res.json();
+  } catch (e) {
+    error = e.message;
+  }
+  const duration = Date.now() - start;
+
+  logDebug(method, path, body, data || { error }, res?.status || 0, duration);
+  return data;
+}
+
+function logDebug(method, path, reqBody, resBody, status, duration) {
+  const entry = document.createElement('details');
+  entry.className = 'debug-entry';
+  const statusClass = status >= 200 && status < 300 ? 'ok' : 'err';
+  entry.innerHTML =
+    `<summary>` +
+      `<span class="method ${method}">${method}</span> ${path} ` +
+      `<span class="status ${statusClass}">${status}</span>` +
+      `<span class="time">${duration}ms</span>` +
+    `</summary>` +
+    (reqBody ? `<pre><b>Request:</b>\n${JSON.stringify(reqBody, null, 2)}</pre>` : '') +
+    `<pre><b>Response:</b>\n${JSON.stringify(resBody, null, 2)}</pre>`;
+  $debugLog.prepend(entry);
+}
+
+function clearDebug() {
+  $debugLog.innerHTML = '';
+}
+
+async function createSession() {
+  const data = await apiCall('POST', '/api/sessions');
+  if (data?.sessionId) {
+    sessionId = data.sessionId;
+    $sessionLabel.textContent = `Session: ${sessionId.slice(0, 8)}...`;
+    $messages.innerHTML = '';
+    $focusBar.innerHTML = '';
+    document.querySelectorAll('.flow-chip').forEach(c => c.classList.remove('active'));
+    addHint(
+      `<strong>Restaurant Agent Showcase</strong> — 6 flows via LLM router<br>` +
+      `Click a flow chip above to pre-fill a sample message, or type freely.`
+    );
+  }
+}
+
+async function resetSession() {
+  sessionId = null;
+  $messages.innerHTML = '';
+  $focusBar.innerHTML = '';
+  $sessionLabel.textContent = 'No session';
+  await createSession();
+}
+
+async function loadHistory() {
+  if (!sessionId) { alert('Create a session first'); return; }
+  const data = await apiCall('GET', `/api/sessions/${sessionId}/history`);
+  if (data?.messages) {
+    $messages.innerHTML = '';
+    for (const msg of data.messages) {
+      const text = msg.content?.map(c => c.text || '').join('') || '';
+      if (text) addMessage(msg.role === 'user' ? 'user' : 'assistant', text);
+    }
+  }
+}
+
+async function send() {
+  const text = $input.value.trim();
+  if (!text || !sessionId) {
+    if (!sessionId) alert('Create a session first');
+    return;
+  }
+
+  $input.value = '';
+  $sendBtn.disabled = true;
+  addMessage('user', text);
+  showTyping();
+
+  const data = await apiCall('POST', '/api/chat', { sessionId, message: text });
+
+  hideTyping();
+  $sendBtn.disabled = false;
+
+  if (data?.response) {
+    addMessage('assistant', data.response);
+    updateFocusBar(data.focusStatus);
+  } else if (data?.error) {
+    addMessage('assistant', `Error: ${data.error}`);
+  }
+
+  $input.focus();
+}
+
+createSession();
+</script>
+</body>
+</html>

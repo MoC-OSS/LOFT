@@ -1,0 +1,45 @@
+{
+  "name": "@moc-global/loft-test-suite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Comprehensive test utilities and contract tests for LOFT Framework",
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.js"
+    }
+  },
+  "author": "Master of Code Global",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "sideEffects": false,
+  "files": [
+    "lib",
+    "src",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.declarations.json",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "dependencies": {
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-pglite": "workspace:*",
+    "pg": "^8.11.4",
+    "uuid": "^9.0.1",
+    "vitest": "^3.2.7",
+    "zod": "3.25.67"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "@types/uuid": "^9.0.8"
+  }
+}

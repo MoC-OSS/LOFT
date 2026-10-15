@@ -1,0 +1,15 @@
+{
+  "llmManifests": {
+    "my-assistant": {
+      "claude-sonnet-5-5": {
+        "systemMessage": "You are a helpful assistant. Be concise and clear in your responses.",
+        "modelPreset": {
+          "model": "claude-sonnet-5-5",
+          "max_tokens": 4096
+        }
+      }
+    }
+  },
+  "prompts": {},
+  "aiTasks": {}
+}

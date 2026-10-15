@@ -1,0 +1,38 @@
+{
+  "name": "@moc-global/example-express-full",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Production-like Express + LOFT + Anthropic with Docker PostgreSQL, middleware pipeline, and GM computer",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsup src/index.ts --format cjs,esm --dts --outDir dist",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ./src --fix"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@moc-global/loft": "workspace:*",
+    "@moc-global/loft-anthropic-strategy": "workspace:*",
+    "@moc-global/loft-chat-history-pg-repository": "workspace:*",
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-llm-call-manager": "workspace:*",
+    "@moc-global/loft-session-pg-repository": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "inversify": "^6.2.2",
+    "pg": "^8.11.4",
+    "reflect-metadata": "^0.2.2",
+    "zod": "3.25.67"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.2",
+    "@types/pg": "^8.23.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3"
+  }
+}

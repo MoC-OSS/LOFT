@@ -1,0 +1,10 @@
+node_modules
+credentials.json
+.env
+.env.dev
+.env_example
+.env.dev_example
+.vscode/*
+Dockerfile
+docker-compose.yml
+data

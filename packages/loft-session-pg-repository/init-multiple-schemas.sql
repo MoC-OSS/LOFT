@@ -1,0 +1,3 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE SCHEMA IF NOT EXISTS loft_session;
+CREATE SCHEMA IF NOT EXISTS loft_chat_history;

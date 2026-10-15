@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: loft-examples-postgres
+    environment:
+      POSTGRES_USER: loft_example
+      POSTGRES_PASSWORD: loft_example_pass
+      POSTGRES_DB: loft_examples
+    ports:
+      # Reachable from this machine only; the demo password must not be exposed on the network
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - loft_examples_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U loft_example -d loft_examples']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  loft_examples_pgdata:

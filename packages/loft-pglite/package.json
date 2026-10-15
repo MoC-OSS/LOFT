@@ -1,0 +1,41 @@
+{
+  "name": "@moc-global/loft-pglite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PGLite + Socket utilities for LOFT Framework testing",
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.js"
+    }
+  },
+  "author": "Master of Code Global",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "sideEffects": false,
+  "files": [
+    "lib",
+    "src",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.declarations.json",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@electric-sql/pglite-socket": "0.2.11",
+    "pg": "^8.11.4"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1"
+  }
+}

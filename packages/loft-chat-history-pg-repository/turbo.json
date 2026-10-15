@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "prebuild",
+        "^build",
+        "@moc-global/loft-kysely-pg-migrator#build"
+      ]
+    }
+  }
+}
