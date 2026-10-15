@@ -262,10 +262,10 @@ The LLM and queue strategies take their provider SDK as a peer dependency, so yo
 
 | Package | Peer dependency | Supported range | Note |
 |---------|-----------------|-----------------|------|
-| `@moc-global/loft-openai-strategy` | `openai` | `^4.91.1` | openai 5 and later change the APIs the strategy uses |
-| `@moc-global/loft-anthropic-strategy` | `@anthropic-ai/sdk` | `^0.39.0` (0.39.x only) | A caret range on a 0.x version allows only patch releases |
-| `@moc-global/loft-gemini-strategy` | `@google/genai` | `^1.30.0` | |
+| `@moc-global/loft-openai-strategy` | `openai` | `^4.91.1 \|\| ^7.34.0` | openai 5 and 6 are not tested, so they are left out |
+| `@moc-global/loft-anthropic-strategy` | `@anthropic-ai/sdk` | `>=0.39.0 <1` | Every 0.x release from 0.39.0; tested with 0.39.0 and 0.134.0 |
+| `@moc-global/loft-gemini-strategy` | `@google/genai` | `^1.30.0 \|\| ^2.30.0` | |
 | `@moc-global/loft-queue-sqs-strategy` | `@aws-sdk/client-sqs` | `^3.1140.0` | |
 | All packages with Zod schemas | `zod` | `^3.25.67` | Zod 4 is not supported |
 
-These are the versions LOFT is built and tested with. Wider ranges will be added once the newer SDK versions are tested.
+LOFT is built and CI-tested with the newest version of each range. The oldest and newest version of each range were tested when the range was last changed.

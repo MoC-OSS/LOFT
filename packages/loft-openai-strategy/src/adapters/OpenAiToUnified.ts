@@ -47,6 +47,14 @@ function openAiMessageToContentParts(message: ChatCompletionMessage): Type.Entit
  * Converts an OpenAI ChatCompletionMessageToolCall to a Unified tool_call ContentPart
  */
 function toolCallToContentPart(toolCall: ChatCompletionMessageToolCall): Type.Entity.FullContentPart {
+  // Newer openai versions add custom tool calls, which LOFT cannot run; it declares only function tools, so a custom
+  // call means the request was changed outside LOFT
+  if (toolCall.type !== 'function') {
+    throw new Error(
+      `OpenAI returned a tool call of type "${(toolCall as { type: string }).type}"; LOFT supports only function tool calls`
+    );
+  }
+
   return {
     type: 'tool_call',
     method: 'tools/call' as const,

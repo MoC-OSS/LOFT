@@ -261,7 +261,7 @@ Each provider accepts different `modelPreset` fields:
 }
 ```
 
-`max_tokens` is required. Current Claude models reject `temperature`, `top_p` and `top_k` with a 400 error, so leave them out. Current Claude models think before they answer, and the thinking counts against `max_tokens`. With a small limit (a few hundred tokens) the model can use all of it on thinking and return an empty answer with `usage.finishReason` set to `max_tokens`; give it several thousand.
+`max_tokens` is required. Current Claude models reject `temperature`, `top_p` and `top_k` with a 400 error, so leave them out. Unless you turn it off, current Claude models think before they answer, and the thinking counts against `max_tokens`; Claude Sonnet 5.5 and Haiku 5.5 turn it off with `"thinking": { "type": "between_tools" }`. With a small limit (a few hundred tokens) the model can use all of it on thinking and return an empty answer with `usage.finishReason` set to `max_tokens`; give it several thousand.
 
 The exact allowed fields depend on each strategy's validation schema. Check the strategy package's `ValidatingSchemas` export for details.
 

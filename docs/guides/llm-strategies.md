@@ -23,7 +23,7 @@ Every LLM registration follows this pattern:
 ## OpenAI
 
 ```bash
-npm install @moc-global/loft-openai-strategy openai@^4
+npm install @moc-global/loft-openai-strategy openai@^7
 ```
 
 ```typescript
@@ -99,7 +99,7 @@ const callStrategy = new AzureOpenAiCallStrategy(
 ## Anthropic
 
 ```bash
-npm install @moc-global/loft-anthropic-strategy @anthropic-ai/sdk@^0.39.0
+npm install @moc-global/loft-anthropic-strategy @anthropic-ai/sdk
 ```
 
 ```typescript

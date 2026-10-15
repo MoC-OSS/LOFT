@@ -6,7 +6,7 @@ import { Type } from '@moc-global/loft-definitions';
  */
 export function convertUnifiedToolCallToAnthropicToolUse(
   toolCall: Type.Entity.FullContentPart & { type: 'tool_call' }
-): Anthropic.ToolUseBlock {
+): Anthropic.ToolUseBlockParam {
   return {
     type: 'tool_use',
     id: toolCall.callId || `tool_${Date.now()}`,
@@ -18,7 +18,7 @@ export function convertUnifiedToolCallToAnthropicToolUse(
 /**
  * Extracts tool calls from unified content parts and converts them to Anthropic format
  */
-export function extractToolCallsFromContent(parts: Type.Entity.FullContentPart[]): Array<Anthropic.ToolUseBlock> {
+export function extractToolCallsFromContent(parts: Type.Entity.FullContentPart[]): Array<Anthropic.ToolUseBlockParam> {
   return parts
     .filter((part): part is Type.Entity.FullContentPart & { type: 'tool_call' } => part.type === 'tool_call')
     .map(convertUnifiedToolCallToAnthropicToolUse);

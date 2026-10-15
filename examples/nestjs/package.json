@@ -26,7 +26,7 @@
     "@nestjs/platform-express": "^12.1.2",
     "dotenv": "^16.4.5",
     "inversify": "^6.2.2",
-    "openai": "^4.91.1",
+    "openai": "^7.34.0",
     "pg": "^8.11.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",

@@ -12,7 +12,7 @@
     "lint": "eslint ./src --fix"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@anthropic-ai/sdk": "^0.134.0",
     "@moc-global/loft": "workspace:*",
     "@moc-global/loft-anthropic-strategy": "workspace:*",
     "@moc-global/loft-chat-history-pg-repository": "workspace:*",

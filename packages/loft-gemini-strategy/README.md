@@ -5,10 +5,10 @@ The Google Gemini provider for [LOFT](https://github.com/MoC-OSS/LOFT), through 
 ## Install
 
 ```bash
-npm install @moc-global/loft-gemini-strategy @google/genai@^1.30.0 @moc-global/loft-llm-call-manager
+npm install @moc-global/loft-gemini-strategy @google/genai @moc-global/loft-llm-call-manager
 ```
 
-`@google/genai` 1 (from 1.30.0) is a peer dependency. Its other peers, `@moc-global/loft-definitions`, `zod` 3 and `@modelcontextprotocol/sdk`, are already in a LOFT application.
+`@google/genai` 2 (from 2.30.0) or 1 (from 1.30.0) is a peer dependency. Its other peers, `@moc-global/loft-definitions`, `zod` 3 and `@modelcontextprotocol/sdk`, are already in a LOFT application.
 
 ## Usage
 
