@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { Logger, Schema, Type } from '@moc-global/loft-definitions';
 
+import { thinkingBlocksFromContent } from './thinking';
 import { extractToolCallsFromContent } from './toolRequest';
 
 const log = new Logger('AnthropicStrategy');
@@ -180,7 +181,10 @@ function extractToolResultsFromContent(parts: Type.Entity.FullContentPart[]): An
 /**
  * Converts a unified message to an Anthropic message format for requests
  */
-export function convertUnifiedMessageToAnthropicMessage(message: Type.Entity.Message): Anthropic.MessageParam {
+export function convertUnifiedMessageToAnthropicMessage(
+  message: Type.Entity.Message,
+  { withThinking = false }: { withThinking?: boolean } = {}
+): Anthropic.MessageParam {
   // Determine the role (Anthropic only supports user and assistant)
   let role: 'user' | 'assistant';
   switch (message.role) {
@@ -214,6 +218,10 @@ export function convertUnifiedMessageToAnthropicMessage(message: Type.Entity.Mes
     if (toolCalls.length > 0) {
       contentBlocks.push(...toolCalls);
     }
+    // Anthropic expects the thinking blocks first
+    if (withThinking) {
+      contentBlocks.unshift(...thinkingBlocksFromContent(message.content));
+    }
   }
 
   // Anthropic rejects assistant messages whose final content ends with trailing whitespace.
@@ -237,6 +245,10 @@ export function convertUnifiedMessageToAnthropicMessage(message: Type.Entity.Mes
  * Each tool_use must be followed by a user message containing the tool_result
  */
 function organizeMessagesForAnthropic(messages: Type.Entity.Message[]): Anthropic.MessageParam[] {
+  // Thinking goes back only for the tool loop of the current turn, after the last user message; older thinking may be
+  // signed by another model of the session
+  const lastUserIndex = messages.map((m) => m.role).lastIndexOf(Schema.LLM.UnifiedMessageRole.user);
+
   return messages.reduce((acc, currentMessage, index, arr) => {
     // Skip system messages as they're handled separately
     if (currentMessage.role === Schema.LLM.UnifiedMessageRole.system) {
@@ -250,7 +262,9 @@ function organizeMessagesForAnthropic(messages: Type.Entity.Message[]): Anthropi
 
     // Convert the current message (user or assistant)
     // This handles adding tool_calls to assistant messages internally
-    const anthropicMessage = convertUnifiedMessageToAnthropicMessage(currentMessage);
+    const anthropicMessage = convertUnifiedMessageToAnthropicMessage(currentMessage, {
+      withThinking: index > lastUserIndex
+    });
     acc.push(anthropicMessage);
 
     // Anthropic requires the results of every tool call in the assistant message to follow it in one user message.

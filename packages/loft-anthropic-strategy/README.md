@@ -68,6 +68,8 @@ The model and its settings come from the manifest entry with the same LLM name. 
 
 `thinking` takes the four types of the Messages API: `enabled` (with `budget_tokens` of at least 1024), `adaptive`, `disabled` and `between_tools`. Which types a model accepts depends on the model; Claude Sonnet 5.5 and Haiku 5.5 turn thinking off only with `{ "type": "between_tools" }`.
 
+The thinking is not part of the answer. When Claude thinks before calling tools, the strategy keeps its thinking blocks in the `_meta` of the first tool call and sends them back at the start of that assistant message for the rest of the tool loop, as the Messages API expects.
+
 Unless you turn it off, current Claude models think before they answer, and the thinking counts against `max_tokens`. With a small limit (a few hundred tokens) the model can use all of it on thinking and return an empty answer with `usage.finishReason` set to `max_tokens`; give it several thousand.
 
 ## Configuration
