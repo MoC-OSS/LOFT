@@ -1,5 +1,54 @@
 # @moc-global/loft-aws-s3-repository
 
+## 1.1.0
+
+### Minor Changes
+
+- 19ede7d: Declare the libraries LOFT shares with your code as peer dependencies, and fill in the package metadata.
+
+  - inversify, reflect-metadata, zod, the MCP SDK, `@moc-global/loft-definitions` (and `@moc-global/loft` for `loft-agents`) and the SDKs that appear in the public types (`openai`, `@anthropic-ai/sdk`, `@google/genai`, `@aws-sdk/client-sqs`) are peer dependencies instead of dependencies, so your project and LOFT use one copy of each. A custom constructor written against your own inversify now compiles. LOFT needs inversify 6 and zod 3. npm 7 or later and pnpm install missing peers on their own; with Yarn, add them to your dependencies.
+  - `langfuse` is an optional peer dependency of `@moc-global/loft`, loaded only when a `LangfuseTracer` is created. If you use `LangfuseTracer`, install `langfuse` yourself; without it, the constructor throws an error that says so.
+  - zod is no longer pinned to exactly 3.25.67; any zod 3 from 3.25.67 on works.
+  - Every package declares the MIT license, a description, keywords, homepage, issue tracker and the `MoC-OSS/LOFT` repository with its directory.
+
+### Patch Changes
+
+- 19ede7d: Update dependencies to fix security advisories.
+
+  - `@modelcontextprotocol/sdk`: `^1.26.0` -> `^1.31.0`
+  - `axios`: `^1.13.5` -> `^1.20.0`
+  - `fast-copy`: `^3.0.2` -> `^3.1.0`
+  - `kysely`: `^0.27.3` -> `^0.28.17`
+  - `@aws-sdk/client-s3` and `@aws-sdk/client-sqs`: -> `^3.1140.0` (pulls a patched `fast-xml-parser`)
+
+- 19ede7d: Declare the supported Node.js versions: `engines.node` is `>=22`. CI tests Node 22, 24 and 26.
+- 19ede7d: Fix the ES module builds, and publish only the built code.
+
+  - `loft-llm-call-manager` works when imported as an ES module: `GenerateCallManager` and `GenerateWithQueueManager` no longer throw `PQueue is not a constructor`.
+  - The Postgres repositories load as ES modules, and `runSessionPgMigrations` and `runChatHistoryPgMigrations` find their migrations from both builds. Their library entry no longer bundles the migration CLI (yargs, dotenv). `SessionMigrationOptions` and `ChatHistoryMigrationOptions` are exported, and `databaseSsl` is optional (default false).
+  - Each package is built from its `index.ts` into one bundle per format, and the tarball holds only `lib` (and `bin` for `loft-definitions`), so tests, sources and `tsconfig.json` are no longer published. `@moc-global/loft` unpacks to 1.0 MB instead of 6.5 MB. Only the package root was ever exported, so imports do not change.
+  - Unused runtime dependencies are removed: `axios`, `fast-copy` and `openai` from `loft`; `axios`, `uuid` and `zod-to-json-schema` from `loft-openai-strategy`; `uuid` from the Gemini, LLM call manager and Postgres packages. `zod` moves to `devDependencies` in the S3, GCP, Azure, SQS and LLM call manager packages, which use it only in tests. Code that imported one of these through LOFT must declare it itself.
+
+- 19ede7d: Ship ES module types and the MIT license file.
+
+  - Code that imports a package now gets ES module type declarations (`.d.mts`) that match the `.mjs` build; code that requires it keeps the CommonJS declarations (`.d.ts`). Before, both got the CommonJS declarations, so TypeScript with `moduleResolution: node16` or `nodenext` typed ES module imports as CommonJS. `package.json` is exported too.
+  - Every package ships the MIT `LICENSE`. `@moc-global/loft-definitions` also ships a `NOTICE` for the types it copies from the MCP TypeScript SDK (MIT, Anthropic, PBC).
+
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [f5aa906]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+  - @moc-global/loft-definitions@1.8.0
+
 ## 1.0.23
 
 ### Patch Changes
