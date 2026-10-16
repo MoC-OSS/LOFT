@@ -29,7 +29,7 @@ It creates a markdown file in `.changeset/` describing the version bump.
 
 `.changeset/config.json`:
 - **Base branch:** `main`
-- **Access:** `restricted` (private npm)
+- **Access:** `public` — `changeset publish` passes `--access public`, which also keeps existing packages public
 - **Changelog:** `@changesets/cli/changelog`
 - **Commit:** `true` — `changeset add` and `changeset version` commit the files they change
 - **Fixed / linked groups:** none
@@ -84,6 +84,15 @@ Publishing is handled in CI, not locally:
 pnpm run publish-packages
 # Runs: turbo build && changeset version && changeset publish
 ```
+
+The Release workflow (`.github/workflows/release.yaml`) publishes with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), so the repository holds no npm token. On Node.js 24, the job runs npm 11, which trusted publishing needs (11.5.1 or later). Each published package needs a trusted publisher on npmjs.com (package Settings > Trusted publishing > GitHub Actions):
+
+- **Organization:** `MoC-OSS`
+- **Repository:** `LOFT`
+- **Workflow filename:** `release.yaml`
+- **Environment:** `npm-release`
+
+npm adds a provenance attestation to every version published this way. A new trusted publisher expires unless a publish succeeds within 2 days, so add it shortly before a release. A package that does not exist on npm yet needs one first publish before you can configure it.
 
 ## Pinned Dependencies
 

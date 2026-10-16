@@ -1,5 +1,66 @@
 # @moc-global/loft-agents
 
+## 1.1.0
+
+### Minor Changes
+
+- 19ede7d: `LoftAgentNode` stores its answer in the SharedContext.
+
+  A node's answer reached only the next node, as its input. After a fan-out the next node got only the last branch's answer, and a team's parent got only the team's final answer, so coordinators and reviewers worked from partial results. Each `LoftAgentNode` now stores its answer under its name in the SharedContext, as the agents design describes: later nodes receive it with the shared context, and a team's parent receives its nodes' answers as `team:<team>:<node>`. Set `shareOutput: false` on a node to keep its answer out.
+
+- 19ede7d: Cancel timed-out agent calls and fix Focus completion.
+
+  - Cancellation: `generate()` accepts an optional `signal` (AbortSignal). It is passed through the LLM manager and call manager to the Anthropic, OpenAI, Azure OpenAI and Gemini SDK calls, and the tool loop stops once the signal aborts. Aborted calls are not retried.
+  - `loft-agents`: a node timeout now aborts the node's LLM call before any retry. `Agent.Node.run()` receives `options.signal`, `Orchestrator.run()` and `runFrom()` accept `{ signal }` to cancel a whole run, and retries stop once the run is cancelled.
+  - `loft-agents`: `LoftAgentNode` takes a `focusName` option naming the registered Focus it collects. It no longer uses its node name as the Focus name; without `focusName` the session's Focus applies.
+  - Focus: a completed Focus returns its values once in `focusStatus.filled` and then clears them from the focus state store, so it does not complete again with stale data.
+  - Focus: completing a per-call Focus no longer deactivates a different session-level Focus.
+  - Focus: collected values and shared context are written into prompts as escaped JSON in delimited blocks (`toPromptData`), with Focus string values capped at 500 characters, so user input cannot add prompt instructions.
+
+- 19ede7d: Declare the libraries LOFT shares with your code as peer dependencies, and fill in the package metadata.
+
+  - inversify, reflect-metadata, zod, the MCP SDK, `@moc-global/loft-definitions` (and `@moc-global/loft` for `loft-agents`) and the SDKs that appear in the public types (`openai`, `@anthropic-ai/sdk`, `@google/genai`, `@aws-sdk/client-sqs`) are peer dependencies instead of dependencies, so your project and LOFT use one copy of each. A custom constructor written against your own inversify now compiles. LOFT needs inversify 6 and zod 3. npm 7 or later and pnpm install missing peers on their own; with Yarn, add them to your dependencies.
+  - `langfuse` is an optional peer dependency of `@moc-global/loft`, loaded only when a `LangfuseTracer` is created. If you use `LangfuseTracer`, install `langfuse` yourself; without it, the constructor throws an error that says so.
+  - zod is no longer pinned to exactly 3.25.67; any zod 3 from 3.25.67 on works.
+  - Every package declares the MIT license, a description, keywords, homepage, issue tracker and the `MoC-OSS/LOFT` repository with its directory.
+
+### Patch Changes
+
+- 19ede7d: Declare the supported Node.js versions: `engines.node` is `>=22`. CI tests Node 22, 24 and 26.
+- 19ede7d: Fix the ES module builds, and publish only the built code.
+
+  - `loft-llm-call-manager` works when imported as an ES module: `GenerateCallManager` and `GenerateWithQueueManager` no longer throw `PQueue is not a constructor`.
+  - The Postgres repositories load as ES modules, and `runSessionPgMigrations` and `runChatHistoryPgMigrations` find their migrations from both builds. Their library entry no longer bundles the migration CLI (yargs, dotenv). `SessionMigrationOptions` and `ChatHistoryMigrationOptions` are exported, and `databaseSsl` is optional (default false).
+  - Each package is built from its `index.ts` into one bundle per format, and the tarball holds only `lib` (and `bin` for `loft-definitions`), so tests, sources and `tsconfig.json` are no longer published. `@moc-global/loft` unpacks to 1.0 MB instead of 6.5 MB. Only the package root was ever exported, so imports do not change.
+  - Unused runtime dependencies are removed: `axios`, `fast-copy` and `openai` from `loft`; `axios`, `uuid` and `zod-to-json-schema` from `loft-openai-strategy`; `uuid` from the Gemini, LLM call manager and Postgres packages. `zod` moves to `devDependencies` in the S3, GCP, Azure, SQS and LLM call manager packages, which use it only in tests. Code that imported one of these through LOFT must declare it itself.
+
+- 19ede7d: Ship ES module types and the MIT license file.
+
+  - Code that imports a package now gets ES module type declarations (`.d.mts`) that match the `.mjs` build; code that requires it keeps the CommonJS declarations (`.d.ts`). Before, both got the CommonJS declarations, so TypeScript with `moduleResolution: node16` or `nodenext` typed ES module imports as CommonJS. `package.json` is exported too.
+  - Every package ships the MIT `LICENSE`. `@moc-global/loft-definitions` also ships a `NOTICE` for the types it copies from the MCP TypeScript SDK (MIT, Anthropic, PBC).
+
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [f5aa906]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+- Updated dependencies [19ede7d]
+  - @moc-global/loft-definitions@1.8.0
+  - @moc-global/loft@2.9.0
+
 ## 1.0.0
 
 ### Major Changes
