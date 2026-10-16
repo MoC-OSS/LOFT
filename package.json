@@ -14,7 +14,7 @@
     "changeset": "npx @changesets/cli",
     "versions:check": "manypkg check",
     "versions:align": "manypkg fix",
-    "publish-packages": "turbo run build && npx @changesets/cli version && npx @changesets/cli publish",
+    "publish-packages": "turbo run build && npx @changesets/cli publish",
     "test:unit:coverage": "vitest run packages --coverage",
     "test:integration": "pnpm run --filter=loft-integration-tests test",
     "test:integration:esm": "pnpm run --filter=loft-integration-tests test:esm",
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
-    "@changesets/cli": "^2.29.4",
+    "@changesets/cli": "^3.0.3",
     "@manypkg/cli": "^0.25.1",
     "@moc-global/loft-base-tsconfig": "workspace:*",
     "@moc-global/loft-definitions": "workspace:*",
