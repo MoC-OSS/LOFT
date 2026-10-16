@@ -34,7 +34,7 @@
     "@moc-global/loft-definitions": "workspace:*",
     "@moc-global/loft-pglite": "workspace:*",
     "pg": "^8.11.4",
-    "uuid": "^9.0.1",
+    "uuid": "^14.0.2",
     "vitest": "^3.2.7",
     "zod": "3.25.67"
   },
