@@ -70,6 +70,8 @@ The model and its settings come from the manifest entry with the same LLM name. 
 
 The thinking is not part of the answer, and LOFT neither returns nor saves it. When Claude thinks before calling tools, the strategy keeps the thinking blocks in memory and sends them back at the start of that assistant message for the rest of the tool loop, so the model keeps its reasoning.
 
+Claude needs at least one message, and current Claude models a conversation that ends with the user. The strategy adds a short user turn to the request: "Start." when it has no message, and "Continue." when a Focus turn runs after the assistant's answer. It is not saved to the chat history. Without a Focus, a request that ends with an assistant message is sent as it is.
+
 Unless you turn it off, current Claude models think before they answer, and the thinking counts against `max_tokens`. With a small limit (a few hundred tokens) the model can use all of it on thinking and return an empty answer with `usage.finishReason` set to `max_tokens`; give it several thousand.
 
 ## Configuration
