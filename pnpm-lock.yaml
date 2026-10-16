@@ -658,8 +658,8 @@ importers:
         specifier: ^0.2.2
         version: 0.2.2
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^14.0.0
+        version: 14.0.0
       zod:
         specifier: 3.25.67
         version: 3.25.67
@@ -716,8 +716,8 @@ importers:
   packages/loft:
     dependencies:
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^14.0.0
+        version: 14.0.0
     devDependencies:
       '@moc-global/loft-definitions':
         specifier: workspace:*
@@ -850,8 +850,8 @@ importers:
         specifier: ^8.19.0
         version: 8.21.0
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^14.0.0
+        version: 14.0.0
     devDependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.1
@@ -1090,8 +1090,8 @@ importers:
         specifier: ^8.11.4
         version: 8.23.1
       uuid:
-        specifier: ^9.0.1
-        version: 9.0.1
+        specifier: ^14.0.0
+        version: 14.0.0
       vitest:
         specifier: ^3.2.7
         version: 3.2.7(@types/node@25.9.9)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2)
@@ -5678,6 +5678,10 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
+  uuid@14.0.0:
+    resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
+    hasBin: true
+
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
@@ -7613,6 +7617,14 @@ snapshots:
       magic-string: 0.30.21
     optionalDependencies:
       vite: 7.3.6(@types/node@20.19.27)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2)
+
+  '@vitest/mocker@3.2.7(vite@7.3.6(@types/node@25.9.9)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2))':
+    dependencies:
+      '@vitest/spy': 3.2.7
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 7.3.6(@types/node@25.9.9)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2)
 
   '@vitest/pretty-format@3.2.7':
     dependencies:
@@ -10931,6 +10943,8 @@ snapshots:
 
   utils-merge@1.0.1: {}
 
+  uuid@14.0.0: {}
+
   uuid@8.3.2: {}
 
   uuid@9.0.1: {}
@@ -11060,7 +11074,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
-      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@20.19.27)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2))
+      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@25.9.9)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2))
       '@vitest/pretty-format': 3.2.7
       '@vitest/runner': 3.2.7
       '@vitest/snapshot': 3.2.7

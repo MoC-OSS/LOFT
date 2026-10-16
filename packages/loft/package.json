@@ -57,7 +57,7 @@
     "lint:check": "npx eslint ./src --max-warnings=0"
   },
   "dependencies": {
-    "uuid": "^9.0.1"
+    "uuid": "^14.0.0"
   },
   "peerDependencies": {
     "@moc-global/loft-definitions": "workspace:^",
