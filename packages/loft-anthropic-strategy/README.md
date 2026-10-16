@@ -66,7 +66,7 @@ The model and its settings come from the manifest entry with the same LLM name. 
 
 `modelPreset` takes the Messages API parameters: `model`, `max_tokens`, `stop_sequences`, `thinking`, `output_config` (`effort` and `format`), `service_tier`, `inference_geo`, `cache_control`, `tools`, `tool_choice` and `metadata`, plus `temperature`, `top_p` and `top_k` for older models; current Claude models reject those three with a 400 error. Unknown fields are rejected, and so are `workspace_id` and `user_profile_id`, which the SDK sends as headers.
 
-`thinking` takes the four types of the Messages API: `enabled` (with `budget_tokens` of at least 1024), `adaptive`, `disabled` and `between_tools`. Which types a model accepts depends on the model; Claude Sonnet 5.5 and Haiku 5.5 turn thinking off only with `{ "type": "between_tools" }`.
+`thinking` takes the four types of the Messages API: `enabled` (with `budget_tokens` of at least 1024), `adaptive`, `disabled` and `between_tools`. Which types a model accepts depends on the model; Claude Sonnet 5.5 turns thinking off only with `{ "type": "between_tools" }`, and Claude Haiku 5.5 with `{ "type": "disabled" }`.
 
 The thinking is not part of the answer, and LOFT neither returns nor saves it. When Claude thinks before calling tools, the strategy keeps the thinking blocks in memory and sends them back at the start of that assistant message for the rest of the tool loop, so the model keeps its reasoning.
 
