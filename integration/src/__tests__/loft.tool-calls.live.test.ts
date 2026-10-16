@@ -81,6 +81,13 @@ const PROVIDERS = [
     key: 'LOFT_ANTHROPIC_API_KEY' as const,
     llmName: 'claude-haiku-tool-calls',
     register: (lc: LoftConstructor, name: string) => lc.registerLlmStrategy(name, initAnthropicStrategy(name))
+  },
+  {
+    // Claude Sonnet 5.5 takes no sampling parameters and turns thinking off only with between_tools
+    provider: 'Anthropic, thinking between_tools',
+    key: 'LOFT_ANTHROPIC_API_KEY' as const,
+    llmName: 'claude-sonnet-thinking-off-tool-calls',
+    register: (lc: LoftConstructor, name: string) => lc.registerLlmStrategy(name, initAnthropicStrategy(name))
   }
 ];
 

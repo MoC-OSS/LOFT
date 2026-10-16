@@ -26,6 +26,7 @@ import { ContentBlockSchema } from './MCP_SDK_Types';
  * ├── ToolCallContentSchema (extends RequestSchema)
  * │   ├── method: "tools/call"
  * │   ├── callId?: string
+ * │   ├── _meta?: { [key: string]: unknown }
  * │   └── params
  * │       ├── _meta?
  * │       │   └── progressToken?: string | number
@@ -219,6 +220,8 @@ export const ToolCallContentSchema = RequestSchema.extend({
   type: z.literal('tool_call'),
   method: z.literal('tools/call'),
   callId: z.string().optional(), // optional because it's not MCP part, but it's required for tool result
+  // Provider data the strategy needs back in the next request; params go to the MCP server, so it is kept outside them
+  _meta: z.optional(z.object({}).passthrough()),
   params: BaseRequestParamsSchema.extend({
     name: z.string(),
     arguments: z.optional(z.record(z.unknown()))

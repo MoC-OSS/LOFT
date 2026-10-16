@@ -38,10 +38,10 @@ Then add your LLM provider:
 
 ```bash
 # Option A: OpenAI
-npm install @moc-global/loft-openai-strategy openai@^4
+npm install @moc-global/loft-openai-strategy openai@^7
 
 # Option B: Anthropic
-npm install @moc-global/loft-anthropic-strategy @anthropic-ai/sdk@^0.39.0
+npm install @moc-global/loft-anthropic-strategy @anthropic-ai/sdk
 ```
 
 ## 2. Set Up the Database

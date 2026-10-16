@@ -35,7 +35,7 @@ export class OpenAiCallStrategy implements Strategy.LLM.LLMApi {
   async generateStream<T_LLM_Req, T_LLM_Res>(generalRequest: T_LLM_Req): Promise<T_LLM_Res> {
     try {
       const llmRequest = generalRequest as unknown as OpenAiStreamRequest;
-      const stream = await this.openAi.beta.chat.completions.stream(llmRequest);
+      const stream = await this.openAi.chat.completions.create({ ...llmRequest, stream: true });
       return stream as unknown as T_LLM_Res;
     } catch (error) {
       log.error('generateStream failed', error);

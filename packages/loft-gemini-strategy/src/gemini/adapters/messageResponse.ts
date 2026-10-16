@@ -1,6 +1,7 @@
 import type { GenerateContentResponse } from '@google/genai';
 import { InteractiveOutputMessage, Strategy, Type } from '@moc-global/loft-definitions';
 
+import { thoughtSignatureField, thoughtSignatureMeta } from './thoughtSignature';
 import { convertGeminiFunctionCallToUnifiedToolCall } from './toolResponse';
 
 export interface ResponseConversionOptions {
@@ -21,17 +22,32 @@ function convertGeminiContentToUnifiedParts(response: GenerateContentResponse): 
     return parts;
   }
 
+  // A signature can come on a part that is not kept, such as a thought summary or an empty final text part; it moves to
+  // the next kept part, or to the last one when none follows
+  let pendingSignature: string | undefined;
+
   for (const part of candidates[0].content.parts) {
-    if (part.text) {
-      parts.push({
-        type: 'text',
-        text: part.text
-      } as Type.Entity.TextContent);
-    }
+    const thoughtSignature = part.thoughtSignature ?? pendingSignature;
 
     if (part.functionCall) {
-      parts.push(convertGeminiFunctionCallToUnifiedToolCall(part.functionCall));
+      parts.push(convertGeminiFunctionCallToUnifiedToolCall(part.functionCall, thoughtSignature));
+      pendingSignature = undefined;
+    } else if (part.text && !part.thought) {
+      // A thought summary (includeThoughts) is the model's reasoning, not its answer
+      parts.push({
+        type: 'text',
+        text: part.text,
+        ...thoughtSignatureMeta(thoughtSignature)
+      } as Type.Entity.TextContent);
+      pendingSignature = undefined;
+    } else if (part.thoughtSignature) {
+      pendingSignature = part.thoughtSignature;
     }
+  }
+
+  const lastPart = parts.at(-1);
+  if (pendingSignature && lastPart && !thoughtSignatureField(lastPart).thoughtSignature) {
+    lastPart._meta = { ...lastPart._meta, ...thoughtSignatureMeta(pendingSignature)._meta };
   }
 
   return parts;

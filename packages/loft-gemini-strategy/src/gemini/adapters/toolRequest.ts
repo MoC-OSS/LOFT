@@ -1,6 +1,8 @@
 import type { Part } from '@google/genai';
 import { Type, Util } from '@moc-global/loft-definitions';
 
+import { thoughtSignatureField } from './thoughtSignature';
+
 /**
  * Converts a unified tool_call content part to Gemini functionCall part
  */
@@ -11,7 +13,8 @@ function convertUnifiedToolCallToGeminiFunctionCall(
     functionCall: {
       name: toolCall.params?.name || '',
       args: toolCall.params?.arguments || {}
-    }
+    },
+    ...thoughtSignatureField(toolCall)
   };
 }
 

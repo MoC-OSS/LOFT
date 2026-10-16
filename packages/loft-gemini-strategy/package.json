@@ -54,13 +54,13 @@
     "lint:check": "npx eslint ./src --max-warnings=0"
   },
   "peerDependencies": {
-    "@google/genai": "^1.30.0",
+    "@google/genai": "^1.30.0 || ^2.30.0",
     "@moc-global/loft-definitions": "workspace:^",
     "@modelcontextprotocol/sdk": "^1.31.0",
     "zod": "^3.25.67"
   },
   "devDependencies": {
-    "@google/genai": "^1.52.0",
+    "@google/genai": "^2.30.0",
     "@moc-global/loft-definitions": "workspace:*",
     "@moc-global/loft-test-suite": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",

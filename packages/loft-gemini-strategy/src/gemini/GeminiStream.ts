@@ -14,10 +14,10 @@ export class GeminiStream extends Strategy.LLM.UnifiedLLMStream {
     try {
       const geminiResponseChunk = JSON.parse(responseChunk) as GeminiStreamChunk;
 
-      // Extract text from the response using the new SDK format
+      // Extract text from the response using the new SDK format; a thought summary (includeThoughts) is not the answer
       const textContent =
         geminiResponseChunk.candidates?.[0]?.content?.parts
-          ?.map((part) => part.text || '')
+          ?.map((part) => (part.thought ? '' : part.text || ''))
           .filter(Boolean)
           .join('') || '';
 

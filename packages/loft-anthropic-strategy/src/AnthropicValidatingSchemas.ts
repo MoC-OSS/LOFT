@@ -24,7 +24,8 @@ const ModelSchema = z.string();
 // -----------------------------
 const cacheControlSchema = z
   .object({
-    type: z.literal('ephemeral')
+    type: z.literal('ephemeral'),
+    ttl: z.enum(['5m', '1h']).optional()
   })
   .nullable()
   .optional();
@@ -78,10 +79,14 @@ const TextBlockParamSchema = z
 // -----------------------------
 // Extended Thinking Configuration
 // -----------------------------
+// Which types a model accepts depends on the model: Claude Sonnet 5.5 and Haiku 5.5 turn thinking off only with
+// between_tools
+const ThinkingDisplaySchema = z.enum(['summarized', 'omitted']).nullable().optional();
 const ThinkingConfigEnabledSchema = z
   .object({
     type: z.literal('enabled'),
-    budget_tokens: z.number().min(1024, { message: 'Minimum budget_tokens is 1024' })
+    budget_tokens: z.number().min(1024, { message: 'Minimum budget_tokens is 1024' }),
+    display: ThinkingDisplaySchema
   })
   .strict();
 const ThinkingConfigDisabledSchema = z
@@ -89,7 +94,23 @@ const ThinkingConfigDisabledSchema = z
     type: z.literal('disabled')
   })
   .strict();
-const ThinkingConfigParamSchema = z.union([ThinkingConfigEnabledSchema, ThinkingConfigDisabledSchema]);
+const ThinkingConfigBetweenToolsSchema = z
+  .object({
+    type: z.literal('between_tools')
+  })
+  .strict();
+const ThinkingConfigAdaptiveSchema = z
+  .object({
+    type: z.literal('adaptive'),
+    display: ThinkingDisplaySchema
+  })
+  .strict();
+const ThinkingConfigParamSchema = z.discriminatedUnion('type', [
+  ThinkingConfigEnabledSchema,
+  ThinkingConfigDisabledSchema,
+  ThinkingConfigBetweenToolsSchema,
+  ThinkingConfigAdaptiveSchema
+]);
 
 // -----------------------------
 // Tool Choice Configuration
@@ -113,7 +134,34 @@ const ToolChoiceToolSchema = z
     disable_parallel_tool_use: z.boolean().optional()
   })
   .strict();
-const ToolChoiceSchema = z.union([ToolChoiceAutoSchema, ToolChoiceAnySchema, ToolChoiceToolSchema]);
+const ToolChoiceNoneSchema = z
+  .object({
+    type: z.literal('none')
+  })
+  .strict();
+const ToolChoiceSchema = z.union([
+  ToolChoiceAutoSchema,
+  ToolChoiceAnySchema,
+  ToolChoiceToolSchema,
+  ToolChoiceNoneSchema
+]);
+
+// -----------------------------
+// Output Configuration
+// -----------------------------
+const OutputConfigSchema = z
+  .object({
+    effort: z.enum(['low', 'medium', 'high', 'xhigh', 'max']).nullable().optional(),
+    format: z
+      .object({
+        type: z.literal('json_schema'),
+        schema: z.record(z.unknown())
+      })
+      .strict()
+      .nullable()
+      .optional()
+  })
+  .strict();
 
 // -----------------------------
 // Tools Definitions
@@ -163,12 +211,18 @@ const toolsSchema = z.array(toolUnionSchema).optional();
 // -----------------------------
 // Base Request Schema
 // -----------------------------
+// Left out: container and diagnostics, which belong to a single request, and workspace_id and user_profile_id, which
+// the SDK sends as headers (SDK 0.39 would send them in the body)
 const MessageCreateParamsBaseSchema = z
   .object({
     max_tokens: z.number(),
+    cache_control: cacheControlSchema,
+    inference_geo: z.string().nullable().optional(),
     // messages: z.any(), // don't required in model preset
     model: ModelSchema,
     metadata: MetadataSchema.optional(),
+    output_config: OutputConfigSchema.optional(),
+    service_tier: z.enum(['auto', 'standard_only']).optional(),
     stop_sequences: z.array(z.string()).optional(),
     system: z.union([z.string(), z.array(TextBlockParamSchema)]).optional(),
     temperature: z.number().optional(),

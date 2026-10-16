@@ -88,6 +88,10 @@ export class AnthropicCallStrategy implements Strategy.LLM.LLMApi {
       metadata: request.metadata,
       tool_choice: request.tool_choice,
       thinking: request.thinking,
+      output_config: request.output_config,
+      service_tier: request.service_tier,
+      inference_geo: request.inference_geo,
+      cache_control: request.cache_control,
       stream
     };
 

@@ -114,6 +114,14 @@
           "max_tokens": 500
         }
       },
+      "claude-sonnet-thinking-off-tool-calls": {
+        "systemMessage": "You are a travel assistant. Use the tools for every fact you report. When the user asks for several things, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": {
+          "model": "claude-sonnet-5-5",
+          "max_tokens": 500,
+          "thinking": { "type": "between_tools" }
+        }
+      },
       "scripted": {
         "systemMessage": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
         "modelPreset": {

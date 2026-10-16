@@ -14,30 +14,12 @@ export interface ResponseConversionOptions {
 }
 
 /**
- * Converts Anthropic thinking block to text content
- */
-function convertAnthropicThinkingToText(thinkingBlock: Anthropic.ThinkingBlock): Type.Entity.FullContentPart | null {
-  if (!thinkingBlock.thinking || typeof thinkingBlock.thinking !== 'object') {
-    return null;
-  }
-
-  return {
-    type: 'text',
-    text: `[Thinking] ${thinkingBlock.thinking || ''}`
-  }; //as Type.Entity.FullContentPart;
-}
-
-/**
  * Converts Anthropic content block to unified content parts
  */
 export function convertAnthropicContentBlockToUnifiedParts(
   contentBlock: Anthropic.ContentBlock
 ): Type.Entity.FullContentPart[] {
   const parts: Type.Entity.FullContentPart[] = [];
-
-  // Variables for handling different content block types
-  let thinkingPart: Type.Entity.FullContentPart | null;
-  // let imagePart: Type.Entity.FullContentPart | null;
 
   switch (contentBlock.type) {
     case 'text':
@@ -64,19 +46,8 @@ export function convertAnthropicContentBlockToUnifiedParts(
       break;
 
     case 'thinking':
-      // Convert thinking content to text
-      thinkingPart = convertAnthropicThinkingToText(contentBlock as Anthropic.ContentBlock & { type: 'thinking' });
-      if (thinkingPart) {
-        parts.push(thinkingPart);
-      }
-      break;
-
     case 'redacted_thinking':
-      // Convert redacted thinking to text
-      parts.push({
-        type: 'text',
-        text: '[Redacted Thinking]'
-      } as Type.Entity.FullContentPart);
+      // Not part of the answer; ThinkingCache keeps the blocks for the tool loop
       break;
 
     default:

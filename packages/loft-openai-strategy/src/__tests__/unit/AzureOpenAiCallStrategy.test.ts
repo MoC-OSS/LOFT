@@ -40,9 +40,29 @@ describe('AzureOpenAiCallStrategy', () => {
     });
   });
 
+  describe('auth', () => {
+    it('builds the client with a Microsoft Entra ID token provider for azure-ad', () => {
+      const client = new AzureOpenAiCallStrategy(
+        { endpoint: ENDPOINT, deploymentName: 'prod-chat', auth: { type: 'azure-ad' } },
+        {} as Strategy.LLM.LlmTokenRateLimiter,
+        {} as Strategy.LLM.LlmTokenizer
+      )['client'];
+
+      expect(client.baseURL).toBe(`${ENDPOINT}/openai`);
+      expect(client.deploymentName).toBe('prod-chat');
+    });
+
+    it('builds the client with the API key for api-key', () => {
+      const client = createClient({ endpoint: ENDPOINT });
+
+      expect(client.apiKey).toBe('test-key');
+    });
+  });
+
   describe('deploymentName', () => {
-    const chatCompletionPath = (config: Omit<AzureOpenAiConfig, 'auth'>) => {
-      const { url } = createClient(config).buildRequest({
+    // buildRequest is async in openai 7 and sync in openai 4; awaiting works with both
+    const chatCompletionPath = async (config: Omit<AzureOpenAiConfig, 'auth'>) => {
+      const { url } = await createClient(config).buildRequest({
         method: 'post',
         path: '/chat/completions',
         body: { model: 'gpt-4o', messages: [] }
@@ -50,14 +70,14 @@ describe('AzureOpenAiCallStrategy', () => {
       return new URL(url).pathname;
     };
 
-    it('sends requests to the configured deployment, whatever the model', () => {
-      expect(chatCompletionPath({ endpoint: ENDPOINT, deploymentName: 'prod-chat' })).toBe(
+    it('sends requests to the configured deployment, whatever the model', async () => {
+      expect(await chatCompletionPath({ endpoint: ENDPOINT, deploymentName: 'prod-chat' })).toBe(
         '/openai/deployments/prod-chat/chat/completions'
       );
     });
 
-    it('uses the model as the deployment when none is configured', () => {
-      expect(chatCompletionPath({ endpoint: ENDPOINT })).toBe('/openai/deployments/gpt-4o/chat/completions');
+    it('uses the model as the deployment when none is configured', async () => {
+      expect(await chatCompletionPath({ endpoint: ENDPOINT })).toBe('/openai/deployments/gpt-4o/chat/completions');
     });
   });
 

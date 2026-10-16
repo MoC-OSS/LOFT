@@ -22,7 +22,7 @@
     "@modelcontextprotocol/sdk": "^1.32.1",
     "dotenv": "^16.4.5",
     "inversify": "^6.2.2",
-    "openai": "^4.91.1",
+    "openai": "^7.34.0",
     "pg": "^8.11.4",
     "reflect-metadata": "^0.2.2",
     "zod": "3.25.67"

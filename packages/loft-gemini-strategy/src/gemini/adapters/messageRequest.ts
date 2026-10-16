@@ -1,6 +1,7 @@
 import type { Content, Part } from '@google/genai';
 import { Schema, Type } from '@moc-global/loft-definitions';
 
+import { signUnsignedFunctionCalls, thoughtSignatureField } from './thoughtSignature';
 import { extractToolCallsFromContent, extractToolResultsFromContent } from './toolRequest';
 
 /**
@@ -33,7 +34,7 @@ function convertContentPartsToGeminiTextParts(parts: Type.Entity.FullContentPart
 
     const text = extractTextFromContentPart(part);
     if (text) {
-      geminiParts.push({ text });
+      geminiParts.push({ text, ...(part.type === 'text' ? thoughtSignatureField(part) : {}) });
     }
   }
 
@@ -71,6 +72,7 @@ function convertUnifiedMessageToGeminiContent(message: Type.Entity.Message): Con
   // For model (assistant) messages, add function calls
   if (role === 'model') {
     parts.push(...extractToolCallsFromContent(message.content));
+    signUnsignedFunctionCalls(parts);
   }
 
   return { role, parts };

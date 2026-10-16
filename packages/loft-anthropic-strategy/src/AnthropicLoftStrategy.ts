@@ -5,6 +5,7 @@ import { ZodSchema } from 'zod';
 
 import { convertUnifiedMessagesToAnthropicMessages } from './adapters/messageRequest';
 import { formatAnthropicResponseToUnified } from './adapters/messageResponse';
+import { ThinkingCache } from './adapters/thinking';
 import { convertMcpToolToAnthropicTool } from './adapters/toolDeclaration';
 import { AnthropicStream } from './AnthropicStream';
 import { AnthropicRequest, AnthropicResponse } from './AnthropicTypes';
@@ -38,6 +39,7 @@ export class AnthropicLoftStrategy implements LoftLLMImplementation {
   public readonly llmName: string;
   private baseStrategy: any;
   private readonly log = new Logger('LLMStrategy:Anthropic');
+  private readonly thinking = new ThinkingCache();
 
   constructor({ llmName, loftQueue }: Interface.StrategyArgsFacade, callManagerStrategy: Strategy.CallManager) {
     // Use composition instead of inheritance
@@ -53,7 +55,9 @@ export class AnthropicLoftStrategy implements LoftLLMImplementation {
     mcpTools: ListToolsResult['tools'] = []
   ): Promise<AnthropicRequest> {
     // Convert unified messages to Anthropic format
-    const anthropicMessages = convertUnifiedMessagesToAnthropicMessages(messages);
+    const anthropicMessages = convertUnifiedMessagesToAnthropicMessages(messages, (message) =>
+      this.thinking.forMessage(message.content)
+    );
 
     // Anthropic takes one system prompt and no system messages in the conversation. The conversation's system
     // messages (Focus instructions, context from earlier agents, notices from LOFT) are appended to it in order,
@@ -85,6 +89,8 @@ export class AnthropicLoftStrategy implements LoftLLMImplementation {
     llmName: string,
     manifestName: string
   ): Strategy.LLM.UnifiedLLMResponse {
+    this.thinking.keep(originalResponse.content);
+
     // Format the Anthropic response to unified format using the adapter
     return formatAnthropicResponseToUnified(
       originalResponse.content,
