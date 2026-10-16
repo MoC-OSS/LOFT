@@ -29,7 +29,7 @@ It creates a markdown file in `.changeset/` describing the version bump.
 
 `.changeset/config.json`:
 - **Base branch:** `main`
-- **Access:** `restricted` (private npm)
+- **Access:** `public` — `changeset publish` passes `--access public`, which also keeps existing packages public
 - **Changelog:** `@changesets/cli/changelog`
 - **Commit:** `true` — `changeset add` and `changeset version` commit the files they change
 - **Fixed / linked groups:** none
