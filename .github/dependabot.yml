@@ -28,12 +28,7 @@ updates:
       # zod 3.25.68 and later make MCP tool registration hit TS2589 under moduleResolution node
       - dependency-name: zod
         versions: ['>3.25.67']
-      # 0.29 is ESM-only and needs Node.js 22.12; a 0.x minor is a breaking release
-      - dependency-name: kysely
-        update-types: ['version-update:semver-major', 'version-update:semver-minor']
       - dependency-name: inversify
-        update-types: ['version-update:semver-major']
-      - dependency-name: p-queue
         update-types: ['version-update:semver-major']
       # Peer dependencies of the LLM strategies; a new major (a new minor for the 0.x Anthropic SDK) can need code changes,
       # and a new openai or @google/genai major a wider peer range

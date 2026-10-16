@@ -1,5 +1,5 @@
 import { Logger, Strategy } from '@moc-global/loft-definitions';
-import PQueueImport from 'p-queue';
+import PQueue from 'p-queue';
 
 import { TooManyHighPriorityTasksError } from './errors';
 import { GenerateConfig } from './types';
@@ -7,14 +7,18 @@ import { delay } from './utils';
 
 const log = new Logger('LlmCallManager');
 
-// p-queue 6 is CommonJS and exports the class as `exports.default`. Node's ESM loader hands over the whole
-// exports object as the default import, so the class sits one level deeper there.
-type PQueue = PQueueImport;
-const PQueue: typeof PQueueImport =
-  (PQueueImport as unknown as { default?: typeof PQueueImport }).default ?? PQueueImport;
+/**
+ * The part of p-queue the call managers use. p-queue publishes its types only through `exports`, so declaring
+ * the queue type here keeps the published types working under `moduleResolution: node`.
+ */
+export interface TaskQueue {
+  readonly size: number;
+  sizeBy(options: { priority?: number }): number;
+  add<T>(task: () => Promise<T>, options?: { priority?: number }): Promise<T>;
+}
 
 export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.GenerateCallManager<T_LLM_Req, T_LLM_Res> {
-  taskPQueue: PQueue;
+  taskPQueue: TaskQueue;
   constructor(
     readonly name: string,
     readonly config: GenerateConfig,
