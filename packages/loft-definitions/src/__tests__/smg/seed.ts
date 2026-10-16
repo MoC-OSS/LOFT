@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 
 import { Type } from '../..';
 import { MessageAction, MessageStatus } from '../../schemas/statefulMessageGateway';
@@ -37,10 +37,10 @@ const sessionId4 = '4e5508fd-979d-47ad-a56b-e9a604d02f4f';
 
 function generateMessage(sessionId: string, partialMessage: PartialMessage, index: number) {
   const { statuses, action, role } = partialMessage;
-  const uniqueContent = uuidv4();
+  const uniqueContent = randomUUID();
   return {
     ctx: {},
-    correlatorId: uuidv4(),
+    correlatorId: randomUUID(),
     content: `${index}`,
     role,
     author: `Author ${uniqueContent}`,
@@ -49,7 +49,7 @@ function generateMessage(sessionId: string, partialMessage: PartialMessage, inde
       statuses.length === 0
         ? []
         : statuses.map((status) => ({
-            // id: uuidv4(),
+            // id: randomUUID(),
             status,
             createdAt: new Date()
           })),

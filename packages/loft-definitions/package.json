@@ -62,8 +62,7 @@
     "axios": "^1.20.0",
     "fast-copy": "^3.1.0",
     "json-colorizer": "^2.2.2",
-    "pino": "^8.19.0",
-    "uuid": "^9.0.1"
+    "pino": "^10.4.0"
   },
   "peerDependencies": {
     "@modelcontextprotocol/sdk": "^1.31.0",

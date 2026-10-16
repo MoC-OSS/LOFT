@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   Chat,
   ContextProviderInterface,
@@ -10,7 +12,6 @@ import {
   Util
 } from '@moc-global/loft-definitions';
 import { injectable } from 'inversify';
-import { v4 as uuidv4 } from 'uuid';
 @injectable()
 export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface {
   protected isShuttingDown = false;
@@ -58,7 +59,7 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
   }
 
   public async createSession(newSession: Type.Entity.CreateSession) {
-    const operationId = `createSession-${uuidv4()}-${Date.now()}`;
+    const operationId = `createSession-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
       const sessionData = await this.sessionRepository.create(newSession);
 
@@ -69,7 +70,7 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
   }
 
   public async deleteSession(sessionId: Type.Entity.Session['id']): Promise<void> {
-    const operationId = `deleteSession-${sessionId}-${uuidv4()}-${Date.now()}`;
+    const operationId = `deleteSession-${sessionId}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
       await this.sessionRepository.deleteById(sessionId);
 
@@ -79,7 +80,7 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
 
   // used to get the session data from ChatStrategy
   public async getSessionById(sessionId: Type.Entity.Session['id']): Promise<Type.Entity.Session> {
-    const operationId = `getSessionById-${sessionId}-${uuidv4()}-${Date.now()}`;
+    const operationId = `getSessionById-${sessionId}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
       this.log.trace(`Getting session by id: ${sessionId}`);
       return this.sessionRepository.getById(sessionId);
@@ -87,7 +88,7 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
   }
 
   public async getSessionByExternalKey(externalKey: Type.Entity.Session['externalKey']): Promise<Type.Entity.Session> {
-    const operationId = `getSessionByExternalKey-${externalKey}-${uuidv4()}-${Date.now()}`;
+    const operationId = `getSessionByExternalKey-${externalKey}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
       this.log.trace(`Getting session by external key: ${externalKey}`);
       return this.sessionRepository.getByExternalKey(externalKey);
@@ -99,7 +100,7 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
     correlatorId: string,
     settings: Partial<Type.Entity.CreateSession>
   ): Promise<void> {
-    const operationId = `updateSessionSettings-${sessionId}-${correlatorId}-${uuidv4()}-${Date.now()}`;
+    const operationId = `updateSessionSettings-${sessionId}-${correlatorId}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
       this.log.trace(`Updating session settings`, { sessionId, correlatorId });
       const session = await this.sessionRepository.getById(sessionId);
@@ -120,7 +121,7 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
   public async getChatHistory(
     sessionId: Type.Entity.Session['id']
   ): Promise<Util.QueryByArrayOfObjects<Type.Entity.Message>> {
-    const operationId = `getChatHistory-${sessionId}-${uuidv4()}-${Date.now()}`;
+    const operationId = `getChatHistory-${sessionId}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
       const messages = await this.chatHistoryManager.getMessages(sessionId);
 

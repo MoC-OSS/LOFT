@@ -1,10 +1,11 @@
 import 'reflect-metadata';
 
+import { randomUUID } from 'node:crypto';
+
 import { Type } from '@moc-global/loft-definitions';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
@@ -42,7 +43,7 @@ async function initTravelClient(): Promise<Client> {
 
 function userMessage(text: string, sessionId: string): Type.Entity.Message {
   return {
-    id: uuidv4(),
+    id: randomUUID(),
     sequenceId: '1',
     sessionId,
     ctx: {},
@@ -189,7 +190,7 @@ describe.runIf(AVAILABLE.length > 0)('Loft tool calls with real providers', () =
     const chat = loft.chat;
     if (!('addMessages' in chat)) throw new Error('Expected the base chat, which has addMessages');
 
-    await expect(chat.addMessages(session.id, [uuidv4()], [userMessage('Hello', otherSession.id)])).rejects.toThrow(
+    await expect(chat.addMessages(session.id, [randomUUID()], [userMessage('Hello', otherSession.id)])).rejects.toThrow(
       `Cannot add a message of session ${otherSession.id} to session ${session.id}`
     );
 
