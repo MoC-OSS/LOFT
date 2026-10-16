@@ -49,6 +49,7 @@
     "zod": "3.25.67"
   },
   "devDependencies": {
+    "@moc-global/loft-pglite": "workspace:*",
     "@types/node": "^20.14.2",
     "@types/pg": "^8.23.1",
     "@types/yargs": "^17.0.32"

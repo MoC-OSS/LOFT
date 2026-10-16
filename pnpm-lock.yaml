@@ -905,6 +905,9 @@ importers:
         specifier: 3.25.67
         version: 3.25.67
     devDependencies:
+      '@moc-global/loft-pglite':
+        specifier: workspace:*
+        version: link:../loft-pglite
       '@types/node':
         specifier: ^20.14.2
         version: 20.19.27
