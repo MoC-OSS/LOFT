@@ -28,10 +28,12 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - name: Setup Node.js 22
+      # Node.js 24 ships npm 11, and npm trusted publishing needs npm 11.5.1 or later:
+      # changeset publish runs pnpm publish, which hands the packed tarball to npm publish
+      - name: Setup Node.js 24
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
@@ -43,17 +45,9 @@ jobs:
       - name: Unit tests
         run: pnpm test:unit
 
-      # To be replaced by npm trusted publishing (OIDC)
-      - name: Creating .npmrc
-        run: |
-          cat << EOF > "$HOME/.npmrc"
-            //registry.npmjs.org/:_authToken=$MOCG_NPMJS_TOKEN
-            @moc-global:registry=https://registry.npmjs.org/
-            always-auth=true
-          EOF
-        env:
-          MOCG_NPMJS_TOKEN: ${{ secrets.MOCG_NPMJS_TOKEN }}
-
+      # npm trusted publishing (OIDC): with no NPM_TOKEN set, changesets/action leaves ~/.npmrc alone
+      # and npm exchanges the job's OIDC token for a short-lived publish token. npm adds provenance itself.
+      # Each package needs a trusted publisher on npmjs.com for MoC-OSS/LOFT, release.yaml, environment npm-release.
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
@@ -61,4 +55,3 @@ jobs:
           publish: pnpm run publish-packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          #NPM_TOKEN: ${{ secrets.MOCG_NPMJS_TOKEN }}
