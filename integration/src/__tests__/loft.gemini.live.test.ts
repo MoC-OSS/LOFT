@@ -101,7 +101,9 @@ describe.runIf(hasKeys('LOFT_GEMINI_VERTEX_PROJECT'))('Loft Gemini MCP Integrati
     // the next turn, which sends that history, is accepted
     const history = [...(await loft.chat.getChatHistory(session.id))];
     expect(
-      history.flatMap((msg) => msg.content).some((c: any) => c.type === 'tool_call' && c._meta?.geminiThoughtSignature)
+      history
+        .flatMap((msg) => msg.content)
+        .some((c) => c.type === 'tool_call' && typeof c._meta?.geminiThoughtSignature === 'string')
     ).toBe(true);
 
     const followUp = await loft.chat.generate({

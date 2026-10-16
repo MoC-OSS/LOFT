@@ -1,7 +1,7 @@
 import type { Content, Part } from '@google/genai';
 import { Schema, Type } from '@moc-global/loft-definitions';
 
-import { thoughtSignatureField } from './thoughtSignature';
+import { signUnsignedFunctionCalls, thoughtSignatureField } from './thoughtSignature';
 import { extractToolCallsFromContent, extractToolResultsFromContent } from './toolRequest';
 
 /**
@@ -72,6 +72,7 @@ function convertUnifiedMessageToGeminiContent(message: Type.Entity.Message): Con
   // For model (assistant) messages, add function calls
   if (role === 'model') {
     parts.push(...extractToolCallsFromContent(message.content));
+    signUnsignedFunctionCalls(parts);
   }
 
   return { role, parts };

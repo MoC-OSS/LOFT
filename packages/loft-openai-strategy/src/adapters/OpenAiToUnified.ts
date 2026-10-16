@@ -1,9 +1,11 @@
-import { InteractiveOutputMessage, Type } from '@moc-global/loft-definitions';
+import { InteractiveOutputMessage, Logger, Type } from '@moc-global/loft-definitions';
 import {
   ChatCompletion,
   ChatCompletionMessage,
   ChatCompletionMessageToolCall
 } from 'openai/resources/chat/completions';
+
+const log = new Logger('OpenAIStrategy');
 
 /**
  * Converts OpenAI ChatCompletionMessage to Unified ContentParts
@@ -27,11 +29,24 @@ function openAiMessageToContentParts(message: ChatCompletionMessage): Type.Entit
     } as Type.Entity.FullContentPart);
   }
 
-  // Add tool calls if they exist
-  if (message.tool_calls && message.tool_calls.length > 0) {
-    for (const toolCall of message.tool_calls) {
+  // Add tool calls if they exist. Newer openai versions add custom tool calls, which LOFT cannot run; it declares only
+  // function tools, so a custom call means the request was changed outside LOFT. It is skipped, and the response fails
+  // only when nothing else is left in it
+  const toolCalls = message.tool_calls ?? [];
+  for (const toolCall of toolCalls) {
+    if (toolCall.type === 'function') {
       parts.push(toolCallToContentPart(toolCall));
+    } else {
+      // openai 4 knows only function calls, so the type is read without its types
+      log.warn(
+        `Skipped an OpenAI tool call of type "${(toolCall as { type: string }).type}"; LOFT supports only function tool calls`
+      );
     }
+  }
+  if (parts.length === 0 && toolCalls.length > 0) {
+    throw new Error(
+      'OpenAI returned only tool calls of a type other than function; LOFT supports only function tool calls'
+    );
   }
 
   // audio content - will be designed in future because mimeType is available in request and not provided in response
@@ -46,15 +61,9 @@ function openAiMessageToContentParts(message: ChatCompletionMessage): Type.Entit
 /**
  * Converts an OpenAI ChatCompletionMessageToolCall to a Unified tool_call ContentPart
  */
-function toolCallToContentPart(toolCall: ChatCompletionMessageToolCall): Type.Entity.FullContentPart {
-  // Newer openai versions add custom tool calls, which LOFT cannot run; it declares only function tools, so a custom
-  // call means the request was changed outside LOFT
-  if (toolCall.type !== 'function') {
-    throw new Error(
-      `OpenAI returned a tool call of type "${(toolCall as { type: string }).type}"; LOFT supports only function tool calls`
-    );
-  }
-
+function toolCallToContentPart(
+  toolCall: Extract<ChatCompletionMessageToolCall, { type: 'function' }>
+): Type.Entity.FullContentPart {
   return {
     type: 'tool_call',
     method: 'tools/call' as const,

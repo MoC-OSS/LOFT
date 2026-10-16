@@ -1,8 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { InteractiveOutputMessage, Logger, Strategy, Type } from '@moc-global/loft-definitions';
 
-import { keepThinkingOnToolCall } from './thinking';
-
 const log = new Logger('AnthropicStrategy');
 
 /**
@@ -49,7 +47,7 @@ export function convertAnthropicContentBlockToUnifiedParts(
 
     case 'thinking':
     case 'redacted_thinking':
-      // Not part of the answer; keepThinkingOnToolCall keeps the blocks for the tool loop
+      // Not part of the answer; ThinkingCache keeps the blocks for the tool loop
       break;
 
     default:
@@ -70,7 +68,6 @@ export function convertAnthropicContentToUnifiedMessage(
 
   // Combine all content parts from all content blocks
   const allContentParts = contentBlocks.flatMap((block) => convertAnthropicContentBlockToUnifiedParts(block));
-  keepThinkingOnToolCall(contentBlocks, allContentParts);
 
   // Extract citations if available, only include in ctx if defined
   const citations = contentBlocks.find((block) => block.type === 'text')?.citations;
