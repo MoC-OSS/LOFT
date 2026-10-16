@@ -34,6 +34,21 @@ interface LoftLLMImplementation {
   generateResponseSchema(): ZodSchema<any>;
 }
 
+/**
+ * A Focus turn may run without a message from the user: the Focus prompt, which goes into `system`, opens the
+ * conversation or asks the next question after the assistant's own answer. Claude needs at least one message, and
+ * current Claude models need a conversation that ends with the user, so a short user turn is added to the request. It
+ * is not saved to the chat history. "Continue." is added only with a Focus prompt, so a request that ends with an
+ * assistant message on purpose (prefill, on models that support it) is sent as it is.
+ */
+function addOpeningUserTurn(messages: Anthropic.MessageParam[], hasFocusPrompt: boolean): void {
+  if (messages.length === 0) {
+    messages.push({ role: 'user', content: [{ type: 'text', text: 'Start.' }] });
+  } else if (hasFocusPrompt && messages[messages.length - 1].role === 'assistant') {
+    messages.push({ role: 'user', content: [{ type: 'text', text: 'Continue.' }] });
+  }
+}
+
 // Create a class that doesn't directly extend the problematic generic class
 export class AnthropicLoftStrategy implements LoftLLMImplementation {
   public readonly llmName: string;
@@ -57,6 +72,10 @@ export class AnthropicLoftStrategy implements LoftLLMImplementation {
     // Convert unified messages to Anthropic format
     const anthropicMessages = convertUnifiedMessagesToAnthropicMessages(messages, (message) =>
       this.thinking.forMessage(message.content)
+    );
+    addOpeningUserTurn(
+      anthropicMessages,
+      messages.some((message) => isSystemMessage(message) && message.author === 'focus')
     );
 
     // Anthropic takes one system prompt and no system messages in the conversation. The conversation's system

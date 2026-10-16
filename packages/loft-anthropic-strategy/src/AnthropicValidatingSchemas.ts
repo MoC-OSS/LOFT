@@ -79,8 +79,8 @@ const TextBlockParamSchema = z
 // -----------------------------
 // Extended Thinking Configuration
 // -----------------------------
-// Which types a model accepts depends on the model: Claude Sonnet 5.5 and Haiku 5.5 turn thinking off only with
-// between_tools
+// Which types a model accepts depends on the model: Claude Sonnet 5.5 turns thinking off only with between_tools,
+// Claude Haiku 5.5 with disabled
 const ThinkingDisplaySchema = z.enum(['summarized', 'omitted']).nullable().optional();
 const ThinkingConfigEnabledSchema = z
   .object({

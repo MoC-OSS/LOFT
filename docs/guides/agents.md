@@ -159,6 +159,8 @@ console.log(result.focusStatus);
 
 **Values stay data:** the Focus prompt shows the collected values as escaped JSON inside a `<collected_values>` block, with string values capped at 500 characters, so a value cannot add instructions to the prompt.
 
+**Starting without a message:** while a Focus is active, `generate()` runs without `directMessages`, and the Focus prompt opens the conversation, for example to greet the user and ask for the first field. Claude needs at least one message, and current Claude models a conversation that ends with the user, so the Anthropic strategy adds a short user turn to the request: "Start.", or "Continue." after the assistant's answer. It is not saved to the chat history.
+
 ### Focus with LoftAgentNode
 
 By default the agent uses the session's Focus: set `focusAgent` on the session at creation time. To make a node always collect one Focus, pass its registered name as `focusName`. The `onFocusComplete` action on the agent controls graph routing when Focus completes.
