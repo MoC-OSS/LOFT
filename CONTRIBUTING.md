@@ -8,7 +8,7 @@ Thanks for helping with LOFT. Bug reports, fixes, documentation and examples are
 
 ## Set up
 
-You need Node.js 22 or later and Corepack, which installs the pnpm version pinned in `package.json`.
+You need Node.js 22.12 or later and Corepack, which installs the pnpm version pinned in `package.json`.
 
 ```bash
 git clone https://github.com/MoC-OSS/LOFT.git

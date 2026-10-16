@@ -107,6 +107,51 @@ describe('GenerateCallManager', () => {
     });
   });
 
+  describe('task queue', () => {
+    const request = (text: string, priority: number) => ({ ...REQUEST, llmBody: { messages: [text] }, priority });
+
+    // The first call holds the queue, so the next ones wait and are ordered by priority
+    function holdFirstCall() {
+      let release!: () => void;
+      generate.mockImplementationOnce(() => new Promise((resolve) => (release = () => resolve('first'))));
+      generate.mockImplementation(async (body) => body.messages[0]);
+      return () => release();
+    }
+
+    it('runs one call at a time, the higher priority first', async () => {
+      const release = holdFirstCall();
+      const first = manager.addHighPriorityTask(request('first', 30));
+      await vi.waitFor(() => expect(generate).toHaveBeenCalledTimes(1));
+
+      const low = manager.addHighPriorityTask(request('low', 10));
+      const high = manager.addHighPriorityTask(request('high', 50));
+      expect(manager.getCountOfHighPriorityTaskQueue()).toBe(2);
+      release();
+
+      await expect(Promise.all([first, low, high])).resolves.toEqual(['first', 'low', 'high']);
+      expect(generate.mock.calls.map(([body]) => body.messages[0])).toEqual(['first', 'high', 'low']);
+    });
+
+    it('rejects a call once highPriorityTasksLimit calls are waiting', async () => {
+      const llmApi = {
+        generate,
+        reduceMessages: () => 'hello',
+        extractUsedTokens: () => 1,
+        tokenRateLimiter: { awaitBeforeCall, setUsedTokens: vi.fn(), setUsedRequest: vi.fn() },
+        llmTokenizer: { calculateTokensFromString: () => 1 }
+      } as unknown as Strategy.LLM.LLMApi;
+      const limited = new GenerateCallManager<Body, unknown>('test', { ...CONFIG, highPriorityTasksLimit: 1 }, llmApi);
+      const release = holdFirstCall();
+      const first = limited.addHighPriorityTask(request('first', 30));
+      await vi.waitFor(() => expect(generate).toHaveBeenCalledTimes(1));
+      const waiting = limited.addHighPriorityTask(request('waiting', 30));
+
+      await expect(limited.addHighPriorityTask(request('rejected', 30))).rejects.toThrow('Too many high priority task');
+      release();
+      await expect(Promise.all([first, waiting])).resolves.toEqual(['first', 'waiting']);
+    });
+  });
+
   describe('stop', () => {
     it('stops the rate limiter of the LLM strategy', () => {
       const stop = vi.fn();

@@ -11,7 +11,7 @@ This guide covers setting up the LOFT monorepo for development.
 | **Git** | Any recent | OS package manager |
 | **Docker** | Optional — only for package-level integration tests | [docker.com](https://docker.com) |
 
-> **Note:** There is no `.nvmrc`, `.node-version`, or `.tool-versions` file in the repo. The `packageManager` field in root `package.json` enforces pnpm 10.14.0 via Corepack. Every package declares `engines.node >=22`, and CI tests Node 22, 24 and 26.
+> **Note:** There is no `.nvmrc`, `.node-version`, or `.tool-versions` file in the repo. The `packageManager` field in root `package.json` enforces pnpm 10.14.0 via Corepack. Packages declare `engines.node >=22`, except the PostgreSQL repositories, the migrator and the call manager, which load ES module-only dependencies through `require()` and declare `>=22.12`. CI tests Node 22.12, 22, 24 and 26.
 
 ## Initial Setup
 
