@@ -1,9 +1,10 @@
 import 'reflect-metadata';
 
+import { randomUUID } from 'node:crypto';
+
 import { LoftConstructor } from '@moc-global/loft';
 import { FsRepositoryConstructor, ManifestManagerConstructor } from '@moc-global/loft';
 import { Interface, Strategy, Type } from '@moc-global/loft-definitions';
-import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { env } from './config';
@@ -15,7 +16,7 @@ import { MockTracerStrategy } from './mocks/MockTracerStrategy';
 // Helper function to create test messages
 function createTestMessage(text: string, sessionId: string): Type.Entity.CreateMessage {
   return {
-    id: uuidv4(),
+    id: randomUUID(),
     sessionId,
     ctx: {},
     llmName: 'gpt-4o-mini',

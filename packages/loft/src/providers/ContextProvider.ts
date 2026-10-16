@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   Context,
   ContextInterface,
@@ -10,7 +12,6 @@ import {
   Type
 } from '@moc-global/loft-definitions';
 import { Container, inject, injectable } from 'inversify';
-import { v4 as uuidv4 } from 'uuid';
 
 import { ChatHistory, Session } from '../entities';
 
@@ -68,7 +69,7 @@ export class ContextProvider implements ContextProviderInterface {
     const tracerStrategy = this.container.get(DI_TYPES.TracerStrategy);
 
     const tracer = (tracerStrategy as any).createTracer({
-      traceId: uuidv4(),
+      traceId: randomUUID(),
       name: `loft-generate-${sessionId}`,
       sessionId: sessionId,
       // metadata: {

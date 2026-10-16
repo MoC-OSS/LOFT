@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 
+import { randomUUID } from 'node:crypto';
+
 import { Type } from '@moc-global/loft-definitions';
-import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { hasKeys } from './config';
@@ -15,7 +16,7 @@ const createTestMessage = (
   sessionId: string,
   options: Partial<Type.Entity.Message> = {}
 ): Type.Entity.Message => ({
-  id: uuidv4(),
+  id: randomUUID(),
   sequenceId: '1',
   sessionId,
   ctx: {},

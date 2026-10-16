@@ -1,8 +1,9 @@
 import 'reflect-metadata';
 
+import { randomUUID } from 'node:crypto';
+
 import { FsRepositoryConstructor, LangfuseTracer, LoftConstructor, ManifestManagerConstructor } from '@moc-global/loft';
 import { Interface, Type } from '@moc-global/loft-definitions';
-import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { env, hasKeys, requireKey } from './config';
@@ -15,7 +16,7 @@ const TEST_TIMEOUT = 30000;
 // Helper function to create test messages
 function createTestMessage(text: string, sessionId: string): Type.Entity.CreateMessage {
   return {
-    id: uuidv4(),
+    id: randomUUID(),
     sessionId,
     ctx: {},
     llmName: 'gpt-4o-mini',
