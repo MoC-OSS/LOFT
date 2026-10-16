@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
-    "@changesets/cli": "^2.29.4",
+    "@changesets/cli": "^3.0.3",
     "@manypkg/cli": "^0.25.1",
     "@moc-global/loft-base-tsconfig": "workspace:*",
     "@moc-global/loft-definitions": "workspace:*",
