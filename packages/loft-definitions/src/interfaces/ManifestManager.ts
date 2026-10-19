@@ -17,4 +17,9 @@ export interface ManifestManager {
   getPrompt(promptName: string, llmName: string): Promise<Prompt>;
   useLlmManifestSchema(llmName: string, schema: ZodSchema<any>): Promise<void>;
   updateCache(): Promise<void>;
+  /**
+   * Loads and validates the manifests now, and rejects when they cannot be loaded or are invalid. Optional, so a
+   * manager written before it still fits; `LoftConstructor.validateManifest()` then falls back to `updateCache()`.
+   */
+  validate?(): Promise<void>;
 }

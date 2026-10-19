@@ -215,6 +215,17 @@ export class ManifestManager implements Interface.ManifestManager {
       });
   }
 
+  /**
+   * Loads and validates the manifests now and rejects when that fails. Unlike updateCache(), which keeps the stale
+   * cache on a failed load, it reports the error to the caller.
+   */
+  async validate(): Promise<void> {
+    if (this.currentUpdatePromise) {
+      await this.currentUpdatePromise;
+    }
+    await this._doUpdateCache();
+  }
+
   async updateCache(): Promise<void> {
     // If there's already an update in progress, wait for it
     if (this.currentUpdatePromise) {
