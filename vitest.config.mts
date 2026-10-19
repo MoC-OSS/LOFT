@@ -20,7 +20,10 @@ export default defineConfig({
         'packages/loft-agents/src/**': { lines: 98, branches: 88, functions: 95, statements: 97 },
         'packages/loft-definitions/src/**': { lines: 77, branches: 79, functions: 64, statements: 77 },
         'packages/loft-openai-strategy/src/**': { lines: 43, branches: 32, functions: 47, statements: 44 },
-        'packages/loft-session-pg-repository/src/**': { lines: 18, branches: 0, functions: 20, statements: 18 }
+        'packages/loft-session-pg-repository/src/**': { lines: 85, branches: 57, functions: 87, statements: 86 },
+        // Measured on 2026-10-20, with the PGlite contract tests
+        'packages/loft-chat-history-pg-repository/src/**': { lines: 78, branches: 33, functions: 80, statements: 79 },
+        'packages/loft-kysely-pg-migrator/src/**': { lines: 43, branches: 48, functions: 50, statements: 43 }
       }
     }
   }

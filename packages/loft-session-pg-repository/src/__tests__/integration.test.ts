@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { testSessionRepository } from '@moc-global/loft-definitions/src/__tests__/SessionRepository/SessionRepositoryTest';
+import { testSessionRepository } from '@moc-global/loft-test-suite';
 import { afterAll, beforeAll, describe } from 'vitest';
 
 import { config } from './config';

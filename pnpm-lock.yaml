@@ -800,6 +800,9 @@ importers:
       '@moc-global/loft-pglite':
         specifier: workspace:*
         version: link:../loft-pglite
+      '@moc-global/loft-test-suite':
+        specifier: workspace:*
+        version: link:../loft-test-suite
       inversify:
         specifier: ^6.2.2
         version: 6.2.2(reflect-metadata@0.2.2)
@@ -1040,6 +1043,9 @@ importers:
       '@moc-global/loft-pglite':
         specifier: workspace:*
         version: link:../loft-pglite
+      '@moc-global/loft-test-suite':
+        specifier: workspace:*
+        version: link:../loft-test-suite
       inversify:
         specifier: ^6.2.2
         version: 6.2.2(reflect-metadata@0.2.2)
