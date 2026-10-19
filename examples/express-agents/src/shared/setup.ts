@@ -50,7 +50,6 @@ function createAnthropicStrategy(modelName: string) {
 
 export interface LoftSetup {
   loft: LOFT<Chat.ChatInterface>;
-  loftConstructor: { gracefulShutdown: () => Promise<void> };
   chat: Chat.ChatInterface;
 }
 
@@ -101,5 +100,5 @@ export async function initializeLoft(pool: Pool): Promise<LoftSetup> {
   const loft = loftConstructor.getInstance() as LOFT<Chat.ChatInterface>;
   const chat = loft.chat as Chat.ChatInterface;
 
-  return { loft, loftConstructor, chat };
+  return { loft, chat };
 }

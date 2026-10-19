@@ -85,12 +85,11 @@ Generations include:
 
 ### Graceful Shutdown
 
-Flush the rest of the buffered data on shutdown:
+`loft.shutdown()` shuts the tracer down as its last step, after the active operations finished, so the rest of the buffered data is sent:
 
 ```typescript
 process.on('SIGTERM', async () => {
-  await loft.shutdown();                      // Wait for active operations, stop the LLM rate-limiter timers
-  await loftConstructor.gracefulShutdown();   // Flush tracer data
+  await loft.shutdown(); // Wait for active operations, stop the LLM rate-limiter timers, shut the tracer down
   process.exit(0);
 });
 ```

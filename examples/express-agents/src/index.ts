@@ -15,7 +15,7 @@ async function main() {
   const db = await initializeDatabase();
   console.log('Connected to PostgreSQL');
 
-  const { loft, loftConstructor, chat } = await initializeLoft(db.pool);
+  const { loft, chat } = await initializeLoft(db.pool);
   console.log(`LOFT initialized with Anthropic ${MODEL_NAME}`);
 
   const orchestrator = createMainOrchestrator(loft);
@@ -41,7 +41,6 @@ async function main() {
     console.log('\nShutting down...');
     try {
       await loft.shutdown();
-      await loftConstructor.gracefulShutdown();
       await db.close();
       console.log('Shutdown complete');
     } catch (error) {

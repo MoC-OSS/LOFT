@@ -184,7 +184,7 @@ examples/nestjs/
 4. **Session creation:** `POST /chat/sessions` → `LoftService.createSession()` → `loft.chat.createSession()`
 5. **Chat flow:** `POST /chat` → `LoftService.sendMessage()` → stores user message via `addMessages()` → `generate({ sessionId })` (auto-loads history) → `save()` persists response
 6. **History:** `GET /chat/sessions/:id/history` → `LoftService.getChatHistory()` → `loft.chat.getChatHistory()`
-7. **Shutdown:** SIGINT/SIGTERM → NestJS lifecycle → `LoftService.onModuleDestroy()` → three-step shutdown: `loft.shutdown()` → `loftConstructor.gracefulShutdown()` → `db.close()`
+7. **Shutdown:** SIGINT/SIGTERM → NestJS lifecycle → `LoftService.onModuleDestroy()` → two-step shutdown: `loft.shutdown()` (which also shuts the tracer down) → `db.close()`
 
 ## NestJS + LOFT DI — how they coexist
 

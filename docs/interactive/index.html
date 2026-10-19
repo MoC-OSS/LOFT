@@ -2316,10 +2316,9 @@ new LoftConstructor(
           <details class="bx-op">
             <summary><span class="block" aria-hidden="true"></span><span>Graceful shutdown<small>Let running requests finish, then stop</small></span></summary>
             <div class="bx-op__body">
-              <p><code>loft.shutdown()</code> waits for the requests that are already running and stops the rate-limiter timers. From then on, new calls on <code>loft.chat</code> throw <code>ShutdownError</code>. <code>loftConstructor.gracefulShutdown()</code> flushes what the tracer still holds.</p>
+              <p><code>loft.shutdown()</code> waits for the requests that are already running, stops the rate-limiter timers and shuts the tracer down, so it sends what it still holds. From then on, new calls on <code>loft.chat</code> throw <code>ShutdownError</code>. <code>ChatConfig.shutdownTimeout</code> limits the wait.</p>
               <div class="code"><pre><code data-hl="ts">process.on('SIGTERM', async () => {
   await loft.shutdown();
-  await loftConstructor.gracefulShutdown();
   process.exit(0);
 });</code></pre></div>
             </div>
@@ -3436,7 +3435,7 @@ main();</code></pre>
       notes: [
         'You build LOFT before <code>app.listen</code> and keep the instance in a variable. The route is an ordinary Express handler.',
         'This route creates a session per request and deletes it afterwards, so nothing is remembered between calls.',
-        'On SIGTERM the example calls <code>loft.shutdown()</code>, then <code>loftConstructor.gracefulShutdown()</code>.'
+        'On SIGTERM the example calls <code>loft.shutdown()</code>, then closes the database.'
       ],
       code: [
         '// loft is built once at startup (see Chapter 8)',
@@ -5413,7 +5412,7 @@ main();</code></pre>
     TracerStrategy: {
       c: ROOT, scope: 'Constant', yours: true,
       what: 'The tracer factory. Each <code>generate()</code> creates a tracer from it and flushes it at the end. The default, <code>NoOpTracerStrategy</code>, records nothing.',
-      how: 'Pass a <code>TracerFactory</code> as the fourth <code>LoftConstructor</code> argument: the built-in <code>LangfuseTracer</code> or your own. Call <code>loftConstructor.gracefulShutdown()</code> on exit to shut it down.',
+      how: 'Pass a <code>TracerFactory</code> as the fourth <code>LoftConstructor</code> argument: the built-in <code>LangfuseTracer</code> or your own. <code>loft.shutdown()</code> shuts it down on exit.',
       file: 'loft.ts',
       code: 'new LoftConstructor(\n  { logLevel: Interface.LogLevel.WARN },\n  manifestManagerConstructor,\n  chatConstructor,\n  new LangfuseTracer({ secretKey, publicKey }) // 4th\n);'
     },

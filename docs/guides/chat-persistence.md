@@ -336,11 +336,9 @@ const pool = new Pool({
 
 ```typescript
 process.on('SIGTERM', async () => {
-  // 1. Stop accepting new operations, wait for active ones, then stop the LLM rate-limiter timers
+  // 1. Stop accepting new operations, wait for active ones, stop the LLM rate-limiter timers, shut the tracer down
   await loft.shutdown();
-  // 2. Flush tracer data (after operations finish, so spans are captured)
-  await loftConstructor.gracefulShutdown();
-  // 3. Close database connections
+  // 2. Close database connections
   await pool.end();
 });
 ```

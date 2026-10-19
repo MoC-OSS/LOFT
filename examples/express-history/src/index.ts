@@ -14,7 +14,7 @@ async function main() {
   const db: Database = await initializeDatabase();
   console.log('PGLite database initialized (in-process, no external DB needed)');
 
-  const { loft, loftConstructor } = await initializeLoft(db.pool);
+  const { loft } = await initializeLoft(db.pool);
   const chat = loft.chat as Chat.ChatInterface;
   console.log('LOFT initialized with OpenAI gpt-4o-mini strategy');
 
@@ -97,7 +97,7 @@ async function main() {
     }
   });
 
-  // Three-step graceful shutdown
+  // Two-step graceful shutdown
   let isShuttingDown = false;
   const shutdown = async () => {
     if (isShuttingDown) return;
@@ -105,7 +105,6 @@ async function main() {
     console.log('\nShutting down...');
     try {
       await loft.shutdown();
-      await loftConstructor.gracefulShutdown();
       await db.close();
       console.log('Shutdown complete');
     } catch (error) {

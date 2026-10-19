@@ -14,7 +14,7 @@ async function main() {
   const db: Database = await initializeDatabase();
   console.log('Connected to Docker PostgreSQL');
 
-  const { loft, loftConstructor } = await initializeLoft(db.pool);
+  const { loft } = await initializeLoft(db.pool);
   const chat = loft.chat as Chat.ChatInterface;
   console.log('LOFT initialized with Anthropic claude-sonnet-5-5 strategy');
 
@@ -124,7 +124,7 @@ async function main() {
     }
   });
 
-  // Three-step graceful shutdown with re-entrancy guard
+  // Two-step graceful shutdown with re-entrancy guard
   let isShuttingDown = false;
   const shutdown = async () => {
     if (isShuttingDown) return;
@@ -132,7 +132,6 @@ async function main() {
     console.log('\nShutting down...');
     try {
       await loft.shutdown();
-      await loftConstructor.gracefulShutdown();
       await db.close();
       console.log('Shutdown complete');
     } catch (error) {

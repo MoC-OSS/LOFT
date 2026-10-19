@@ -61,6 +61,7 @@ At every level, the default `PinoLoggerStrategy` replaces credentials with `[Red
 ```typescript
 // packages/loft/src/types/config.ts
 interface ChatConfig {
+  shutdownTimeout?: number;          // Max wait of shutdown() for active operations, in ms. Default: no limit
   mcp?: {
     toolCacheTtl?: number;           // MCP tool list cache TTL in ms. Default: 60000 (1 min)
     maxCallsPerGenerate?: number;    // Max MCP tool execution loop iterations. Default: 10
@@ -267,7 +268,7 @@ class LoftConstructor<
   registerPromptComputer(promptName: string, llmName: string, handler: PromptComputer): void
   validateManifest(): Promise<void>
   getInstance(): TLoft
-  gracefulShutdown(): Promise<void>
+  gracefulShutdown(): Promise<void> // @deprecated: loft.shutdown() shuts the tracer down
 }
 ```
 

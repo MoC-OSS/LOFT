@@ -7,6 +7,11 @@ interface RetryConfig {
 }
 
 export interface ChatConfig {
+  /**
+   * How long `shutdown()` waits for the requests in flight, in milliseconds. It then logs a warning and returns,
+   * so the process can exit. No limit when unset.
+   */
+  shutdownTimeout?: number;
   mcp?: {
     toolCacheTtl?: number;
     maxCallsPerGenerate?: number;
