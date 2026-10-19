@@ -73,7 +73,7 @@ importers:
         version: 2.32.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)
       eslint-plugin-prettier:
         specifier: ^5.5.6
-        version: 5.5.6(@types/eslint@9.6.1)(eslint@8.57.1)(prettier@3.9.9)
+        version: 5.5.6(@types/eslint@9.6.1)(eslint@8.57.1)(prettier@3.9.10)
       eslint-plugin-simple-import-sort:
         specifier: ^12.0.0
         version: 12.1.1(eslint@8.57.1)
@@ -88,7 +88,7 @@ importers:
         version: 16.2.7
       prettier:
         specifier: ^3.9.9
-        version: 3.9.9
+        version: 3.9.10
       publint:
         specifier: ^0.3.25
         version: 0.3.25
@@ -687,7 +687,7 @@ importers:
         version: 2.32.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)
       eslint-plugin-prettier:
         specifier: ^5.5.6
-        version: 5.5.6(@types/eslint@9.6.1)(eslint@8.57.1)(prettier@3.9.9)
+        version: 5.5.6(@types/eslint@9.6.1)(eslint@8.57.1)(prettier@3.9.10)
       eslint-plugin-simple-import-sort:
         specifier: ^12.0.0
         version: 12.1.1(eslint@8.57.1)
@@ -696,7 +696,7 @@ importers:
         version: 4.4.1(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)
       prettier:
         specifier: ^3.9.9
-        version: 3.9.9
+        version: 3.9.10
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
@@ -1001,11 +1001,11 @@ importers:
     dependencies:
       sqs-consumer:
         specifier: ^15.0.4
-        version: 15.0.4(@aws-sdk/client-sqs@3.1147.0)
+        version: 15.0.4(@aws-sdk/client-sqs@3.1149.0)
     devDependencies:
       '@aws-sdk/client-sqs':
         specifier: ^3.1147.0
-        version: 3.1147.0
+        version: 3.1149.0
       '@moc-global/loft-definitions':
         specifier: workspace:*
         version: link:../loft-definitions
@@ -1153,8 +1153,8 @@ packages:
     resolution: {integrity: sha512-oI1+ZaM6pSOwZazu4nAb7rL8ug7LSjg31tDoJqRB9MooRqqWCf/qvkIZqne1mRA3xK3slg6K0RNWXaJYHbWLvg==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-sqs@3.1147.0':
-    resolution: {integrity: sha512-EfxC1vQy5edjwLozqGbOYlDm/ofXRL6uW0X1qZq3jeaTkgoSYaV2Fkl68fIjNmvcj2t5habTg9ZYdgvGMD8TEw==}
+  '@aws-sdk/client-sqs@3.1149.0':
+    resolution: {integrity: sha512-9+EqyZeDAy+hqmBU8Zk76wXOBrTblg1jCTbjc12rWvGnkVcWymrfbBi411eKapcENuXIKN+H25DQ2aKh5Xq7Zw==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.978.3':
@@ -4901,11 +4901,6 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  prettier@3.9.9:
-    resolution: {integrity: sha512-Z/CJHIkdujO/OtN7nXUii0Rf3VT5SRuhjBA82Xvu2XhBUgX3nhP67T0LHceBdQLex7OOFGTox+Q5Yg8Jk2Qivg==}
-    engines: {node: '>=14'}
-    hasBin: true
-
   process-warning@5.1.1:
     resolution: {integrity: sha512-oCkNVj4OKnKEcocVBcDfiIugN1/cE6rgfT3nCtzeqZPA8+rIxMaQ0xXzIkGP8Gj2qUaP1UR7uhJ1VD8lUCpzCg==}
 
@@ -5977,7 +5972,7 @@ snapshots:
       '@smithy/types': 4.19.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-sqs@3.1147.0':
+  '@aws-sdk/client-sqs@3.1149.0':
     dependencies:
       '@aws-sdk/core': 3.978.3
       '@aws-sdk/credential-provider-node': 3.972.86
@@ -7569,6 +7564,14 @@ snapshots:
     optionalDependencies:
       vite: 7.3.6(@types/node@20.19.27)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2)
 
+  '@vitest/mocker@3.2.7(vite@7.3.6(@types/node@25.9.9)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2))':
+    dependencies:
+      '@vitest/spy': 3.2.7
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 7.3.6(@types/node@25.9.9)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2)
+
   '@vitest/pretty-format@3.2.7':
     dependencies:
       tinyrainbow: 2.0.0
@@ -8390,10 +8393,10 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-prettier@5.5.6(@types/eslint@9.6.1)(eslint@8.57.1)(prettier@3.9.9):
+  eslint-plugin-prettier@5.5.6(@types/eslint@9.6.1)(eslint@8.57.1)(prettier@3.9.10):
     dependencies:
       eslint: 8.57.1
-      prettier: 3.9.9
+      prettier: 3.9.10
       prettier-linter-helpers: 1.0.1
       synckit: 0.11.13
     optionalDependencies:
@@ -10012,10 +10015,7 @@ snapshots:
 
   prettier@2.8.8: {}
 
-  prettier@3.9.10:
-    optional: true
-
-  prettier@3.9.9: {}
+  prettier@3.9.10: {}
 
   process-warning@5.1.1: {}
 
@@ -10442,9 +10442,9 @@ snapshots:
 
   sprintf-js@1.0.3: {}
 
-  sqs-consumer@15.0.4(@aws-sdk/client-sqs@3.1147.0):
+  sqs-consumer@15.0.4(@aws-sdk/client-sqs@3.1149.0):
     dependencies:
-      '@aws-sdk/client-sqs': 3.1147.0
+      '@aws-sdk/client-sqs': 3.1149.0
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
@@ -10986,7 +10986,7 @@ snapshots:
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
-      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@20.19.27)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2))
+      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@25.9.9)(terser@5.46.1)(tsx@4.23.15)(yaml@2.8.2))
       '@vitest/pretty-format': 3.2.7
       '@vitest/runner': 3.2.7
       '@vitest/snapshot': 3.2.7
