@@ -1,6 +1,6 @@
 import { LOFT } from '@moc-global/loft';
 import { Orchestrator, SharedContext } from '@moc-global/loft-agents';
-import { Agent, Chat, Type } from '@moc-global/loft-definitions';
+import { Agent, Chat, SessionNotFoundError, Type } from '@moc-global/loft-definitions';
 import crypto from 'crypto';
 import { Express } from 'express';
 
@@ -182,6 +182,10 @@ export const registerRoutes = (
 
       res.json({ sessionId, response: responseText, focusStatus });
     } catch (error) {
+      if (error instanceof SessionNotFoundError) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
       console.error('Chat error:', error);
       res.status(500).json({ error: 'Internal server error' }); // details stay in the server log
     }

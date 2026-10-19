@@ -1,4 +1,15 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, Logger, Param, Post } from '@nestjs/common';
+import { SessionNotFoundError } from '@moc-global/loft-definitions';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Logger,
+  NotFoundException,
+  Param,
+  Post
+} from '@nestjs/common';
 
 import { LoftService } from './loft.service';
 
@@ -28,7 +39,12 @@ export class ChatController {
       throw new BadRequestException('sessionId and message are required');
     }
 
-    return this.loftService.sendMessage(sessionId, message);
+    try {
+      return await this.loftService.sendMessage(sessionId, message);
+    } catch (error) {
+      if (error instanceof SessionNotFoundError) throw new NotFoundException('Session not found');
+      throw error;
+    }
   }
 
   @Get('sessions/:id/history')

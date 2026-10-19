@@ -1,4 +1,4 @@
-import { Chat } from '@moc-global/loft-definitions';
+import { Chat, SessionNotFoundError } from '@moc-global/loft-definitions';
 import { Express } from 'express';
 
 import { sendMessage } from './loft/chat';
@@ -41,6 +41,10 @@ export const registerRoutes = (app: Express, chat: Chat.ChatInterface) => {
       const result = await sendMessage(chat, sessionId, message);
       res.json(result);
     } catch (error) {
+      if (error instanceof SessionNotFoundError) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
       console.error('Chat error:', error);
       res.status(500).json({ error: 'Internal server error' }); // details stay in the server log
     }

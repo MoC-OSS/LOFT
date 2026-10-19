@@ -11,12 +11,13 @@ Error
   └── ChatError
         ├── GenerateError                — LLM generation failures
         ├── ShutdownError                — Operation rejected during shutdown
+        ├── SessionNotFoundError         — The session does not exist
         ├── AppendMessageError           — @experimental, queued mode only
         ├── GetPendingMessagesError       — @experimental, queued mode only
         └── ProcessSessionActionsError   — @experimental, queued mode only
 ```
 
-All error classes are exported from `@moc-global/loft-definitions`. With `LoftConstructor`, `generate()` throws `GenerateError`, `addMessages()` rethrows the original error, and both throw `ShutdownError` during shutdown. The three experimental classes belong to execution modes that are not available yet.
+All error classes are exported from `@moc-global/loft-definitions`. With `LoftConstructor`, `generate()` throws `GenerateError`, `addMessages()` rethrows the original error, both throw `ShutdownError` during shutdown, and every method that loads a session throws `SessionNotFoundError` when it does not exist. The three experimental classes belong to execution modes that are not available yet.
 
 Every `ChatError` has `sessionId`, `correlatorIds`, `messageIds`, `status` (a `Chat.Status`), `cause` (the original error, whose stack is appended to the error's stack after `Caused by:`) and an optional `details` object. `shouldRetry()` returns `false` for the errors LOFT throws today, so decide on retries yourself (see [Retry with backoff](#retry-with-backoff)).
 
@@ -112,11 +113,13 @@ After `shutdown()` is called:
 
 ## Missing Sessions
 
-LOFT does not check session ids for you. `generate()`, `addMessages()`, `getSessionById()`, `updateSessionSettings()` and `deleteSession()` reject when the session does not exist, with a plain `Error` whose message is `Session with id <id> not found`, and LOFT logs it at ERROR level. An id that is not a UUID fails in the database instead. Without handling, your API answers these requests with 500. `getChatHistory()` does not check the session: it returns an empty list for an unknown id, and the kept messages of a deleted one.
+`generate()`, `addMessages()`, `getSessionById()`, `getSessionByExternalKey()`, `updateSessionSettings()` and `deleteSession()` reject with a `SessionNotFoundError` when the session does not exist. `generate()` throws it as it is, not wrapped in a `GenerateError`. The error has the `sessionId` (or the `externalKey` it was looked up by), and its message is `Session with id <id> not found`. An id that is not a UUID fails in the database instead. `getChatHistory()` does not check the session: it returns an empty list for an unknown id, and the kept messages of a deleted one.
 
-Handle them at your API boundary: validate the id's format, and turn the error into the response your API defines, for example 404:
+Handle it at your API boundary: validate the id's format, and turn the error into the response your API defines, for example 404:
 
 ```typescript
+import { SessionNotFoundError } from '@moc-global/loft-definitions';
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 app.get('/api/sessions/:id', async (req, res) => {
@@ -127,11 +130,16 @@ app.get('/api/sessions/:id', async (req, res) => {
   try {
     res.json(await loft.chat.getSessionById(req.params.id));
   } catch (error) {
-    const notFound = error instanceof Error && error.message.endsWith('not found');
-    res.status(notFound ? 404 : 500).json({ error: notFound ? 'Session not found' : 'Internal server error' });
+    if (error instanceof SessionNotFoundError) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 ```
+
+A custom `Repository.Session` should throw `SessionNotFoundError` from `getById()`, `getByExternalKey()` and `deleteById()` as well, so this works with any storage.
 
 ## Error Handling Patterns
 

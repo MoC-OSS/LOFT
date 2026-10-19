@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Repository, Type } from '../..';
+import { Repository, SessionNotFoundError, Type } from '../..';
 
 /**
  * Generates a test session data object for testing
@@ -169,7 +169,7 @@ export function testSessionRepository(repository: Repository.Session) {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // Act & Assert
-        await expect(repository.getById(nonExistentId)).rejects.toThrow();
+        await expect(repository.getById(nonExistentId)).rejects.toBeInstanceOf(SessionNotFoundError);
       });
     });
 
@@ -200,7 +200,7 @@ export function testSessionRepository(repository: Repository.Session) {
         };
 
         // Act & Assert
-        await expect(repository.getByExternalKey(nonExistentKey)).rejects.toThrow();
+        await expect(repository.getByExternalKey(nonExistentKey)).rejects.toBeInstanceOf(SessionNotFoundError);
       });
 
       it('should throw an error when trying to get a session with empty external key', async () => {
@@ -272,7 +272,7 @@ export function testSessionRepository(repository: Repository.Session) {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // Act & Assert
-        await expect(repository.deleteById(nonExistentId)).rejects.toThrow();
+        await expect(repository.deleteById(nonExistentId)).rejects.toBeInstanceOf(SessionNotFoundError);
       });
     });
 

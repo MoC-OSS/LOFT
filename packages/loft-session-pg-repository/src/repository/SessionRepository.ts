@@ -1,4 +1,4 @@
-import { Agent, Logger, Repository, Type } from '@moc-global/loft-definitions';
+import { Agent, Logger, Repository, SessionNotFoundError, Type } from '@moc-global/loft-definitions';
 import { inject, injectable } from 'inversify';
 import { Kysely, Updateable } from 'kysely';
 import { stringify as safeStableStringify } from 'safe-stable-stringify';
@@ -72,7 +72,7 @@ export class SessionRepository extends SessionQueries implements Repository.Sess
       const session = await this.getByIdQuery(sessionId).executeTakeFirst();
 
       if (!session) {
-        throw new Error(`Session with id ${sessionId} not found`);
+        throw new SessionNotFoundError({ sessionId });
       }
 
       return {
@@ -101,7 +101,7 @@ export class SessionRepository extends SessionQueries implements Repository.Sess
         .executeTakeFirst();
 
       if (!session) {
-        throw new Error(`Session with externalKey ${externalKey} not found`);
+        throw new SessionNotFoundError({ externalKey });
       }
 
       return {
@@ -141,7 +141,7 @@ export class SessionRepository extends SessionQueries implements Repository.Sess
       const result = await this.deleteByIdQuery(sessionId).executeTakeFirst();
 
       if (!result || result.numDeletedRows === BigInt(0)) {
-        throw new Error(`Session with id ${sessionId} not found`);
+        throw new SessionNotFoundError({ sessionId });
       }
     } catch (error) {
       this.log.error('Error deleting session', error);
