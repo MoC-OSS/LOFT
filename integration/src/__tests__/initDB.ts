@@ -38,12 +38,7 @@ async function initPGLiteDB(): Promise<TestDatabaseInstance> {
 
   await PGLiteUtils.createSchemas(pool, [sessionSchema, chatHistorySchema]);
   await PGLiteUtils.createExtensions(pool);
-  await migrate(
-    pool,
-    `postgresql://postgres@localhost:${pgliteInstance.port}/postgres`,
-    sessionSchema,
-    chatHistorySchema
-  );
+  await migrate(pool, pgliteInstance.connectionString, sessionSchema, chatHistorySchema);
 
   return {
     pool,
