@@ -1,14 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { errorStatus, isRetryableError, retryAfterMs, retryDelayMs } from '../..';
 
 const withStatus = (status: number) => Object.assign(new Error(`status ${status}`), { status });
 
 describe('retry policy', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it.each([408, 429, 500, 502, 503, 529])('retries a %i response', (status) => {
     expect(isRetryableError(withStatus(status))).toBe(true);
   });
@@ -50,10 +46,19 @@ describe('retry policy', () => {
   });
 
   it('doubles the delay for each attempt, between half and all of it', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0);
-    expect([1, 2, 3].map((attempt) => retryDelayMs(new Error('x'), attempt, 1000))).toEqual([500, 1000, 2000]);
-    vi.spyOn(Math, 'random').mockReturnValue(1);
-    expect([1, 2, 3].map((attempt) => retryDelayMs(new Error('x'), attempt, 1000))).toEqual([1000, 2000, 4000]);
-    expect(retryDelayMs(new Error('x'), 20, 1000)).toBe(60_000);
+    for (const [attempt, low, high] of [
+      [1, 500, 1000],
+      [2, 1000, 2000],
+      [3, 2000, 4000]
+    ]) {
+      for (let sample = 0; sample < 50; sample++) {
+        const delay = retryDelayMs(new Error('x'), attempt, 1000);
+        expect(delay).toBeGreaterThanOrEqual(low);
+        expect(delay).toBeLessThanOrEqual(high);
+      }
+    }
+    expect(retryDelayMs(new Error('x'), 20, 1000)).toBeGreaterThanOrEqual(30_000);
+    expect(retryDelayMs(new Error('x'), 20, 1000)).toBeLessThanOrEqual(60_000);
+    expect(retryDelayMs(new Error('x'), 1, 0)).toBe(0);
   });
 });

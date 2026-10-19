@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto';
+
 /**
  * The retry policy of the call managers: retry only what can succeed on a new attempt (408, 429, 5xx and network
  * failures), with exponential backoff and jitter, and wait as long as the provider's `Retry-After` asks.
@@ -73,31 +75,43 @@ export function isRetryableError(error: unknown): boolean {
   return isNetworkError(error);
 }
 
+function headerText(value: unknown): string | undefined {
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
+}
+
 function readHeader(headers: unknown, name: string): string | undefined {
   if (!headers || typeof headers !== 'object') return undefined;
   if (typeof (headers as { get?: unknown }).get === 'function') {
-    const value = (headers as { get(name: string): unknown }).get(name);
-    if (value !== null && value !== undefined) return String(value);
+    const value = headerText((headers as { get(name: string): unknown }).get(name));
+    if (value !== undefined) return value;
   }
-  const value = (headers as Record<string, unknown>)[name];
-  return value === null || value === undefined ? undefined : String(value);
+  return headerText((headers as Record<string, unknown>)[name]);
+}
+
+function nonNegativeNumber(text: string | undefined): number | undefined {
+  if (text === undefined) return undefined;
+  const value = Number(text);
+  return Number.isFinite(value) && value >= 0 ? value : undefined;
+}
+
+// The wait one set of response headers asks for, in ms
+function requestedWaitMs(headers: unknown, now: number): number | undefined {
+  const milliseconds = nonNegativeNumber(readHeader(headers, 'retry-after-ms'));
+  if (milliseconds !== undefined) return milliseconds;
+  const retryAfter = readHeader(headers, 'retry-after');
+  if (retryAfter === undefined) return undefined;
+  const seconds = nonNegativeNumber(retryAfter);
+  if (seconds !== undefined) return seconds * 1000;
+  const date = Date.parse(retryAfter);
+  return Number.isNaN(date) ? undefined : Math.max(0, date - now);
 }
 
 /** How long the provider asks to wait (`retry-after-ms`, or `retry-after` in seconds or as a date), in ms */
 export function retryAfterMs(error: unknown, now = Date.now()): number | undefined {
   for (const item of errorChain(error)) {
     for (const headers of [item.headers, item.response?.headers]) {
-      const retryAfterMilliseconds = readHeader(headers, 'retry-after-ms');
-      if (retryAfterMilliseconds !== undefined) {
-        const milliseconds = Number(retryAfterMilliseconds);
-        if (Number.isFinite(milliseconds) && milliseconds >= 0) return milliseconds;
-      }
-      const retryAfter = readHeader(headers, 'retry-after');
-      if (retryAfter === undefined) continue;
-      const seconds = Number(retryAfter);
-      if (Number.isFinite(seconds) && seconds >= 0) return seconds * 1000;
-      const date = Date.parse(retryAfter);
-      if (!Number.isNaN(date)) return Math.max(0, date - now);
+      const wait = requestedWaitMs(headers, now);
+      if (wait !== undefined) return wait;
     }
   }
   return undefined;
@@ -115,6 +129,7 @@ export function retryDelayMs(
 ): number {
   const requested = retryAfterMs(error);
   if (requested !== undefined) return Math.min(requested, maxDelayMs);
-  const backoff = Math.min(baseDelayMs * 2 ** (attempt - 1), maxDelayMs);
-  return backoff / 2 + Math.random() * (backoff / 2);
+  const backoff = Math.floor(Math.min(baseDelayMs * 2 ** (attempt - 1), maxDelayMs));
+  const half = Math.floor(backoff / 2);
+  return half + randomInt(0, backoff - half + 1);
 }
