@@ -52,6 +52,21 @@ describe('MiddlewareManager', () => {
     expect(finalPayload.message).toBe(message);
   });
 
+  test("leaves the caller's payload unchanged when a middleware changes its input", async () => {
+    middlewareManager.use('mutating', async (_ctx, payload, chain) => {
+      payload.message = 'changed';
+      payload.nested.items.push('added');
+      chain.next();
+      return payload;
+    });
+    const initialPayload = { message: 'original', nested: { items: ['first'] } };
+
+    const { payload: finalPayload } = await middlewareManager.executeChain({}, initialPayload, ['correlatorId']);
+
+    expect(initialPayload).toEqual({ message: 'original', nested: { items: ['first'] } });
+    expect(finalPayload).toEqual({ message: 'changed', nested: { items: ['first', 'added'] } });
+  });
+
   test('should add middleware successfully', () => {
     const middleware: Middleware<Record<string, any>, Record<string, any>> = async (ctx, payload, chain) => {
       chain.next();
