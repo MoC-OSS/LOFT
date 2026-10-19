@@ -25,8 +25,8 @@ export class FsRepository implements Repository.ObjectStorage {
       this.log.trace(`Returning data from file ${filePath}`);
       return data;
     } catch (error) {
-      this.log.error(`Error reading/parsing JSON: `, error);
-      throw `Error reading/parsing JSON: ${error}`;
+      // The caller logs it; ManifestManager does
+      throw new Error(`Error reading/parsing JSON from ${filePath}`, { cause: error });
     }
   }
 
@@ -41,8 +41,7 @@ export class FsRepository implements Repository.ObjectStorage {
       const stringifiedData = JSON.stringify(data, null, 2);
       await writeFile(pathToManifest, stringifiedData, 'utf8');
     } catch (error) {
-      this.log.error(`Error writing JSON: `, error);
-      throw `Error writing JSON: ${error}`;
+      throw new Error(`Error writing JSON to ${filePath}`, { cause: error });
     }
   }
 
@@ -53,8 +52,7 @@ export class FsRepository implements Repository.ObjectStorage {
       const pathToManifest = path.join(process.cwd(), filePath);
       await writeFile(pathToManifest, '');
     } catch (error) {
-      this.log.error(`Error deleting JSON: `, error);
-      throw `Error deleting JSON: ${error}`;
+      throw new Error(`Error deleting JSON at ${filePath}`, { cause: error });
     }
   }
 

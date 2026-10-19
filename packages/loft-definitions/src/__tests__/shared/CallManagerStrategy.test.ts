@@ -3,7 +3,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HttpCallManagerStrategy, Interface, Logger, NativeCallManagerStrategy, Strategy } from '../..';
 
-vi.mock('axios', () => ({ default: { post: vi.fn(), get: vi.fn() } }));
+// axios is callable (streamCall uses axios(config)) and has post()
+vi.mock('axios', () => ({ default: Object.assign(vi.fn(), { post: vi.fn(), get: vi.fn() }) }));
 
 const REQUEST: Strategy.LLM.LLMRequest<{ prompt: string }> = {
   sessionId: 'session-1',
@@ -53,6 +54,28 @@ describe('HttpCallManagerStrategy', () => {
     await expect(strategy.call(REQUEST)).resolves.toEqual({ llmBody: 'response' });
 
     expect(post).toHaveBeenCalledTimes(3);
+  });
+
+  it('keeps the last failure as the cause once every attempt failed', async () => {
+    const lastFailure = new Error('fail 3');
+    post.mockRejectedValueOnce(new Error('fail 1')).mockRejectedValueOnce(new Error('fail 2'));
+    post.mockRejectedValueOnce(lastFailure);
+
+    await expect(strategy.call(REQUEST)).rejects.toMatchObject({
+      message: "CallManager doesn't work",
+      cause: lastFailure
+    });
+  });
+
+  it('keeps the last failure of streamCall as the cause', async () => {
+    const lastFailure = new Error('stream failed');
+    vi.mocked(axios).mockReset().mockRejectedValue(lastFailure);
+
+    await expect(strategy.streamCall(REQUEST)).rejects.toMatchObject({
+      message: "stream call doesn't work",
+      cause: lastFailure
+    });
+    expect(axios).toHaveBeenCalledTimes(3);
   });
 });
 
