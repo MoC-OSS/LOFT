@@ -21,7 +21,9 @@
       "@moc-global/loft-gemini-strategy": ["../packages/loft-gemini-strategy/src"],
       "@moc-global/loft-llm-call-manager": ["../packages/loft-llm-call-manager/src"],
       "@moc-global/loft-openai-strategy": ["../packages/loft-openai-strategy/src"],
-      "@moc-global/loft-session-pg-repository": ["../packages/loft-session-pg-repository/src"]
+      "@moc-global/loft-session-pg-repository": ["../packages/loft-session-pg-repository/src"],
+      // p-queue publishes its types only through `exports`, which moduleResolution node does not read
+      "p-queue": ["../packages/loft-llm-call-manager/node_modules/p-queue/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*"]
