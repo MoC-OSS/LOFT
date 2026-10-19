@@ -74,6 +74,8 @@ The model and its settings come from the manifest entry with the same LLM name. 
 
 Gemini 3 models sign their thinking and reject a request whose earlier function calls come back without their signatures. The strategy keeps each signature in the `_meta` of the content part (`geminiThoughtSignature`) and sends it back with the chat history, so a saved conversation can go on. Thought summaries are not part of the answer.
 
+Images in a message reach the model. A base64 image goes inline, and an image URL goes as file data, which Gemini fetches: a Cloud Storage URI (`gs://`) or a public URL the server can download. The MIME type comes from the part, or from the data or the URL extension when the part has none (JPEG when it cannot tell).
+
 ## Configuration
 
 | Mode | Fields | Credentials |

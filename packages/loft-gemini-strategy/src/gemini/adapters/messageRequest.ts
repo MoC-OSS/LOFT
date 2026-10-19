@@ -21,14 +21,56 @@ function extractTextFromContentPart(part: Type.Entity.FullContentPart): string |
   }
 }
 
+// Gemini needs the MIME type of every image; the unified part may leave it out
+const BASE64_SIGNATURES: Array<[prefix: string, mimeType: string]> = [
+  ['iVBORw0KGgo', 'image/png'],
+  ['/9j/', 'image/jpeg'],
+  ['R0lGOD', 'image/gif'],
+  ['UklGR', 'image/webp']
+];
+const URL_EXTENSIONS: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  heif: 'image/heif'
+};
+const DEFAULT_IMAGE_MIME_TYPE = 'image/jpeg';
+
+function imageUrlMimeType(url: string): string {
+  const extension = /\.([a-z0-9]+)(?:[?#]|$)/i.exec(url)?.[1]?.toLowerCase();
+  return (extension && URL_EXTENSIONS[extension]) || DEFAULT_IMAGE_MIME_TYPE;
+}
+
 /**
- * Converts unified content parts to Gemini parts (text only)
+ * Converts a unified image part: base64 data goes inline, a URL goes as file data, which Gemini fetches
  */
-function convertContentPartsToGeminiTextParts(parts: Type.Entity.FullContentPart[]): Part[] {
+function convertImageToGeminiPart(image: Type.Entity.ImageContent): Part {
+  if (image.format === Schema.Entity.ImageFormat.BASE64) {
+    const mimeType =
+      image.mimeType ??
+      BASE64_SIGNATURES.find(([prefix]) => image.data.startsWith(prefix))?.[1] ??
+      DEFAULT_IMAGE_MIME_TYPE;
+    return { inlineData: { mimeType, data: image.data } };
+  }
+  return { fileData: { fileUri: image.url, mimeType: imageUrlMimeType(image.url) } };
+}
+
+/**
+ * Converts unified content parts to Gemini parts: text and images
+ */
+function convertContentPartsToGeminiParts(parts: Type.Entity.FullContentPart[]): Part[] {
   const geminiParts: Part[] = [];
 
   for (const part of parts) {
     if (part.type === 'tool_call' || part.type === 'tool_result') {
+      continue;
+    }
+
+    if (part.type === 'image') {
+      geminiParts.push(convertImageToGeminiPart(part));
       continue;
     }
 
@@ -66,8 +108,8 @@ function convertUnifiedMessageToGeminiContent(message: Type.Entity.Message): Con
     role = 'model';
   }
 
-  // Add text parts
-  parts.push(...convertContentPartsToGeminiTextParts(message.content));
+  // Add text and image parts
+  parts.push(...convertContentPartsToGeminiParts(message.content));
 
   // For model (assistant) messages, add function calls
   if (role === 'model') {
