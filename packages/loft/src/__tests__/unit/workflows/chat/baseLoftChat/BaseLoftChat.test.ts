@@ -1629,6 +1629,62 @@ describe('BaseLoftChat', () => {
     });
   });
 
+  describe('session operations', () => {
+    const session = { id: 'test-session-id', externalKey: { crmId: 'external-1' }, ctx: { plan: 'basic' } };
+
+    it('creates a session through the session repository', async () => {
+      mockSessionRepository.create.mockResolvedValue(session);
+
+      await expect(baseLoftChat.createSession({ currentLlmName: 'test-llm' } as any)).resolves.toBe(session);
+      expect(mockSessionRepository.create).toHaveBeenCalledWith({ currentLlmName: 'test-llm' });
+    });
+
+    it('deletes a session by id', async () => {
+      await baseLoftChat.deleteSession('test-session-id');
+
+      expect(mockSessionRepository.deleteById).toHaveBeenCalledWith('test-session-id');
+    });
+
+    it('gets a session by id and by external key', async () => {
+      mockSessionRepository.getById.mockResolvedValue(session);
+      mockSessionRepository.getByExternalKey.mockResolvedValue(session);
+
+      await expect(baseLoftChat.getSessionById('test-session-id')).resolves.toBe(session);
+      await expect(baseLoftChat.getSessionByExternalKey({ crmId: 'external-1' })).resolves.toBe(session);
+      expect(mockSessionRepository.getByExternalKey).toHaveBeenCalledWith({ crmId: 'external-1' });
+    });
+
+    it('merges the new ctx into the session when updating its settings', async () => {
+      mockSessionRepository.getById.mockResolvedValue(session);
+
+      await baseLoftChat.updateSessionSettings('test-session-id', 'correlator-1', { ctx: { locale: 'uk' } });
+
+      expect(mockSessionRepository.updateById).toHaveBeenCalledWith('test-session-id', {
+        ...session,
+        ctx: { plan: 'basic', locale: 'uk' }
+      });
+    });
+
+    it('rejects updating the settings of a missing session', async () => {
+      mockSessionRepository.getById.mockResolvedValue(undefined);
+
+      await expect(baseLoftChat.updateSessionSettings('missing', 'correlator-1', {})).rejects.toThrow(
+        'Session not found: missing'
+      );
+      expect(mockSessionRepository.updateById).not.toHaveBeenCalled();
+    });
+
+    it('returns the chat history of a session', async () => {
+      const messages = [createValidMessage()];
+      mockChatHistoryManager.getMessages.mockResolvedValue(messages);
+
+      const history = await baseLoftChat.getChatHistory('test-session-id');
+
+      expect([...history]).toEqual(messages);
+      expect(mockChatHistoryManager.getMessages).toHaveBeenCalledWith('test-session-id');
+    });
+  });
+
   describe('checkHealth', () => {
     it('should check health of dependent services', async () => {
       // Arrange - setup health check to return true
