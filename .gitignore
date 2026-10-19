@@ -34,11 +34,7 @@ vertex-credentials.json
 *.sublime-workspace
 
 # IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode
 
 data
 .env*
@@ -54,4 +50,3 @@ volume
 .superpowers
 .claude-flow
 **/manifest/errors/
-.vscode
