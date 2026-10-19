@@ -1,12 +1,17 @@
 import { Type } from '..';
 
+export interface GetMessagesOptions {
+  /** Load only the latest messages, at most this many, still in chronological order */
+  limit?: number;
+}
+
 export interface ChatHistory {
   addMessages(
     sessionId: Type.Entity.Session['id'],
     messages: Type.Entity.CreateMessage[]
   ): Promise<Type.Entity.Message[]>;
 
-  getMessages(sessionId: Type.Entity.Session['id']): Promise<Type.Entity.Message[]>;
+  getMessages(sessionId: Type.Entity.Session['id'], options?: GetMessagesOptions): Promise<Type.Entity.Message[]>;
 
   checkHealth(): Promise<boolean>;
 

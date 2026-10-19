@@ -317,6 +317,16 @@ The example applications demonstrate different persistence patterns:
 
 ## Production Considerations
 
+### Long sessions
+
+Every request loads the session's history before the context window cropper cuts it to what the model takes. For long sessions, `ChatConfig.historyLimit` bounds what the database reads: a request loads only that many of the latest messages. Set it above what your context windows hold, so the cropper still decides what the model sees. A limited history does not start with tool results whose tool call was cut off. `getChatHistory()` still returns the whole history.
+
+```typescript
+new ChatConstructor(sessionRepositoryConstructor, chatHistoryRepositoryConstructor, undefined, undefined, {
+  historyLimit: 200
+});
+```
+
 ### Connection Pool Sizing
 
 ```typescript

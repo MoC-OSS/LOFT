@@ -181,6 +181,54 @@ describe('ChatHistoryManager', () => {
   });
 
   describe('getMessages', () => {
+    describe('with a limit', () => {
+      const message = (id: string, role: Type.LLM.UnifiedMessageRole) =>
+        createCompleteMessage(id, role, [{ type: 'text' as const, text: id }], 'author');
+      const user = Type.LLM.UnifiedMessageRole.user;
+      const assistant = Type.LLM.UnifiedMessageRole.assistant;
+      const tool = Type.LLM.UnifiedMessageRole.tool;
+
+      function managerWith(messages: Type.Entity.Message[]) {
+        const limitedContainer = new Container();
+        limitedContainer
+          .bind<Repository.ChatHistory>(DI_TYPES.ChatHistoryRepository)
+          .toConstantValue(mockChatHistoryRepository as unknown as Repository.ChatHistory);
+        limitedContainer.bind<ChatHistoryManager>(ChatHistoryManager).toSelf();
+        (mockChatHistoryRepository.getMessages as any).mockResolvedValue(messages);
+        return limitedContainer.get<ChatHistoryManager>(ChatHistoryManager);
+      }
+
+      it('passes the limit to the repository', async () => {
+        const manager = managerWith([message('m1', user)]);
+
+        await manager.getMessages('session-123', { limit: 5 });
+
+        expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith('session-123', { limit: 5 });
+      });
+
+      it('keeps the latest messages when the repository ignores the limit', async () => {
+        const manager = managerWith([message('m1', user), message('m2', assistant), message('m3', user)]);
+
+        const result = await manager.getMessages('session-123', { limit: 2 });
+
+        expect(result.map(({ id }) => id)).toEqual(['m2', 'm3']);
+      });
+
+      it('does not start with tool results whose tool call was left out', async () => {
+        const manager = managerWith([
+          message('call', assistant),
+          message('result-1', tool),
+          message('result-2', tool),
+          message('answer', assistant),
+          message('question', user)
+        ]);
+
+        const result = await manager.getMessages('session-123', { limit: 4 });
+
+        expect(result.map(({ id }) => id)).toEqual(['answer', 'question']);
+      });
+    });
+
     it('should return messages from repository when no patcher exists', async () => {
       // Arrange
       const containerWithoutPatcher = new Container();
@@ -205,7 +253,7 @@ describe('ChatHistoryManager', () => {
       const result = await managerWithoutPatcher.getMessages(sessionId);
 
       // Assert
-      expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith(sessionId);
+      expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith(sessionId, undefined);
       expect(result).toEqual(messages);
     });
 
@@ -238,7 +286,7 @@ describe('ChatHistoryManager', () => {
       const result = await chatHistoryManager.getMessages(sessionId);
 
       // Assert
-      expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith(sessionId);
+      expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith(sessionId, undefined);
       expect(mockChatHistoryPatcherRepository.getPatches).toHaveBeenCalledWith(sessionId);
       expect(result[0].content).toEqual([{ type: 'text' as const, text: 'Hello updated' }]);
     });
@@ -261,7 +309,7 @@ describe('ChatHistoryManager', () => {
       const result = await chatHistoryManager.getMessages(sessionId);
 
       // Assert
-      expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith(sessionId);
+      expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith(sessionId, undefined);
       expect(mockChatHistoryPatcherRepository.getPatches).toHaveBeenCalledWith(sessionId);
       expect(result).toEqual(messages);
     });
@@ -284,7 +332,7 @@ describe('ChatHistoryManager', () => {
       const result = await chatHistoryManager.getMessages(sessionId);
 
       // Assert
-      expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith(sessionId);
+      expect(mockChatHistoryRepository.getMessages).toHaveBeenCalledWith(sessionId, undefined);
       expect(mockChatHistoryPatcherRepository.getPatches).toHaveBeenCalledWith(sessionId);
       expect(result).toEqual(messages);
     });

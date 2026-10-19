@@ -11,16 +11,20 @@ import {
   Repository,
   Type
 } from '@moc-global/loft-definitions';
-import { Container, inject, injectable } from 'inversify';
+import { Container, inject, injectable, optional } from 'inversify';
 
 import { ChatHistory, Session } from '../entities';
+import { ChatConfig } from '../types';
 
 @injectable()
 export class ContextProvider implements ContextProviderInterface {
   private container: Container;
   protected readonly log = new Logger('ContextProvider');
 
-  constructor(@inject(Container) container: Container) {
+  constructor(
+    @inject(Container) container: Container,
+    @inject(DI_TYPES.ChatConfig) @optional() private readonly chatConfig?: ChatConfig
+  ) {
     this.container = container;
   }
 
@@ -51,7 +55,7 @@ export class ContextProvider implements ContextProviderInterface {
     );
 
     if (!chatHistoryData) {
-      chatHistoryData = await chatHistoryManager.getMessages(sessionId);
+      chatHistoryData = await chatHistoryManager.getMessages(sessionId, { limit: this.chatConfig?.historyLimit });
     }
     return new ChatHistory(sessionId, chatHistoryManager, chatHistoryData);
   }

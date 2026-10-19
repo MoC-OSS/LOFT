@@ -1,4 +1,5 @@
 import {
+  ChatConfig,
   ChatConstructor,
   FsRepositoryConstructor,
   LoftConstructor,
@@ -14,12 +15,15 @@ import { SessionPostgresDialect, SessionRepositoryConstructor } from '@moc-globa
 import { env } from './config';
 import type { TestDatabaseInstance } from './initDB';
 
-export function createChatConstructor(db: TestDatabaseInstance): ChatConstructor {
+export function createChatConstructor(db: TestDatabaseInstance, chatConfig?: ChatConfig): ChatConstructor {
   return new ChatConstructor(
     new SessionRepositoryConstructor(new SessionPostgresDialect({ pool: db.pool }), { schema: db.sessionSchema }),
     new ChatHistoryRepositoryConstructor(new ChatHistoryPostgresDialect({ pool: db.pool }), {
       schema: db.chatHistorySchema
-    })
+    }),
+    undefined,
+    undefined,
+    chatConfig
   );
 }
 

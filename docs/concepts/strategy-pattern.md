@@ -158,11 +158,14 @@ The out-of-the-box implementation is `@moc-global/loft-session-pg-repository` (K
 // packages/loft-definitions/src/repositories/ChatHistory.ts
 export interface ChatHistory {
   addMessages(sessionId: string, messages: CreateMessage[]): Promise<Message[]>;
-  getMessages(sessionId: string): Promise<Message[]>;
+  // With options.limit: only the latest messages, at most that many, still in chronological order
+  getMessages(sessionId: string, options?: { limit?: number }): Promise<Message[]>;
   checkHealth(): Promise<boolean>;
   end(): Promise<void>;
 }
 ```
+
+A repository that ignores `limit` still works: the chat history manager keeps the latest messages itself, but the database then reads the whole history.
 
 The out-of-the-box implementation is `@moc-global/loft-chat-history-pg-repository` (Kysely ORM with PostgreSQL). Like `Session`, this interface is database-agnostic and can be implemented for any storage backend.
 

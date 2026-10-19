@@ -48,6 +48,20 @@ export abstract class MessageQueries {
       .orderBy('message.sequenceId', 'asc');
   }
 
+  /** The latest `limit` messages of a session, newest first */
+  getLatestBySessionIdQuery(
+    sessionId: Message['sessionId'],
+    limit: number
+  ): SelectQueryBuilder<Database, 'message', Message> {
+    return this.db
+      .withSchema(this.config.schema)
+      .selectFrom('message')
+      .selectAll()
+      .where('message.sessionId', '=', sessionId)
+      .orderBy('message.sequenceId', 'desc')
+      .limit(limit);
+  }
+
   getByIdQuery(
     sessionId: Message['sessionId'],
     messageId: Message['id']
