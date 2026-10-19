@@ -11,8 +11,8 @@
     "lint": "eslint ./src --fix"
   },
   "dependencies": {
-    "@electric-sql/pglite": "0.5.8",
-    "@electric-sql/pglite-socket": "0.2.11",
+    "@electric-sql/pglite": "0.5.9",
+    "@electric-sql/pglite-socket": "0.2.12",
     "@moc-global/loft": "workspace:*",
     "@moc-global/loft-chat-history-pg-repository": "workspace:*",
     "@moc-global/loft-definitions": "workspace:*",
