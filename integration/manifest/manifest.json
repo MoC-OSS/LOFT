@@ -122,6 +122,18 @@
           "thinking": { "type": "between_tools" }
         }
       },
+      "focus-gpt-4o-mini": {
+        "systemMessage": "You are the assistant of a pizza shop. Follow the Focus instructions to take the order.",
+        "modelPreset": { "model": "gpt-4o-mini", "max_tokens": 1000 }
+      },
+      "focus-claude-haiku": {
+        "systemMessage": "You are the assistant of a pizza shop. Follow the Focus instructions to take the order.",
+        "modelPreset": { "model": "claude-haiku-5-5", "max_tokens": 4000, "thinking": { "type": "disabled" } }
+      },
+      "focus-gemini-flash-lite": {
+        "systemMessage": "You are the assistant of a pizza shop. Follow the Focus instructions to take the order.",
+        "modelPreset": { "model": "gemini-3.1-flash-lite", "max_output_tokens": 1000 }
+      },
       "scripted": {
         "systemMessage": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
         "modelPreset": {
