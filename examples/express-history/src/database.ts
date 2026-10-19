@@ -31,30 +31,35 @@ export async function initializeDatabase(): Promise<Database> {
   const databaseUrl = `postgresql://postgres@127.0.0.1:${port}/postgres`;
   // PGlite serves one connection at a time
   const pool = new Pool({ connectionString: databaseUrl, max: 1 });
-  await pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
-  for (const schema of [env.LOFT_SESSION_SCHEMA, env.LOFT_CHAT_HISTORY_SCHEMA]) {
-    await pool.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
+  const close = async () => {
+    await pool.end();
+    await server.stop();
+    await db.close();
+  };
+
+  try {
+    await pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+    for (const schema of [env.LOFT_SESSION_SCHEMA, env.LOFT_CHAT_HISTORY_SCHEMA]) {
+      await pool.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
+    }
+
+    await runSessionPgMigrations(
+      { databaseUrl, direction: 'to-latest', schemaName: env.LOFT_SESSION_SCHEMA, libraryVersion: '0.0.1' },
+      pool
+    );
+    await runChatHistoryPgMigrations(
+      { databaseUrl, direction: 'to-latest', schemaName: env.LOFT_CHAT_HISTORY_SCHEMA, libraryVersion: '0.0.1' },
+      pool
+    );
+
+    console.log('PGlite ready — schemas created, migrations applied');
+  } catch (error) {
+    // The open socket server would keep the process running
+    await close();
+    throw error;
   }
 
-  await runSessionPgMigrations(
-    { databaseUrl, direction: 'to-latest', schemaName: env.LOFT_SESSION_SCHEMA, libraryVersion: '0.0.1' },
-    pool
-  );
-  await runChatHistoryPgMigrations(
-    { databaseUrl, direction: 'to-latest', schemaName: env.LOFT_CHAT_HISTORY_SCHEMA, libraryVersion: '0.0.1' },
-    pool
-  );
-
-  console.log('PGlite ready — schemas created, migrations applied');
-
-  return {
-    pool,
-    close: async () => {
-      await pool.end();
-      await server.stop();
-      await db.close();
-    }
-  };
+  return { pool, close };
 }
 
 // PGLiteSocketServer treats port 0 as its default, 5432, so ask the operating system for a free port first
