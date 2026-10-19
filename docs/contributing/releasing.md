@@ -23,6 +23,8 @@ It creates a markdown file in `.changeset/` describing the version bump.
 - **Never** for changes to private packages (`loft-base-tsconfig`, `loft-pglite`, `loft-test-suite`, `loft-kysely-pg-migrator`, `loft-integration-tests`)
 - **Never** for documentation, CI, or tooling changes that don't affect published packages
 
+> **A peer's major release needs major changesets for its dependents.** When a package gets a major release, Changesets bumps each package that has it as a peer dependency (most packages have `@moc-global/loft-definitions` as one) by `patch` only, although their published peer range moves to the new major. Narrowing a peer range is a major change under the [versioning policy](#versioning-and-deprecation-policy), so add a `major` changeset for each of those packages by hand.
+
 > **The migrator is bundled.** `@moc-global/loft-kysely-pg-migrator` is private. It is a dev dependency of `@moc-global/loft-session-pg-repository` and `@moc-global/loft-chat-history-pg-repository`, and their `tsup` builds bundle it (`noExternal`). A change to the migrator therefore does not bump either package. Add a changeset for those two packages by hand.
 
 ### Changeset Configuration
@@ -34,7 +36,7 @@ It creates a markdown file in `.changeset/` describing the version bump.
 - **Commit:** `true` — `changeset add` and `changeset version` commit the files they change
 - **Fixed / linked groups:** none
 - **Internal deps:** `updateInternalDependencies: "patch"` — a patch bump on internal dependency updates
-- **Peer dependents:** `onlyUpdatePeerDependentsWhenOutOfRange: true` — a package that has a bumped package as a peer dependency is bumped only when the new version leaves its peer range
+- **Peer dependents:** `onlyUpdatePeerDependentsWhenOutOfRange: true` — a package that has a bumped package as a peer dependency is bumped only when the new version leaves its peer range, and then by `patch` (see the note above)
 - **Ignored packages:** none (`"ignore": []`)
 - **Private packages:** `"privatePackages": false` — private packages (`"private": true`, such as `loft-base-tsconfig`, `loft-pglite`, `loft-test-suite`, `loft-kysely-pg-migrator`, `loft-integration-tests` and the examples) are not versioned or tagged
 
@@ -82,8 +84,10 @@ Publishing is handled in CI, not locally:
 ```bash
 # DO NOT run locally — this is for CI/CD pipelines
 pnpm run publish-packages
-# Runs: turbo build && changeset version && changeset publish
+# Runs: turbo build && changeset publish
 ```
+
+On a push to `main`, the Release workflow runs [`changesets/action`](https://github.com/changesets/action). While changesets are pending, it runs `changeset version` and opens or updates the **Version Packages** pull request. Merging that pull request leaves no changesets, so the next run calls `publish-packages`, which publishes the new versions; the action then pushes the tags and creates the GitHub releases through the GitHub API.
 
 The Release workflow (`.github/workflows/release.yaml`) publishes with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), so the repository holds no npm token. On Node.js 24, the job runs npm 11, which trusted publishing needs (11.5.1 or later). Each published package needs a trusted publisher on npmjs.com (package Settings > Trusted publishing > GitHub Actions):
 

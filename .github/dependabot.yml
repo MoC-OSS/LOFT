@@ -49,7 +49,3 @@ updates:
       actions:
         patterns:
           - '*'
-    ignore:
-      # v2 requires @changesets/cli 3; move both together
-      - dependency-name: changesets/action
-        update-types: ['version-update:semver-major']
