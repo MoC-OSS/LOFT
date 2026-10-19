@@ -35,6 +35,8 @@ JSON response with text + focusStatus
 
 ## Quick Start
 
+Needs Node.js 22.12 or later.
+
 ```bash
 # 1. Start Docker PostgreSQL (from repo root)
 docker compose -f examples/docker-compose.yml up -d

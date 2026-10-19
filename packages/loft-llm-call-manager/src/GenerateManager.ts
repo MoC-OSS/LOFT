@@ -14,7 +14,7 @@ const log = new Logger('LlmCallManager');
 export interface TaskQueue {
   readonly size: number;
   sizeBy(options: { priority?: number }): number;
-  add<T>(task: () => Promise<T>, options?: { priority?: number }): Promise<T>;
+  add<T>(task: () => Promise<T>, options?: { priority?: number; signal?: AbortSignal }): Promise<T>;
 }
 
 export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.GenerateCallManager<T_LLM_Req, T_LLM_Res> {
@@ -35,14 +35,29 @@ export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.Gener
       throw new TooManyHighPriorityTasksError(`Too many high priority task in ${this.name}`);
     }
 
+    // A task aborted while it waits leaves the queue, so it no longer counts toward highPriorityTasksLimit. The
+    // queue gets its own signal that follows the caller's only until the task starts: p-queue frees the slot of a
+    // running task whose signal aborts, and the next task would then run while the aborted one still ends.
+    const { signal } = options ?? {};
+    const waiting = new AbortController();
+    const abortWaiting = () => waiting.abort(signal?.reason);
+    if (signal?.aborted) abortWaiting();
+    signal?.addEventListener('abort', abortWaiting, { once: true });
+
     try {
-      const llmResponse = await this.taskPQueue.add(this.taskPQueueHandler.bind(this, llmRequest.llmBody, options), {
-        priority: llmRequest.priority
-      });
+      const llmResponse = await this.taskPQueue.add(
+        () => {
+          signal?.removeEventListener('abort', abortWaiting);
+          return this.taskPQueueHandler(llmRequest.llmBody, options);
+        },
+        { priority: llmRequest.priority, signal: waiting.signal }
+      );
       return llmResponse as T_LLM_Res;
     } catch (error) {
       log.error('addHighPriorityTask failed', error);
       throw error;
+    } finally {
+      signal?.removeEventListener('abort', abortWaiting);
     }
   }
 
@@ -81,11 +96,10 @@ export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.Gener
   }
 
   async taskPQueueHandler(llmRequest: T_LLM_Req, options?: Strategy.LLM.CallOptions) {
-    // p-queue 6 cannot drop a queued task, so a task aborted while it waited ends here
-    options?.signal?.throwIfAborted();
     const totalMessage = this.llmStrategy.reduceMessages(llmRequest);
     const predictedTokens = this.llmStrategy.llmTokenizer.calculateTokensFromString(totalMessage);
     await this.llmStrategy.tokenRateLimiter.awaitBeforeCall(predictedTokens);
+    // The rate limiter does not watch the signal, so a call aborted during its wait ends here
     options?.signal?.throwIfAborted();
     const llmResponse = await this.makeGenerateRequest(llmRequest, options);
     return llmResponse;

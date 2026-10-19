@@ -4,7 +4,7 @@ Get a working LOFT instance in 15 minutes. This guide shows two variants — pic
 
 ## Prerequisites
 
-- Node.js v22+
+- Node.js 22.12 or later (the PostgreSQL storage and the call manager load ES module-only dependencies through `require()`)
 - A package manager: npm, yarn, or pnpm
 - An API key for [OpenAI](https://platform.openai.com/) or [Anthropic](https://console.anthropic.com/)
 - PostgreSQL database (optional — used in this guide for session and chat history; other databases possible via custom repositories)

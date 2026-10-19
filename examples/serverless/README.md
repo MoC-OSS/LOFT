@@ -17,7 +17,7 @@ AWS Lambda + LOFT + OpenAI serverless example with PGLite. Demonstrates how to u
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 22.12+
 - An OpenAI API key
 
 ## Quick start

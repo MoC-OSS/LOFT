@@ -216,7 +216,7 @@ The [documentation index](./docs/README.md) lists every page.
 
 | | Supported |
 | --- | --- |
-| Node.js | 22 or later; CI tests 22, 24 and 26 |
+| Node.js | 22 or later, and 22.12 or later for the PostgreSQL storage and the call manager; CI tests 22.12, 22, 24 and 26 |
 | Module formats | ES modules and CommonJS, each with its own types |
 | TypeScript | 5.x |
 | inversify, zod | 6, 3 |

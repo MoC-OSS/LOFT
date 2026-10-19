@@ -18,7 +18,7 @@ Multi-turn Express + LOFT + OpenAI example with PGLite. Send messages in a sessi
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 22.12+
 - An OpenAI API key
 
 ## Quick start

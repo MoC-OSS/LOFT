@@ -84,6 +84,25 @@ describe('GenerateCallManager', () => {
 
       expect(generate).toHaveBeenCalledTimes(1);
     });
+    it('keeps the queue slot until a call aborted while it runs has ended', async () => {
+      const controller = new AbortController();
+      let fail!: () => void;
+      generate.mockImplementationOnce(
+        () => new Promise((_resolve, reject) => (fail = () => reject(new Error('request aborted'))))
+      );
+      generate.mockResolvedValue('next');
+      const running = manager.addHighPriorityTask(REQUEST, { signal: controller.signal });
+      await vi.waitFor(() => expect(generate).toHaveBeenCalledTimes(1));
+      const next = manager.addHighPriorityTask(REQUEST);
+
+      controller.abort();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(generate).toHaveBeenCalledTimes(1);
+
+      fail();
+      await expect(running).rejects.toThrow('request aborted');
+      await expect(next).resolves.toBe('next');
+    });
   });
 
   describe('retries without a signal', () => {
@@ -149,6 +168,22 @@ describe('GenerateCallManager', () => {
       await expect(limited.addHighPriorityTask(request('rejected', 30))).rejects.toThrow('Too many high priority task');
       release();
       await expect(Promise.all([first, waiting])).resolves.toEqual(['first', 'waiting']);
+    });
+    it('drops a call aborted while it waits in the queue', async () => {
+      const release = holdFirstCall();
+      const first = manager.addHighPriorityTask(request('first', 30));
+      await vi.waitFor(() => expect(generate).toHaveBeenCalledTimes(1));
+      const controller = new AbortController();
+      const aborted = manager.addHighPriorityTask(request('aborted', 30), { signal: controller.signal });
+      expect(manager.getCountOfHighPriorityTaskQueue()).toBe(1);
+
+      controller.abort();
+
+      await expect(aborted).rejects.toMatchObject({ name: 'AbortError' });
+      expect(manager.getCountOfHighPriorityTaskQueue()).toBe(0);
+      release();
+      await expect(first).resolves.toBe('first');
+      expect(generate).toHaveBeenCalledTimes(1);
     });
   });
 
