@@ -20,7 +20,7 @@ beforeAll(() => {
 describe('HttpCallManagerStrategy', () => {
   const URL = 'http://call-manager.local';
   const post = vi.mocked(axios.post);
-  const strategy = new HttpCallManagerStrategy({ llmCallManagerUrl: URL, retryAttempts: 3 });
+  const strategy = new HttpCallManagerStrategy({ llmCallManagerUrl: URL, retryAttempts: 3, retryDelay: 0 });
 
   beforeEach(() => {
     post.mockReset();
@@ -47,8 +47,11 @@ describe('HttpCallManagerStrategy', () => {
     expect(post).toHaveBeenCalledTimes(1);
   });
 
+  // An axios error: the HTTP status is on the response
+  const httpError = (status: number, message: string) => Object.assign(new Error(message), { response: { status } });
+
   it('retries a failing call without a signal', async () => {
-    post.mockRejectedValueOnce(new Error('fail 1')).mockRejectedValueOnce(new Error('fail 2'));
+    post.mockRejectedValueOnce(httpError(503, 'fail 1')).mockRejectedValueOnce(httpError(500, 'fail 2'));
     post.mockResolvedValue({ data: { llmBody: 'response' } });
 
     await expect(strategy.call(REQUEST)).resolves.toEqual({ llmBody: 'response' });
@@ -56,9 +59,17 @@ describe('HttpCallManagerStrategy', () => {
     expect(post).toHaveBeenCalledTimes(3);
   });
 
+  it('does not retry a 400 response', async () => {
+    post.mockRejectedValue(httpError(400, 'bad request'));
+
+    await expect(strategy.call(REQUEST)).rejects.toThrow('bad request');
+
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the last failure as the cause once every attempt failed', async () => {
-    const lastFailure = new Error('fail 3');
-    post.mockRejectedValueOnce(new Error('fail 1')).mockRejectedValueOnce(new Error('fail 2'));
+    const lastFailure = Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' });
+    post.mockRejectedValueOnce(httpError(503, 'fail 1')).mockRejectedValueOnce(httpError(503, 'fail 2'));
     post.mockRejectedValueOnce(lastFailure);
 
     await expect(strategy.call(REQUEST)).rejects.toMatchObject({
@@ -67,8 +78,8 @@ describe('HttpCallManagerStrategy', () => {
     });
   });
 
-  it('keeps the last failure of streamCall as the cause', async () => {
-    const lastFailure = new Error('stream failed');
+  it('retries streamCall and keeps the last failure as the cause', async () => {
+    const lastFailure = httpError(503, 'stream failed');
     vi.mocked(axios).mockReset().mockRejectedValue(lastFailure);
 
     await expect(strategy.streamCall(REQUEST)).rejects.toMatchObject({
@@ -76,6 +87,13 @@ describe('HttpCallManagerStrategy', () => {
       cause: lastFailure
     });
     expect(axios).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not retry streamCall on a 404 response', async () => {
+    vi.mocked(axios).mockReset().mockRejectedValue(httpError(404, 'not found'));
+
+    await expect(strategy.streamCall(REQUEST)).rejects.toThrow('not found');
+    expect(axios).toHaveBeenCalledTimes(1);
   });
 });
 

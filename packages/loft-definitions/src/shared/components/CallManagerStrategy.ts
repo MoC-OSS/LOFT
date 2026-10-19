@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 import * as Strategy from '../../strategies';
+import { isRetryableError, retryDelayMs } from '../utils/retryPolicy';
 import { Logger } from './Logger';
 
 const log = new Logger('CallManagerStrategy');
@@ -8,10 +9,21 @@ const log = new Logger('CallManagerStrategy');
 export interface CallManagerAdapterConfig {
   llmCallManagerUrl: string;
   retryAttempts: number;
+  /** The base of the exponential backoff between attempts, in ms. Default: 500 */
+  retryDelay?: number;
 }
+
+const DEFAULT_RETRY_DELAY_MS = 500;
 
 export class HttpCallManagerStrategy implements Strategy.CallManager {
   constructor(private readonly config: CallManagerAdapterConfig) {}
+
+  // Waits before the next attempt; always true, so it can sit in the loop condition
+  private async waitBeforeRetry(error: unknown, attempt: number): Promise<boolean> {
+    const delay = retryDelayMs(error, attempt, this.config.retryDelay ?? DEFAULT_RETRY_DELAY_MS);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return true;
+  }
 
   async call(
     llmRequest: Strategy.LLM.LLMRequest<any>,
@@ -27,12 +39,12 @@ export class HttpCallManagerStrategy implements Strategy.CallManager {
         });
         return result.data;
       } catch (error) {
-        // An aborted call is not retried
-        if (signal?.aborted) throw error;
+        // An aborted call is not retried, and neither is one that cannot succeed on a new attempt (400, 401, 404)
+        if (signal?.aborted || !isRetryableError(error)) throw error;
         log.error('call to loft-llm-call-manager-service failed', error);
         lastError = error;
       }
-    } while (++attempts < this.config.retryAttempts);
+    } while (++attempts < this.config.retryAttempts && (await this.waitBeforeRetry(lastError, attempts)));
 
     throw new Error(`CallManager doesn't work`, { cause: lastError });
   }
@@ -54,10 +66,11 @@ export class HttpCallManagerStrategy implements Strategy.CallManager {
 
         return res.data;
       } catch (error) {
+        if (!isRetryableError(error)) throw error;
         log.error('streamCall to loft-llm-call-manager-service failed', error);
         lastError = error;
       }
-    } while (++attempts < this.config.retryAttempts);
+    } while (++attempts < this.config.retryAttempts && (await this.waitBeforeRetry(lastError, attempts)));
 
     throw new Error(`stream call doesn't work`, { cause: lastError });
   }
