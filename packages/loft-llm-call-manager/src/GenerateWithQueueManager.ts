@@ -6,6 +6,8 @@ import { GenerateWithQueueConfig } from './types';
 
 const log = new Logger('LlmCallManager');
 
+const DEFAULT_MAX_REQUEUE_ATTEMPTS = 10;
+
 export class GenerateWithQueueManager<T_LLM_Req, T_LLM_Res> extends GenerateCallManager<T_LLM_Req, T_LLM_Res> {
   private readonly poller: ExponentialBackoffPoller;
 
@@ -14,7 +16,9 @@ export class GenerateWithQueueManager<T_LLM_Req, T_LLM_Res> extends GenerateCall
     private configWithQueue: GenerateWithQueueConfig,
     llm: Strategy.LLM.LLMApi,
     private readonly incomingLoftQueue: Strategy.LoftQueue,
-    private readonly outgoingLoftQueue: Strategy.LoftQueue
+    private readonly outgoingLoftQueue: Strategy.LoftQueue,
+    /** Gets a task, with its error, once it was requeued `maxRequeueAttempts` times */
+    private readonly deadLetterLoftQueue?: Strategy.LoftQueue
   ) {
     super(
       name,
@@ -86,7 +90,7 @@ export class GenerateWithQueueManager<T_LLM_Req, T_LLM_Res> extends GenerateCall
       );
     } catch (error) {
       if (error instanceof LlmCallManagerLongAwaitError) {
-        await this.incomingLoftQueue.publish(JSON.stringify(validatingResult.data));
+        await this.requeue(validatingResult.data, rawTaskData?.requeueAttempts, error);
       }
       log.error('Happen error when try to call low priority call to llm:', error);
       throw error;
@@ -94,5 +98,34 @@ export class GenerateWithQueueManager<T_LLM_Req, T_LLM_Res> extends GenerateCall
 
     // Only enqueues the next task. Awaiting that task here would deadlock: this handler holds the queue's only slot.
     void this.checkTaskQueue();
+  }
+
+  // Puts a task that waited too long back in the incoming queue, counting the attempts, until the limit
+  private async requeue(task: Record<string, any>, previousAttempts: unknown, error: Error) {
+    const requeueAttempts = (typeof previousAttempts === 'number' ? previousAttempts : 0) + 1;
+    const maxRequeueAttempts = this.configWithQueue.maxRequeueAttempts ?? DEFAULT_MAX_REQUEUE_ATTEMPTS;
+    if (requeueAttempts <= maxRequeueAttempts) {
+      await this.incomingLoftQueue.publish(JSON.stringify({ ...task, requeueAttempts }));
+      return;
+    }
+
+    log.error(`Task of session ${task.sessionId} gave up after ${maxRequeueAttempts} requeues`);
+    const failure = { name: error.constructor.name, message: error.message };
+    if (this.deadLetterLoftQueue) {
+      await this.deadLetterLoftQueue.publish(
+        JSON.stringify({ ...task, requeueAttempts: maxRequeueAttempts, error: failure })
+      );
+      return;
+    }
+    // Without a dead-letter queue, whoever waits for the result learns that the task failed
+    await this.outgoingLoftQueue.publish(
+      JSON.stringify({
+        sessionId: task.sessionId,
+        llmName: task.llmName,
+        callContext: task.callContext,
+        priority: 0,
+        error: failure
+      })
+    );
   }
 }

@@ -167,8 +167,8 @@ interface LlmTokenRateLimiterConfig {
 // packages/loft-llm-call-manager/src/types.ts
 interface GenerateConfig {
   highPriorityTasksLimit: number;   // Max high-priority tasks in queue
-  retryDelay: number;               // Delay between retries (ms)
-  retryAttemptsLimit: number;       // Maximum retry attempts
+  retryDelay: number;               // Base of the exponential backoff between retries (ms); Retry-After overrides it
+  retryAttemptsLimit: number;       // Attempts per call; only 408, 429, 5xx and network failures are retried
 }
 ```
 

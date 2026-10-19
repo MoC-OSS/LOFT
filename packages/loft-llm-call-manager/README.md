@@ -54,8 +54,8 @@ export async function registerOpenAi(loftConstructor: LoftConstructor<Chat.ChatI
 | Field | What it does |
 | --- | --- |
 | `highPriorityTasksLimit` | The most calls that may wait in the queue. One more throws `TooManyHighPriorityTasksError`. |
-| `retryAttemptsLimit` | Attempts per call, the first included. `3` means up to two retries. A cancelled call is not retried. |
-| `retryDelay` | Milliseconds between attempts |
+| `retryAttemptsLimit` | Attempts per call, the first included. `3` means up to two retries. Only 408, 429 and 5xx responses and network failures are retried; a cancelled call, a 400, 401 or 404 and any other error are not. |
+| `retryDelay` | Base of the backoff, in milliseconds: the wait doubles with each retry, between half and all of it at random, at most 60 s. A `Retry-After` header from the provider sets the wait instead. |
 
 `LlmTokenRateLimiter` keeps two budgets that refill over time: tokens and requests. Before each call it estimates the request's tokens and waits until both budgets allow the call. If the wait would be longer than `maxAwaitSeconds`, the call fails with `LlmCallManagerLongAwaitError`. After the call it subtracts the tokens the provider reports. Set the budgets a little below your provider's rate limits.
 
@@ -67,7 +67,7 @@ export async function registerOpenAi(loftConstructor: LoftConstructor<Chat.ChatI
 
 `LlmTokenizer` estimates tokens with the `gpt-3.5-turbo` encoding of tiktoken plus 10%, for every provider.
 
-`GenerateWithQueueManager` and `GenerateWithStreamManager` serve the queued and streaming modes, which are not available through LOFT's public API yet.
+`GenerateWithQueueManager` and `GenerateWithStreamManager` serve the queued and streaming modes, which are not available through LOFT's public API yet. A queued task that waits too long for the rate limiter goes back to the incoming queue up to `maxRequeueAttempts` times (default 10); then it goes to the optional dead-letter queue (the sixth constructor argument) with its error, or to the outgoing queue as `{ sessionId, llmName, callContext, priority, error: { name, message } }`.
 
 ## Documentation
 
