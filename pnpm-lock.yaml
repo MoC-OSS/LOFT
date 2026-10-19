@@ -803,6 +803,9 @@ importers:
       '@moc-global/loft-kysely-pg-migrator':
         specifier: workspace:*
         version: link:../loft-kysely-pg-migrator
+      '@moc-global/loft-pglite':
+        specifier: workspace:*
+        version: link:../loft-pglite
       inversify:
         specifier: ^6.2.2
         version: 6.2.2(reflect-metadata@0.2.2)
