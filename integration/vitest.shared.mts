@@ -38,13 +38,9 @@ export function integrationConfig(build: PackageBuild) {
       // Read by the module-format test to check that the run loads the build it claims to
       env: { LOFT_TEST_PACKAGE_BUILD: build },
       pool: 'forks',
-      poolOptions: {
-        forks: {
-          // The Postgres migrations are TypeScript files loaded at run time with import(), so a src run needs tsx's
-          // CommonJS and ES module hooks
-          execArgv: build === 'src' ? ['--import', 'tsx'] : []
-        }
-      },
+      // The Postgres migrations are TypeScript files loaded at run time with import(), so a src run needs tsx's
+      // CommonJS and ES module hooks
+      execArgv: build === 'src' ? ['--import', 'tsx'] : [],
       // Node loads the CommonJS build itself, through require, as an application would; Vite would otherwise
       // transform those files as ES modules
       server: build === 'cjs' ? { deps: { external: [/[\\/]packages[\\/][^\\/]+[\\/]lib[\\/]/] } } : undefined,

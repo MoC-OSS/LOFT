@@ -11,23 +11,28 @@ import { ContextProvider } from '../../../providers/ContextProvider';
 
 // Mock the Session and ChatHistory classes
 vi.mock('../../../entities', () => ({
-  Session: vi.fn().mockImplementation((repository, data) => ({
-    id: data.id,
-    manifestName: data.manifestName || 'default',
-    llmName: data.llmName || 'openai',
-    ctx: data.ctx || {},
-    setManifestName: vi.fn().mockResolvedValue(undefined),
-    setLlmName: vi.fn().mockResolvedValue(undefined),
-    getManifestName: vi.fn().mockReturnValue('default'),
-    getLlmName: vi.fn().mockReturnValue('openai'),
-    save: vi.fn().mockResolvedValue(undefined)
-  })),
-  ChatHistory: vi.fn().mockImplementation(() => ({
-    getMessages: vi.fn().mockResolvedValue([]),
-    addMessage: vi.fn().mockResolvedValue(undefined),
-    deleteMessage: vi.fn().mockResolvedValue(undefined),
-    clear: vi.fn().mockResolvedValue(undefined)
-  }))
+  // Called with new, so the implementations are functions: Vitest 4 cannot construct an arrow function
+  Session: vi.fn().mockImplementation(function (_repository, data) {
+    return {
+      id: data.id,
+      manifestName: data.manifestName || 'default',
+      llmName: data.llmName || 'openai',
+      ctx: data.ctx || {},
+      setManifestName: vi.fn().mockResolvedValue(undefined),
+      setLlmName: vi.fn().mockResolvedValue(undefined),
+      getManifestName: vi.fn().mockReturnValue('default'),
+      getLlmName: vi.fn().mockReturnValue('openai'),
+      save: vi.fn().mockResolvedValue(undefined)
+    };
+  }),
+  ChatHistory: vi.fn().mockImplementation(function () {
+    return {
+      getMessages: vi.fn().mockResolvedValue([]),
+      addMessage: vi.fn().mockResolvedValue(undefined),
+      deleteMessage: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined)
+    };
+  })
 }));
 
 describe('ManifestManager and ContextProvider Integration', () => {
