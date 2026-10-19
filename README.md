@@ -31,7 +31,7 @@ Not available yet: streaming and queued generation. Their types are exported and
 
 ## Install
 
-LOFT needs Node.js 22 or later. Install the core, a provider strategy, PostgreSQL storage and the call manager:
+LOFT needs Node.js 22 or later, and 22.12 or later for the PostgreSQL storage and the call manager. Install the core, a provider strategy, PostgreSQL storage and the call manager:
 
 ```bash
 npm install @moc-global/loft @moc-global/loft-definitions @moc-global/loft-llm-call-manager \

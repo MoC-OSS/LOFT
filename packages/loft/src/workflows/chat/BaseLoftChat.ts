@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 
+import { randomUUID } from 'node:crypto';
+
 import {
   Agent,
   BeforeGenerateMiddlewareManager,
@@ -18,7 +20,6 @@ import {
 } from '@moc-global/loft-definitions';
 import { createContextProxyWithOverrides } from '@moc-global/loft-definitions';
 import { inject, injectable, optional } from 'inversify';
-import { v4 as uuidv4 } from 'uuid';
 
 import { computeFocusStatus, generateFocusPrompt, generateFocusTools, InMemoryFocusStateStore } from '../../focus';
 import { FocusRegistry } from '../../focus/FocusRegistry';
@@ -58,7 +59,7 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
   }
 
   async addMessages(sessionId: string, correlatorIds: string[], messages: Type.Entity.CreateMessage[]) {
-    const operationId = `addMessages-${sessionId}-${uuidv4()}-${Date.now()}`;
+    const operationId = `addMessages-${sessionId}-${randomUUID()}-${Date.now()}`;
 
     return this.withOperation(operationId, async () => {
       const ctx = await this.contextProvider.get(sessionId);
@@ -136,7 +137,7 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
     focusAgent,
     signal
   }: Chat.GenerateOptions): Promise<Chat.GenerateResult> {
-    const operationId = `generate-${sessionId}-${uuidv4()}-${Date.now()}`;
+    const operationId = `generate-${sessionId}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
       signal?.throwIfAborted();
       this.log.trace(`generate(): called for session: `, sessionId);
@@ -395,7 +396,7 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
     additionalTools?: Chat.AdditionalTool[],
     signal?: AbortSignal
   ): Promise<Chat.GenerateResultMessages> {
-    const operationId = `callAndHandle-${ctx.session.id}-${uuidv4()}-${Date.now()}`;
+    const operationId = `callAndHandle-${ctx.session.id}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
       const { id: sessionId } = ctx.session;
 

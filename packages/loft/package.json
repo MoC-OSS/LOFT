@@ -56,9 +56,6 @@
     "lint": "npx eslint ./src --fix",
     "lint:check": "npx eslint ./src --max-warnings=0"
   },
-  "dependencies": {
-    "uuid": "^9.0.1"
-  },
   "peerDependencies": {
     "@moc-global/loft-definitions": "workspace:^",
     "@modelcontextprotocol/sdk": "^1.31.0",

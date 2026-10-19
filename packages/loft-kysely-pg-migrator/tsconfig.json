@@ -1,6 +1,8 @@
 {
   "extends": "../loft-base-tsconfig/base-tsconfig.json",
   "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "outDir": "./lib",
     "rootDir": "./src"
   },

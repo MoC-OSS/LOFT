@@ -1,5 +1,6 @@
+import { randomUUID } from 'node:crypto';
+
 import { Type } from '@moc-global/loft-definitions';
-import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { initDB, type TestDatabaseInstance } from './initDB';
@@ -8,7 +9,7 @@ import { EchoLLMStrategy } from './mocks/EchoLLMStrategy';
 
 function createTestMessage(text: string, sessionId: string): Type.Entity.CreateMessage {
   return {
-    id: uuidv4(),
+    id: randomUUID(),
     sessionId,
     ctx: {},
     llmName: 'gpt-4o-mini',

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { inspect } from 'node:util';
 
 import {
@@ -13,7 +14,6 @@ import {
   Type
 } from '@moc-global/loft-definitions';
 import { inject, injectable, optional } from 'inversify';
-import { v4 as uuidv4 } from 'uuid';
 
 import { ChatConfig } from '../types/config';
 import { createToolChainDiagnostic, logToolCallStack, UsedToolMessage } from '../utils/toolValidation';
@@ -815,7 +815,7 @@ export class LlmManager implements Interface.LlmManager {
     if (typeof content === 'string') {
       const date = new Date();
       const message: Type.Entity.Message = {
-        id: `ai-task-${uuidv4()}`,
+        id: `ai-task-${randomUUID()}`,
         createdAt: date,
         updatedAt: date,
         sequenceId: '',

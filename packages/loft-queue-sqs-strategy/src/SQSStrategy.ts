@@ -36,8 +36,10 @@ export class SQSStrategy implements Strategy.LoftQueue {
     this.consumer = Consumer.create({
       ...this.consumerOptions,
       queueUrl: this.queueURL,
-      handleMessage: (message) => {
-        return worker(message.Body);
+      handleMessage: async (message) => {
+        await worker(message.Body);
+        // From sqs-consumer 14 a message is deleted only when the handler returns it
+        return message;
       },
       sqs: this.sqsClient
     });

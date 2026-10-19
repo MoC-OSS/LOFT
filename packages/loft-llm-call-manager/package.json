@@ -24,7 +24,7 @@
   "type": "commonjs",
   "sideEffects": false,
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "main": "./lib/index.js",
   "module": "./lib/index.mjs",
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.13",
-    "p-queue": "6.6.2"
+    "p-queue": "^10.0.0"
   },
   "peerDependencies": {
     "@moc-global/loft-definitions": "workspace:^"

@@ -40,7 +40,6 @@
     "@moc-global/loft-test-suite": "workspace:*",
     "@types/node": "^20.14.2",
     "@types/pg": "^8.23.1",
-    "@types/uuid": "^9.0.8",
     "@types/yargs": "^17.0.32",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",

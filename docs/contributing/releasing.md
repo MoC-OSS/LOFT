@@ -106,4 +106,3 @@ Some dependencies are pinned across all packages:
 |---------|---------|--------|
 | `zod` | `3.25.67` (exact) | Consistency across packages; MCP SDK compatibility: from 3.25.68, registering an MCP server tool fails to compile with TS2589 under `moduleResolution: node` |
 | `@modelcontextprotocol/sdk` | `^1.25.0` | MCP protocol compatibility |
-| `p-queue` | `6.6.2` (exact) | ESM/CJS compatibility in call manager |

@@ -106,7 +106,7 @@ LOFT is modular — you install only what you need:
 | **Directory** | `packages/loft-llm-call-manager/` |
 | **Purpose** | Rate limiting, retries with a fixed delay, token counting, request prioritization |
 | **Key exports** | `GenerateCallManager`, `GenerateWithQueueManager`, `GenerateWithStreamManager`, `LlmTokenizer`, `LlmTokenRateLimiter` |
-| **External deps** | `p-queue` (v6.6.2, pinned), `@dqbd/tiktoken` |
+| **External deps** | `p-queue`, `@dqbd/tiktoken` |
 
 ### Database Repositories
 
