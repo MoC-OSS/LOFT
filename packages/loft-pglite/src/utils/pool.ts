@@ -8,7 +8,9 @@ import { type PGLiteInstance } from '../types';
  */
 export const createPool = (instance: PGLiteInstance): Pool => {
   return new Pool({
-    connectionString: `postgresql://postgres@localhost:${instance.port}/postgres`,
+    // The host the server listens on. `localhost` can resolve to ::1 first, and Node.js then tries each address with
+    // a 250 ms limit, which a busy process (several PGlite instances starting) misses: connect ETIMEDOUT.
+    connectionString: instance.connectionString,
     max: 1
   });
 };

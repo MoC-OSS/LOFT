@@ -39,7 +39,7 @@ describe('Postgres migrations', () => {
   beforeAll(async () => {
     pgliteInstance = await PGLiteInstanceFactory.create();
     pool = PGLiteUtils.createPool(pgliteInstance);
-    databaseUrl = `postgresql://postgres@localhost:${pgliteInstance.port}/postgres`;
+    databaseUrl = pgliteInstance.connectionString;
     await PGLiteUtils.createSchemas(pool, [
       SESSION_SCHEMA,
       CHAT_HISTORY_SCHEMA,

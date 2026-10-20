@@ -49,7 +49,7 @@ export class PGLiteInstanceFactory {
     await server.start();
 
     // Create connection string
-    const connectionString = `postgresql://${host}:${port}/postgres`;
+    const connectionString = `postgresql://postgres@${host}:${port}/postgres`;
 
     // Setup cleanup function
     const close = async (): Promise<void> => {
