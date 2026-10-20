@@ -1,5 +1,5 @@
-import { Interface, Strategy, Type } from '@moc-global/loft-definitions';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Interface, Repository, Strategy, Type } from '@moc-global/loft-definitions';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import { GenerateResultMessages } from '../../../entities/GenerateResultMessages';
 import { UsedToolMessage, validateToolsIntegrity } from '../../../utils/toolValidation';
@@ -41,7 +41,7 @@ const parallelTools: UsedToolMessage[] = [
 ];
 
 describe('GenerateResultMessages', () => {
-  let mockAppendFn: ReturnType<typeof vi.fn>;
+  let mockAppendFn: Mock<Repository.ChatHistory['addMessages']>;
   let generateResultMessages: GenerateResultMessages;
 
   const mockDirectMessages: Interface.FacadeEntity.InteractiveOutputMessage[] = [
@@ -180,7 +180,7 @@ describe('GenerateResultMessages', () => {
   };
 
   beforeEach(() => {
-    mockAppendFn = vi.fn().mockResolvedValue([]);
+    mockAppendFn = vi.fn<Repository.ChatHistory['addMessages']>().mockResolvedValue([]);
 
     generateResultMessages = new GenerateResultMessages(
       mockDirectMessages,
