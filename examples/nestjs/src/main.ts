@@ -23,4 +23,7 @@ async function bootstrap() {
   logger.log('GET  /chat/health                — Health check');
 }
 
-bootstrap().catch(console.error);
+bootstrap().catch((error) => {
+  console.error('Startup failed:', error);
+  process.exit(1);
+});
