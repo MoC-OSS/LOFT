@@ -251,7 +251,7 @@ export function testSessionRepository(repository: Repository.Session) {
         const updatePayload = { currentLlmName: 'updated-llm' };
 
         // Act & Assert
-        await expect(repository.updateById(nonExistentId, updatePayload)).rejects.toThrow();
+        await expect(repository.updateById(nonExistentId, updatePayload)).rejects.toBeInstanceOf(SessionNotFoundError);
       });
     });
 

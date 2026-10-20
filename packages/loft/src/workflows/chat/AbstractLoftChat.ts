@@ -7,6 +7,7 @@ import {
   Interface,
   Logger,
   Repository,
+  SessionNotFoundError,
   ShutdownError,
   Type,
   Util
@@ -104,8 +105,9 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
     return this.withOperation(operationId, async () => {
       this.log.trace(`Updating session settings`, { sessionId, correlatorId });
       const session = await this.sessionRepository.getById(sessionId);
+      // getById() should throw for a missing session; this covers a custom repository that returns nothing
       if (!session) {
-        throw new Error(`Session not found: ${sessionId}`);
+        throw new SessionNotFoundError({ sessionId });
       }
       const mergedCtx = deepMerge(session.ctx, settings?.ctx || {}, this.log);
       const updatedSessionData = {

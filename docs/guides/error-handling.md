@@ -139,7 +139,7 @@ app.get('/api/sessions/:id', async (req, res) => {
 });
 ```
 
-A custom `Repository.Session` should throw `SessionNotFoundError` from `getById()`, `getByExternalKey()` and `deleteById()` as well, so this works with any storage.
+A custom `Repository.Session` should throw `SessionNotFoundError` from `getById()`, `getByExternalKey()`, `updateById()` and `deleteById()` as well, so this works with any storage.
 
 ## Error Handling Patterns
 

@@ -1,7 +1,7 @@
 import { Chat, Type } from '../../..';
 import { ChatError } from './ChatError';
 
-export type SessionLookup =
+export type SessionNotFoundLookup =
   { sessionId: Type.Entity.Session['id'] } | { externalKey: Type.Entity.Session['externalKey'] };
 
 /**
@@ -12,7 +12,7 @@ export class SessionNotFoundError extends ChatError {
   /** The external key the session was looked up by; `sessionId` is then empty */
   public externalKey?: Type.Entity.Session['externalKey'];
 
-  constructor(lookup: SessionLookup, message?: string) {
+  constructor(lookup: SessionNotFoundLookup, message?: string) {
     const byId = 'sessionId' in lookup;
     super(
       byId ? lookup.sessionId : '',

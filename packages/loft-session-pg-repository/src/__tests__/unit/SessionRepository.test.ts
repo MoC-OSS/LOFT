@@ -44,6 +44,10 @@ describe('SessionRepository with a missing session', () => {
     expect(error).toMatchObject({ externalKey: { crmId: 'missing' } });
   });
 
+  it('updateById rejects with SessionNotFoundError', async () => {
+    await expect(repository.updateById(MISSING_ID, { ctx: {} })).rejects.toBeInstanceOf(SessionNotFoundError);
+  });
+
   it('deleteById rejects with SessionNotFoundError', async () => {
     await expect(repository.deleteById(MISSING_ID)).rejects.toBeInstanceOf(SessionNotFoundError);
   });

@@ -10,6 +10,7 @@ export interface Session {
   /** Rejects with `SessionNotFoundError` when no session has this external key */
   getByExternalKey(externalKey: Type.Entity.Session['externalKey']): Promise<Type.Entity.Session>;
 
+  /** Rejects with `SessionNotFoundError` when the session does not exist */
   updateById: (
     sessionId: Type.Entity.Session['id'],
     newSession: Partial<Type.Entity.Session>

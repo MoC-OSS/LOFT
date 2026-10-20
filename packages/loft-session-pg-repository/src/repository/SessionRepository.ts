@@ -124,7 +124,11 @@ export class SessionRepository extends SessionQueries implements Repository.Sess
 
       const updatedSession = await this.updateByIdQuery(sessionId, {
         ...sanitizedSessionPayload
-      }).executeTakeFirstOrThrow();
+      }).executeTakeFirst();
+
+      if (!updatedSession) {
+        throw new SessionNotFoundError({ sessionId });
+      }
 
       return {
         ...updatedSession,
