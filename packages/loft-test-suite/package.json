@@ -38,6 +38,7 @@
     "zod": "3.25.67"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
     "@types/pg": "^8.23.1"
   }
 }

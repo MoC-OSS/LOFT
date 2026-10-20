@@ -93,3 +93,22 @@ export const toolCallWithError: ToolChainFixture = {
 };
 
 export const toolChainFixtures: ToolChainFixture[] = [singleToolCall, parallelToolCalls, toolCallWithError];
+
+/** An assistant tool call without a call id, as a custom repository or an old message may hold. */
+export const toolCallWithoutCallId: Type.Entity.Message[] = [
+  userAsks(1, 'What is the weather in Kyiv?'),
+  message(2, Schema.LLM.UnifiedMessageRole.assistant, [
+    { type: 'tool_call', method: 'tools/call', params: { name: 'get_weather', arguments: { city: 'Kyiv' } } }
+  ])
+];
+
+// A 1x1 transparent PNG
+export const PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+/** A user message with text, a base64 image and an image URL. */
+export const imageMessage: Type.Entity.Message = message(1, Schema.LLM.UnifiedMessageRole.user, [
+  { type: 'text', text: 'What is in these pictures?' },
+  { type: 'image', format: Schema.Entity.ImageFormat.BASE64, data: PNG_BASE64, mimeType: 'image/png' },
+  { type: 'image', format: Schema.Entity.ImageFormat.URL, url: 'https://example.com/cat.jpg' }
+]);

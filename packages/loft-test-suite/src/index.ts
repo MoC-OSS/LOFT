@@ -1,5 +1,6 @@
 export { testChatHistoryRepository } from './contracts/chatHistoryRepositoryContract';
 export { testSessionRepository } from './contracts/sessionRepositoryContract';
+export { mcpTools } from './mcpToolFixtures';
 export type {
   ScriptedLLMCall,
   ScriptedMessage,
@@ -11,4 +12,12 @@ export type {
 export { ScriptedLLMStrategy } from './ScriptedLLMStrategy';
 export { configureMockLoggerStrategy, configureSpyLoggerStrategy } from './spyLoggerStrategy';
 export type { ToolChainFixture } from './toolChainFixtures';
-export { parallelToolCalls, singleToolCall, toolCallWithError, toolChainFixtures } from './toolChainFixtures';
+export {
+  imageMessage,
+  parallelToolCalls,
+  PNG_BASE64,
+  singleToolCall,
+  toolCallWithError,
+  toolCallWithoutCallId,
+  toolChainFixtures
+} from './toolChainFixtures';
