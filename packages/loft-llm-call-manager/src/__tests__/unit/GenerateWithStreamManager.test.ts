@@ -18,6 +18,9 @@ async function* failAfter(...texts: string[]) {
   throw new Error('stream broke');
 }
 
+// A 503: an error the call managers retry
+const unavailable = (message: string) => Object.assign(new Error(message), { status: 503 });
+
 async function readAll(stream: AsyncGenerator<Buffer>) {
   const received: string[] = [];
   for await (const chunk of stream) received.push(chunk.toString());
@@ -61,7 +64,7 @@ describe('GenerateWithStreamManager', () => {
   });
 
   it('retries a request that fails to start', async () => {
-    generateStream.mockRejectedValueOnce(new Error('busy')).mockResolvedValue(chunks('ok'));
+    generateStream.mockRejectedValueOnce(unavailable('busy')).mockResolvedValue(chunks('ok'));
 
     const stream = await manager.taskPQueueHandler(BODY);
 
@@ -70,8 +73,8 @@ describe('GenerateWithStreamManager', () => {
   });
 
   it('rejects with the last error after retryAttemptsLimit attempts', async () => {
-    generateStream.mockRejectedValueOnce(new Error('fail 1')).mockRejectedValueOnce(new Error('fail 2'));
-    generateStream.mockRejectedValue(new Error('fail 3'));
+    generateStream.mockRejectedValueOnce(unavailable('fail 1')).mockRejectedValueOnce(unavailable('fail 2'));
+    generateStream.mockRejectedValue(unavailable('fail 3'));
 
     await expect(manager.taskPQueueHandler(BODY)).rejects.toThrow('fail 3');
     expect(generateStream).toHaveBeenCalledTimes(3);
