@@ -15,7 +15,7 @@ Minimal stateless Express + LOFT + OpenAI example. Send a message, get a respons
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 22.12+
 - An OpenAI API key
 
 ## Quick start

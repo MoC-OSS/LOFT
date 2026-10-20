@@ -30,6 +30,12 @@ updates:
         versions: ['>3.25.67']
       - dependency-name: inversify
         update-types: ['version-update:semver-major']
+      # A new kysely minor can break while it is 0.x, and the migrator imports from its kysely/migration subpath
+      - dependency-name: kysely
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # The TaskQueue interface of loft-llm-call-manager follows the p-queue API, and a new major can change it
+      - dependency-name: p-queue
+        update-types: ['version-update:semver-major']
       # Peer dependencies of the LLM strategies; a new major (a new minor for the 0.x Anthropic SDK) can need code changes,
       # and a new openai or @google/genai major a wider peer range
       - dependency-name: openai

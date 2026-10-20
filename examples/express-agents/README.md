@@ -332,6 +332,8 @@ Transition Path: router → reservation-intake → availability-check → reserv
 
 ## Quick Start
 
+Needs Node.js 22.12 or later.
+
 ```bash
 # From the repository root:
 

@@ -19,7 +19,7 @@ Full-featured Express + LOFT + Anthropic example with Docker PostgreSQL, middlew
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 22.12+
 - Docker (for PostgreSQL)
 - An Anthropic API key
 

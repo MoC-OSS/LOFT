@@ -6,7 +6,7 @@ This guide covers setting up the LOFT monorepo for development.
 
 | Tool | Version | Install |
 |------|---------|---------|
-| **Node.js** | v22+ | [nodejs.org](https://nodejs.org) or `nvm install 22` |
+| **Node.js** | v22.12+ | [nodejs.org](https://nodejs.org) or `nvm install 22` |
 | **pnpm** | 10.14.0 (enforced via `packageManager` field) | `corepack enable && corepack prepare pnpm@10.14.0 --activate` |
 | **Git** | Any recent | OS package manager |
 | **Docker** | Optional — only for package-level integration tests | [docker.com](https://docker.com) |
