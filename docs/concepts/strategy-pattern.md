@@ -150,7 +150,7 @@ export interface Session {
 }
 ```
 
-The out-of-the-box implementation is `@moc-global/loft-session-pg-repository` (Kysely ORM with PostgreSQL). However, this interface is database-agnostic — you can implement it for any storage backend (e.g., MySQL, MongoDB, DynamoDB, or an in-memory store for testing). Your custom implementation must satisfy the `Repository.Session` contract and be wrapped in a `BaseComponentConstructor<Repository.Session>` to integrate with `ChatConstructor`.
+The out-of-the-box implementation is `@moc-global/loft-session-pg-repository` (Kysely ORM with PostgreSQL). However, this interface is database-agnostic — you can implement it for any storage backend (e.g., MySQL, MongoDB, DynamoDB, or an in-memory store for testing). Your custom implementation must satisfy the `Repository.Session` contract and be wrapped in a `BaseComponentConstructor<Repository.Session>` to integrate with `ChatConstructor`. Throw `SessionNotFoundError` from `getById()`, `getByExternalKey()`, `updateById()` and `deleteById()` for a missing session, so applications can answer 404 (see [Missing Sessions](../guides/error-handling.md#missing-sessions)).
 
 ### ChatHistory Repository
 

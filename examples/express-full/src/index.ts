@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { Chat, Type } from '@moc-global/loft-definitions';
+import { Chat, SessionNotFoundError, Type } from '@moc-global/loft-definitions';
 import crypto from 'crypto';
 import express from 'express';
 
@@ -49,6 +49,10 @@ async function main() {
       const session = await chat.getSessionById(req.params.id);
       res.json(session);
     } catch (error) {
+      if (error instanceof SessionNotFoundError) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
       console.error('Get session error:', error);
       res.status(500).json({ error: 'Internal server error' }); // details stay in the server log
     }
@@ -71,6 +75,10 @@ async function main() {
       await chat.deleteSession(req.params.id);
       res.json({ deleted: true });
     } catch (error) {
+      if (error instanceof SessionNotFoundError) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
       console.error('Delete session error:', error);
       res.status(500).json({ error: 'Internal server error' }); // details stay in the server log
     }
@@ -119,6 +127,10 @@ async function main() {
         status: result.status
       });
     } catch (error) {
+      if (error instanceof SessionNotFoundError) {
+        res.status(404).json({ error: 'Session not found' });
+        return;
+      }
       console.error('Chat error:', error);
       res.status(500).json({ error: 'Internal server error' }); // details stay in the server log
     }

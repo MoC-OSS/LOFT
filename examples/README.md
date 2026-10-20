@@ -3,7 +3,7 @@
 Runnable example applications demonstrating LOFT framework integration patterns.
 Each example builds on the previous, showing progressively more features.
 
-> **Not for production.** The examples have no authentication or authorization; in those that keep sessions, anyone who can reach the server can read or delete any session by its id. `docker-compose.yml` uses a demo password and publishes Postgres on 127.0.0.1 only. Use the examples to learn LOFT, not as templates for a deployed service. They also answer an unknown or malformed session id with 500; a real API should handle missing sessions (see [Missing sessions](../docs/guides/error-handling.md#missing-sessions)).
+> **Not for production.** The examples have no authentication or authorization; in those that keep sessions, anyone who can reach the server can read or delete any session by its id. `docker-compose.yml` uses a demo password and publishes Postgres on 127.0.0.1 only. Use the examples to learn LOFT, not as templates for a deployed service. They answer an unknown session id with 404 but a malformed one with 500; a real API should validate the id as well (see [Missing sessions](../docs/guides/error-handling.md#missing-sessions)).
 
 ## Examples — Ordered by Complexity
 

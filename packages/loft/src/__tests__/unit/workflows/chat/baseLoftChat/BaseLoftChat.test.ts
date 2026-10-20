@@ -10,6 +10,7 @@ import {
   Interface,
   Repository,
   Schema,
+  SessionNotFoundError,
   Type
 } from '@moc-global/loft-definitions';
 import { configureSpyLoggerStrategy } from '@moc-global/loft-test-suite';
@@ -1668,8 +1669,8 @@ describe('BaseLoftChat', () => {
     it('rejects updating the settings of a missing session', async () => {
       mockSessionRepository.getById.mockResolvedValue(undefined);
 
-      await expect(baseLoftChat.updateSessionSettings('missing', 'correlator-1', {})).rejects.toThrow(
-        'Session not found: missing'
+      await expect(baseLoftChat.updateSessionSettings('missing', 'correlator-1', {})).rejects.toBeInstanceOf(
+        SessionNotFoundError
       );
       expect(mockSessionRepository.updateById).not.toHaveBeenCalled();
     });
