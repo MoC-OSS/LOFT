@@ -74,7 +74,14 @@ The model and its settings come from the manifest entry with the same LLM name. 
 
 Gemini 3 models sign their thinking and reject a request whose earlier function calls come back without their signatures. The strategy keeps each signature in the `_meta` of the content part (`geminiThoughtSignature`) and sends it back with the chat history, so a saved conversation can go on. Thought summaries are not part of the answer.
 
-Images in a message reach the model. A base64 image goes inline, and an image URL goes as file data, which Gemini fetches: a Cloud Storage URI (`gs://`) or a public URL the server can download. The MIME type comes from the part, or from the data or the URL extension when the part has none (JPEG when it cannot tell).
+Images in a message reach the model:
+
+- A base64 image, or a base64 `data:` URL, goes inline.
+- An `https://` or `gs://` URL goes as file data, which Gemini fetches. A Cloud Storage URI and a public HTTPS URL were checked with Vertex AI. With an API key, the Gemini Developer API may take only the URIs of its Files API.
+- Any other URL (`http://`, `file://`, a relative path) is left out with a warning.
+- The URL must stay fetchable: the history is sent again on each turn, and Gemini rejects a request whose image it cannot download.
+- The MIME type comes from the part. When the part has none, it comes from the data (PNG, JPEG, GIF, WebP, HEIC, AVIF, BMP) or the URL extension, and is JPEG, with a warning, when neither tells.
+- Images inside tool results are not sent.
 
 ## Configuration
 

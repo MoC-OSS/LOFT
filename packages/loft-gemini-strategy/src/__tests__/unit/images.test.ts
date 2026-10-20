@@ -29,10 +29,11 @@ const base64 = (data: string, mimeType?: string): Type.Entity.FullContentPart =>
   data,
   ...(mimeType ? { mimeType } : {})
 });
-const url = (value: string): Type.Entity.FullContentPart => ({
+const url = (value: string, extra: Record<string, unknown> = {}): Type.Entity.FullContentPart => ({
   type: 'image',
   format: Schema.Entity.ImageFormat.URL,
-  url: value
+  url: value,
+  ...extra
 });
 
 describe('organizeMessagesForGemini with images', () => {
@@ -60,6 +61,9 @@ describe('organizeMessagesForGemini with images', () => {
     ['jpeg', '/9j/4AAQSkZJRg==', 'image/jpeg'],
     ['gif', 'R0lGODlhAQABAAAAACw=', 'image/gif'],
     ['webp', 'UklGRhoAAABXRUJQ', 'image/webp'],
+    ['heic', 'AAAAGGZ0eXBoZWljAAAAAG1pZjFoZWlj', 'image/heic'],
+    ['avif', 'AAAAHGZ0eXBhdmlmAAAAAGF2aWZtaWYx', 'image/avif'],
+    ['bmp', 'Qk06AAAAAAAAADYAAAA=', 'image/bmp'],
     ['unknown', 'AAAAAAAA', 'image/jpeg']
   ])('finds the MIME type of base64 %s data without one', (_kind, data, mimeType) => {
     const [user] = organizeMessagesForGemini([userMessage([base64(data)])]);
@@ -75,5 +79,37 @@ describe('organizeMessagesForGemini with images', () => {
     const [user] = organizeMessagesForGemini([userMessage([url(fileUri)])]);
 
     expect(user.parts).toEqual([{ fileData: { fileUri, mimeType } }]);
+  });
+
+  it('takes the MIME type given on a URL part', () => {
+    const [user] = organizeMessagesForGemini([userMessage([url('gs://bucket/upload-42', { mimeType: 'image/png' })])]);
+
+    expect(user.parts).toEqual([{ fileData: { fileUri: 'gs://bucket/upload-42', mimeType: 'image/png' } }]);
+  });
+
+  it('sends a base64 data: URL inline, with its MIME type', () => {
+    const [user] = organizeMessagesForGemini([userMessage([url(`data:image/png;base64,${PNG}`)])]);
+
+    expect(user.parts).toEqual([{ inlineData: { mimeType: 'image/png', data: PNG } }]);
+  });
+
+  it.each([
+    'http://intranet.local/files/12345',
+    'file:///tmp/photo.png',
+    '/uploads/photo.png',
+    'data:image/svg+xml,<svg></svg>'
+  ])('leaves out %s, which Gemini cannot fetch, and keeps the text', (value) => {
+    const [user] = organizeMessagesForGemini([userMessage([{ type: 'text', text: 'Look' }, url(value)])]);
+
+    expect(user.parts).toEqual([{ text: 'Look' }]);
+  });
+
+  it('leaves out a message whose only image Gemini cannot fetch', () => {
+    const contents = organizeMessagesForGemini([
+      userMessage([url('http://intranet.local/files/12345')]),
+      userMessage([{ type: 'text', text: 'Hello' }])
+    ]);
+
+    expect(contents).toEqual([{ role: 'user', parts: [{ text: 'Hello' }] }]);
   });
 });
