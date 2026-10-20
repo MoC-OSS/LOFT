@@ -1,4 +1,4 @@
-import { imageMessage, mcpTools, toolCallWithoutCallId } from '@moc-global/loft-test-suite';
+import { imageMessage, mcpTools, PNG_BASE64, toolCallWithoutCallId } from '@moc-global/loft-test-suite';
 import { describe, expect, it } from 'vitest';
 
 import { organizeMessagesForGemini } from '../../gemini/adapters/messageRequest';
@@ -15,14 +15,15 @@ describe('Gemini request adapter', () => {
     });
   });
 
-  it('keeps the text of a message with images', () => {
+  it('sends a base64 image as inlineData and an image URL as fileData, in order with the text', () => {
     const [user] = organizeMessagesForGemini([imageMessage]);
 
-    expect(user.parts).toContainEqual({ text: 'What is in these pictures?' });
+    expect(user.parts).toEqual([
+      { text: 'What is in these pictures?' },
+      { inlineData: { mimeType: 'image/png', data: PNG_BASE64 } },
+      { fileData: { fileUri: 'https://example.com/cat.jpg', mimeType: 'image/jpeg' } }
+    ]);
   });
-
-  // A bug, left for its own fix: the adapter sends text parts only, so images are dropped
-  it.todo('sends a base64 image as inlineData and an image URL as fileData');
 });
 
 describe('Gemini tool declarations', () => {
