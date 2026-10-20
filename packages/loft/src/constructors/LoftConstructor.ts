@@ -114,7 +114,8 @@ export class LoftConstructor<
   /** Loads and validates the manifests; the returned promise rejects when they are invalid. */
   public validateManifest(): Promise<void> {
     const manifestManager = this.loftContainer.get<Interface.ManifestManager>(DI_TYPES.ManifestManager);
-    return manifestManager.updateCache();
+    // updateCache() keeps a stale cache and never rejects, so it serves only managers without validate()
+    return manifestManager.validate ? manifestManager.validate() : manifestManager.updateCache();
   }
 
   public getInstance(): TLoft {
