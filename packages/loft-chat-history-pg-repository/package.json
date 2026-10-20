@@ -1,6 +1,6 @@
 {
   "name": "@moc-global/loft-chat-history-pg-repository",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "PostgreSQL chat history repository for the LOFT framework, with a migration CLI",
   "keywords": [
     "loft",

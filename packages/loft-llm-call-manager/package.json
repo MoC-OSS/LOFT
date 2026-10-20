@@ -1,6 +1,6 @@
 {
   "name": "@moc-global/loft-llm-call-manager",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Rate limiting, retries and queued LLM calls for the LOFT framework",
   "keywords": [
     "loft",

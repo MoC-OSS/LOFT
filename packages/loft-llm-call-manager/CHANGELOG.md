@@ -1,5 +1,32 @@
 # @moc-global/loft-llm-call-manager
 
+## 2.0.0
+
+### Major Changes
+
+- 64a5326: Require Node.js 22.12 or later, for Kysely 0.29 and p-queue 10.
+
+  The PostgreSQL repositories move from Kysely 0.28 to 0.29, and the call manager from p-queue 6 to 10. Both ship only ES modules, and the CommonJS build loads them with `require()`, which Node.js supports without a flag from 22.12. To upgrade, run Node.js 22.12 or later. The migrations, the migration CLIs and the database schema are unchanged. If you create the dialect with your own `kysely` package rather than the re-exported `SessionPostgresDialect` and `ChatHistoryPostgresDialect`, update it to 0.29 as well.
+
+  `loft-llm-call-manager`: `GenerateCallManager.taskPQueue` is now typed as the new `TaskQueue` interface (`size`, `sizeBy()` and `add()`) instead of the p-queue class, because p-queue 10 publishes its types only through `exports`, which `moduleResolution: node` does not read. Code that calls other p-queue methods on `taskPQueue` needs a cast.
+
+### Minor Changes
+
+- 5e97c38: `GenerateWithQueueManager` no longer requeues a task forever. A task that waits too long for the rate limiter goes back to the incoming queue with a `requeueAttempts` count, up to `maxRequeueAttempts` times (new config option, default 10). Then it goes, with its error, to an optional dead-letter queue (new sixth constructor argument), or to the outgoing queue as `{ sessionId, llmName, callContext, priority, error: { name, message } }`.
+
+### Patch Changes
+
+- 60f361d: A call aborted while it waits in the queue now leaves the queue at once: it rejects with the abort reason and no longer counts toward `highPriorityTasksLimit`. Before, it stayed queued until its turn came. A call aborted while it runs keeps its place until it ends, so calls still run one at a time.
+- 5e97c38: The call managers retry only what can succeed on a new attempt, with backoff.
+
+  - `GenerateCallManager` and `HttpCallManagerStrategy` retry 408, 429 and 5xx responses and network failures, and no longer retry a 400, 401 or 404, or any other error.
+  - The wait doubles with each attempt, from `retryDelay`, between half and all of it at random (jitter), at most 60 s. A `Retry-After` (or `retry-after-ms`) header from the provider sets the wait instead.
+  - `HttpCallManagerStrategy` waited nothing between attempts; it now takes an optional `retryDelay` (default 500 ms). `call()` and `streamCall()` throw the axios error itself for a response that is not retried (a 400, 401 or 404, say), instead of `Error("CallManager doesn't work")`; that error is still thrown, with the last error as its `cause`, when the retries run out.
+  - `GenerateWithStreamManager` follows the same policy instead of retrying every error after a fixed delay.
+  - The connection and timeout errors of the OpenAI and Anthropic SDKs are retried; they are recognised by their class, as their `name` is `Error`.
+  - Aborting the call's `signal` ends the wait before a retry. An invalid `retryDelay` (NaN, say) counts as 0 instead of replacing the provider error.
+  - `@moc-global/loft-definitions` exports the policy: `isRetryableError()`, `retryDelayMs()`, `retryAfterMs()`, `errorStatus()` and `waitForRetry()`.
+
 ## 1.1.0
 
 ### Minor Changes
