@@ -1,6 +1,5 @@
+import { Repository, SessionNotFoundError, Type } from '@moc-global/loft-definitions';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
-
-import { Repository, SessionNotFoundError, Type } from '../..';
 
 /**
  * Generates a test session data object for testing
@@ -32,9 +31,19 @@ function createTestSession(externalKey?: Type.Entity.Session['externalKey']): Ty
  * Reusable test suite for Session repository implementations.
  * This can be called from any Session repository implementation test file.
  *
- * @param repository Session repository instance to test
+ * @param target Session repository instance to test, or a function that returns it once the tests run (when the
+ * repository is created in a beforeAll hook)
  */
-export function testSessionRepository(repository: Repository.Session) {
+export function testSessionRepository(target: Repository.Session | (() => Repository.Session)) {
+  const current = () => (typeof target === 'function' ? target() : target);
+  // Resolves the repository when a test calls it, not when the suite is declared
+  const repository = new Proxy({} as Repository.Session, {
+    get: (_target, property) => {
+      const instance = current();
+      const value = Reflect.get(instance, property, instance);
+      return typeof value === 'function' ? value.bind(instance) : value;
+    }
+  });
   describe('SessionRepository Tests', () => {
     // Track the session created for cleanup
     let createdSession: Type.Entity.Session | undefined;
@@ -264,7 +273,7 @@ export function testSessionRepository(repository: Repository.Session) {
         await repository.deleteById(sessionToDelete.id);
 
         // Assert - try to get deleted session
-        await expect(repository.getById(sessionToDelete.id)).rejects.toThrow();
+        await expect(repository.getById(sessionToDelete.id)).rejects.toBeInstanceOf(SessionNotFoundError);
       });
 
       it('should throw an error when trying to delete a non-existent session', async () => {

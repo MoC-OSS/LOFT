@@ -75,6 +75,7 @@
     "@moc-global/loft-definitions": "workspace:*",
     "@moc-global/loft-kysely-pg-migrator": "workspace:*",
     "@moc-global/loft-pglite": "workspace:*",
+    "@moc-global/loft-test-suite": "workspace:*",
     "inversify": "^6.2.2",
     "kanel": "^4.0.4",
     "kanel-kysely": "^0.3.3",

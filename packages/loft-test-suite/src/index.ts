@@ -1,3 +1,5 @@
+export { testChatHistoryRepository } from './contracts/chatHistoryRepositoryContract';
+export { testSessionRepository } from './contracts/sessionRepositoryContract';
 export type {
   ScriptedLLMCall,
   ScriptedMessage,
