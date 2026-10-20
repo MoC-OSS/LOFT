@@ -126,7 +126,7 @@ examples/express-basic/
 1. **Startup:** PGLite starts an in-process PostgreSQL, runs session and chat history migrations automatically
 2. **LOFT init:** `LoftConstructor` binds the DI container with `ChatConstructor` (session + chat history repos), `ManifestManager` (filesystem), and `OpenAiLoftStrategy` (gpt-4o-mini)
 3. **Request flow:** Each `POST /chat` creates an ephemeral session, sends the user message via `loft.chat.generate()`, extracts the response text, deletes the session, and returns the result
-4. **Shutdown:** SIGINT/SIGTERM triggers three-step shutdown: `loft.shutdown()` → `loftConstructor.gracefulShutdown()` → `db.close()`
+4. **Shutdown:** SIGINT/SIGTERM triggers two-step shutdown: `loft.shutdown()` (which also shuts the tracer down) → `db.close()`
 
 ## Using as boilerplate
 

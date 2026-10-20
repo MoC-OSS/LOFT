@@ -258,6 +258,8 @@ export class ManifestManager implements Interface.ManifestManager {
       let errorMessage: Record<string, any>;
       if (isJSON(error.message)) errorMessage = { error: JSON.parse(error.message) };
       else errorMessage = { error: error.message };
+      // For example the JSON parse error behind "Error reading/parsing JSON from <path>"
+      if (error.cause?.message) errorMessage.cause = error.cause.message;
 
       const errorFilePath = createNewPathWithSortableFileName(this.manifestManagerConfig.errorPath);
       await this.manifestRepository.upload(errorFilePath, errorMessage);

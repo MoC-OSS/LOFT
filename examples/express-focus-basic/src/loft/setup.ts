@@ -50,7 +50,6 @@ function createAnthropicStrategy(modelName: string) {
 
 export interface LoftSetup {
   loft: LOFT<Chat.ChatInterface>;
-  loftConstructor: { gracefulShutdown: () => Promise<void> };
   chat: Chat.ChatInterface;
 }
 
@@ -86,5 +85,5 @@ export async function initializeLoft(pool: Pool): Promise<LoftSetup> {
 
   loft.registerFocus(FOCUS_NAME, pizzaOrderFocus);
 
-  return { loft, loftConstructor, chat };
+  return { loft, chat };
 }

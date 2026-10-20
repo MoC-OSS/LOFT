@@ -19,6 +19,7 @@ export class HttpCallManagerStrategy implements Strategy.CallManager {
   ): Promise<Strategy.LLM.LlmResponse<any>> {
     const signal = options?.signal;
     let attempts = 0;
+    let lastError: unknown;
     do {
       try {
         const result = await axios.post<Strategy.LLM.LlmResponse<any>>(this.config.llmCallManagerUrl, llmRequest, {
@@ -29,14 +30,16 @@ export class HttpCallManagerStrategy implements Strategy.CallManager {
         // An aborted call is not retried
         if (signal?.aborted) throw error;
         log.error('call to loft-llm-call-manager-service failed', error);
+        lastError = error;
       }
     } while (++attempts < this.config.retryAttempts);
 
-    throw new Error(`CallManager doesn't work`);
+    throw new Error(`CallManager doesn't work`, { cause: lastError });
   }
 
   async streamCall(llmRequest: Strategy.LLM.LLMRequest<any>): Promise<AxiosResponse<any, any>> {
     let attempts = 0;
+    let lastError: unknown;
     do {
       try {
         const res = await axios({
@@ -52,10 +55,11 @@ export class HttpCallManagerStrategy implements Strategy.CallManager {
         return res.data;
       } catch (error) {
         log.error('streamCall to loft-llm-call-manager-service failed', error);
+        lastError = error;
       }
     } while (++attempts < this.config.retryAttempts);
 
-    throw new Error(`stream call doesn't work`);
+    throw new Error(`stream call doesn't work`, { cause: lastError });
   }
 
   async getHealthCheckStatus(): Promise<boolean> {

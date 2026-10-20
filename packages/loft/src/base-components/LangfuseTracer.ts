@@ -38,7 +38,7 @@
  *
  * // Graceful shutdown
  * process.on('SIGTERM', async () => {
- *   await loft.gracefulShutdown();
+ *   await loft.shutdown(); // shuts the tracer down last
  *   process.exit(0);
  * });
  * ```

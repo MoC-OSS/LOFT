@@ -54,6 +54,11 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
     @inject(DI_TYPES.FocusRegistry) @optional() private readonly focusRegistry?: FocusRegistry
   ) {
     super(sessionRepository, chatHistoryManager, contextProvider, llmManager);
+    const shutdownTimeout = chatConfig?.shutdownTimeout;
+    if (shutdownTimeout !== undefined && !(Number.isFinite(shutdownTimeout) && shutdownTimeout >= 0)) {
+      throw new TypeError(`ChatConfig.shutdownTimeout must be a number of milliseconds >= 0, got ${shutdownTimeout}`);
+    }
+    this.shutdownTimeout = shutdownTimeout;
 
     this.log.info('BaseLoft instantiated');
   }

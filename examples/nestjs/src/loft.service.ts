@@ -88,9 +88,8 @@ export class LoftService implements OnModuleInit, OnModuleDestroy {
     if (!this.chat) return;
     this.logger.log('Shutting down LOFT...');
     try {
-      // Waits for active operations, then stops the LLM rate-limiter timers
+      // Waits for active operations, stops the LLM rate-limiter timers and shuts the tracer down
       await this.loftConstructor?.getInstance().shutdown();
-      await this.loftConstructor?.gracefulShutdown();
       await this.db?.close();
       this.logger.log('LOFT shutdown complete');
     } catch (error) {

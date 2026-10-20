@@ -46,6 +46,8 @@ export class MiddlewareManager<
 
     const chain = this.createChain(context);
     const tracer = (context as any).tracer as Strategy.Tracer.Tracer | undefined;
+    // The first middleware gets a copy too, so a middleware that changes its input leaves the caller's payload alone
+    payload = copy(payload);
 
     for (const [name, middleware] of this.middlewareChain) {
       let middlewareSpan: Strategy.Tracer.Span | undefined;

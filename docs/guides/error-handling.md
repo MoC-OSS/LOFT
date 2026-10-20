@@ -87,13 +87,10 @@ LOFT supports graceful shutdown — active operations complete before the servic
 const shutdown = async () => {
   // 1. Stop accepting new requests at your HTTP layer
 
-  // 2. Shut LOFT down — waits for active generate() calls, then stops the LLM rate-limiter timers
+  // 2. Shut LOFT down — waits for active generate() calls, stops the LLM rate-limiter timers and shuts the tracer down
   await loft.shutdown();
 
-  // 3. Flush tracer data
-  await loftConstructor.gracefulShutdown();
-
-  // 4. Close database connections
+  // 3. Close what your application opened: database connections, MCP clients
   await pool.end();
 
   process.exit(0);
@@ -103,12 +100,13 @@ process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 ```
 
-Call `loft.shutdown()`, not only `loft.chat.shutdown()`. Both wait for active operations, but only `loft.shutdown()` then stops the rate-limiter and queue timers of every registered LLM strategy, which can otherwise keep the process running.
+Call `loft.shutdown()`, not only `loft.chat.shutdown()`. Both wait for active operations, but only `loft.shutdown()` then stops the rate-limiter and queue timers of every registered LLM strategy, which can otherwise keep the process running, and shuts the tracer down so it sends what it still holds. `loftConstructor.gracefulShutdown()`, which used to do the last step, is deprecated. LOFT does not close the database pools or the MCP clients: your application creates them, so it closes them.
 
 After `shutdown()` is called:
-- Active operations continue to completion
+- Active operations continue to completion, including the steps they start after `shutdown()` was called
 - New operations throw `ShutdownError`
-- The `shutdown()` promise resolves when all active operations finish
+- The `shutdown()` promise resolves when all active operations finish, or after `ChatConfig.shutdownTimeout` milliseconds with a warning in the log; without the setting it waits as long as they run
+- After the timeout, `loft.shutdown()` stops the LLM strategies and the tracer although operations still run: a call waiting in a rate-limiter queue may never finish, and the spans those operations end later are lost. Pick a timeout longer than your slowest request
 - LOFT logs each step at INFO level
 
 ## Missing Sessions

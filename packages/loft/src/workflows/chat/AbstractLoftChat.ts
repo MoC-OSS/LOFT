@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -16,7 +17,12 @@ import { injectable } from 'inversify';
 @injectable()
 export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface {
   protected isShuttingDown = false;
+  /** How long `shutdown()` waits for the operations in flight, in milliseconds; no limit when unset */
+  protected shutdownTimeout?: number;
   private activeOperations = new Set<string>();
+  // The operation the current call runs in, so a nested operation of a request in flight is not rejected
+  private readonly currentOperation = new AsyncLocalStorage<string>();
+  private idleWaiters: Array<() => void> = [];
   protected readonly log = new Logger('AbstractLoftChat');
 
   constructor(
@@ -30,33 +36,58 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
     this.log.info('LOFT Chat: Received shutdown signal, initiating graceful shutdown...');
     this.isShuttingDown = true;
 
-    // Wait for active operations to complete
     if (this.activeOperations.size > 0) {
       this.log.info(`LOFT Chat: Waiting for ${this.activeOperations.size} active operations to complete...`);
-      await new Promise<void>((resolve) => {
-        const checkInterval = setInterval(() => {
-          if (this.activeOperations.size === 0) {
-            clearInterval(checkInterval);
-            resolve();
-          }
-        }, 100);
-      });
+      const finished = await this.waitForOperations(this.shutdownTimeout);
+      if (!finished) {
+        this.log.warn(
+          `LOFT Chat: ${this.activeOperations.size} operations still running after the shutdown timeout of ${this.shutdownTimeout} ms`
+        );
+      }
     }
 
     this.log.info('LOFT Chat: Graceful shutdown completed');
   }
 
   protected async withOperation<T>(operationId: string, operation: () => Promise<T>): Promise<T> {
-    if (this.isShuttingDown && !this.activeOperations.has(operationId)) {
+    // A step of a running operation is still accepted. A call that only started inside an operation that has
+    // ended since (a promise nobody awaited) is not.
+    const parent = this.currentOperation.getStore();
+    const insideOperation = parent !== undefined && this.activeOperations.has(parent);
+    if (this.isShuttingDown && !insideOperation && !this.activeOperations.has(operationId)) {
       throw new ShutdownError(operationId, 'LOFT Chat: Service is shutting down, new operations are not accepted');
     }
 
     this.activeOperations.add(operationId);
     try {
-      return await operation();
+      return await this.currentOperation.run(operationId, operation);
     } finally {
       this.activeOperations.delete(operationId);
+      if (this.activeOperations.size === 0) {
+        const waiters = this.idleWaiters;
+        this.idleWaiters = [];
+        waiters.forEach((resolve) => resolve());
+      }
     }
+  }
+
+  /** Resolves `true` once no operation runs, or `false` when `timeoutMs` passes first */
+  private waitForOperations(timeoutMs?: number): Promise<boolean> {
+    if (this.activeOperations.size === 0) return Promise.resolve(true);
+    return new Promise<boolean>((resolve) => {
+      let timer: NodeJS.Timeout | undefined;
+      const onIdle = () => {
+        clearTimeout(timer);
+        resolve(true);
+      };
+      this.idleWaiters.push(onIdle);
+      if (timeoutMs !== undefined) {
+        timer = setTimeout(() => {
+          this.idleWaiters = this.idleWaiters.filter((waiter) => waiter !== onIdle);
+          resolve(false);
+        }, timeoutMs);
+      }
+    });
   }
 
   public async createSession(newSession: Type.Entity.CreateSession) {

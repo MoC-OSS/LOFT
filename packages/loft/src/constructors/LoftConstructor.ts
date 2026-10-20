@@ -122,6 +122,10 @@ export class LoftConstructor<
     return this.loftContainer.get<TLoft>(DI_TYPES.LOFT);
   }
 
+  /**
+   * Shuts the tracer down.
+   * @deprecated `LOFT.shutdown()` now shuts the tracer down as its last step; call that instead.
+   */
   public async gracefulShutdown(): Promise<void> {
     try {
       // Get tracer strategy from DI container and shutdown

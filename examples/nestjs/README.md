@@ -9,7 +9,7 @@ NestJS + LOFT + OpenAI example with PGLite. Demonstrates how to integrate LOFT i
 - **NestJS Module pattern** — `LoftModule` wraps LOFT as a self-contained, importable NestJS module
 - **NestJS Service pattern** — `LoftService` is an `@Injectable()` service encapsulating LOFT initialization and chat operations
 - **NestJS Controller pattern** — `ChatController` uses `@Controller()`, `@Post()`, `@Get()` decorators
-- **NestJS lifecycle hooks** — `OnModuleInit` for PGLite + LOFT setup, `OnModuleDestroy` for three-step shutdown
+- **NestJS lifecycle hooks** — `OnModuleInit` for PGLite + LOFT setup, `OnModuleDestroy` for two-step shutdown
 - **Dual DI coexistence** — LOFT's Inversify DI and NestJS DI running side by side without conflict
 - Multi-turn conversations with persistent sessions (same as express-history)
 - PGLite as a zero-config in-process PostgreSQL (starts automatically, no Docker)
@@ -184,7 +184,7 @@ examples/nestjs/
 4. **Session creation:** `POST /chat/sessions` → `LoftService.createSession()` → `loft.chat.createSession()`
 5. **Chat flow:** `POST /chat` → `LoftService.sendMessage()` → stores user message via `addMessages()` → `generate({ sessionId })` (auto-loads history) → `save()` persists response
 6. **History:** `GET /chat/sessions/:id/history` → `LoftService.getChatHistory()` → `loft.chat.getChatHistory()`
-7. **Shutdown:** SIGINT/SIGTERM → NestJS lifecycle → `LoftService.onModuleDestroy()` → three-step shutdown: `loft.shutdown()` → `loftConstructor.gracefulShutdown()` → `db.close()`
+7. **Shutdown:** SIGINT/SIGTERM → NestJS lifecycle → `LoftService.onModuleDestroy()` → two-step shutdown: `loft.shutdown()` (which also shuts the tracer down) → `db.close()`
 
 ## NestJS + LOFT DI — how they coexist
 

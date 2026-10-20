@@ -15,7 +15,7 @@ Full-featured Express + LOFT + Anthropic example with Docker PostgreSQL, middlew
 - **Full session CRUD** — create, get by ID, delete
 - **Multi-turn context** — LOFT automatically replays chat history to the LLM on each generate call
 - Zod environment validation at startup
-- Three-step graceful shutdown with re-entrancy guard via SIGINT/SIGTERM
+- Two-step graceful shutdown with re-entrancy guard via SIGINT/SIGTERM
 
 ## Prerequisites
 
@@ -244,7 +244,7 @@ examples/express-full/
 4. **Session CRUD:** `POST /api/sessions` creates, `GET /api/sessions/:id` retrieves, `GET /api/sessions/:id/history` lists the stored messages, `DELETE /api/sessions/:id` deletes sessions.
 5. **Chat flow:** `POST /api/chat` stores the user message via `chat.addMessages()`, then calls `chat.generate({ sessionId })` which auto-loads stored history as LLM context, then persists the response via `result.messages.save()`.
 6. **Middleware:** InputMiddleware logs on both `addMessages()` and `generate()`, BeforeGenerateMiddleware logs session ID, AfterGenerateMiddleware logs response receipt.
-7. **Shutdown:** SIGINT/SIGTERM triggers three-step shutdown with re-entrancy guard: `loft.shutdown()` -> `loftConstructor.gracefulShutdown()` -> `pool.end()`.
+7. **Shutdown:** SIGINT/SIGTERM triggers two-step shutdown with re-entrancy guard: `loft.shutdown()` (which also shuts the tracer down) -> `pool.end()`.
 
 ## Changing the LLM model
 

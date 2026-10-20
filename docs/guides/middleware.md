@@ -40,7 +40,7 @@ async (context, payload, chain) => {
 - **Call `chain.next()`** to let the next middleware run. If you don't, the chain stops after your middleware, and the payload you returned is still used. Stopping the chain does not stop the request: the LLM is still called. To stop it, throw, or use `chain.preventGeneration()` in BeforeGenerate
 - **Names must be unique** — registering a duplicate name throws an error
 - **Sequential execution** — middleware runs in registration order
-- **Immutable between steps** — the return value is deep-copied (via `fast-copy`) before passing to the next middleware
+- **Immutable between steps** — the payload is deep-copied (via `fast-copy`) before the first middleware, and each return value before it passes to the next one, so a middleware never changes the caller's object
 - **Errors stop the request** — if a middleware throws, the chain stops and throws `Forced failure in middleware: <name>`, with your error as its `cause`. `generate()` wraps that error in a `GenerateError` (as its `cause`); `addMessages()` throws it as is (see [Error handling](./error-handling.md#common-causes)). For optional steps, catch errors yourself (see [Optional steps](#optional-steps-that-must-not-fail-the-request))
 - **Every step adds latency** — middleware runs one step at a time and each return value is deep-copied, so keep steps light. An LLM call in Input middleware runs twice in the multi-turn pattern (see below)
 
