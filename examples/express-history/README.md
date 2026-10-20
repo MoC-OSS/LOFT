@@ -14,7 +14,7 @@ Multi-turn Express + LOFT + OpenAI example with PGLite. Send messages in a sessi
 - **Chat history retrieval** via `loft.chat.getChatHistory()`
 - PGLite as a zero-config in-process PostgreSQL (starts automatically, no Docker)
 - Zod environment validation at startup
-- Three-step graceful shutdown via SIGINT/SIGTERM
+- Two-step graceful shutdown via SIGINT/SIGTERM
 
 ## Prerequisites
 

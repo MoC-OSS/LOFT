@@ -26,7 +26,11 @@ export class LOFT<TChatInterface extends Chat.ChatInterface | Chat.ChatInterface
     this.log.info('LOFT: Received shutdown signal, initiating graceful shutdown...');
     await this.chat.shutdown();
     // After the last operation: stops the rate limiter and queue poller timers of every LLM strategy
-    this.llmManager?.stop?.();
+    try {
+      this.llmManager?.stop?.();
+    } catch (error) {
+      this.log.error('LOFT: Stopping the LLM strategies failed', error);
+    }
     // Then sends the traces that are left
     try {
       await this.tracerStrategy?.shutdownAsync();

@@ -2183,3 +2183,27 @@ describe('BaseLoftChat', () => {
     });
   });
 });
+
+describe('BaseLoftChat shutdownTimeout', () => {
+  const create = (shutdownTimeout: number | undefined) =>
+    new BaseLoftChat(
+      new MockSessionRepository(),
+      new MockChatHistoryManager(),
+      new MockContextProvider(),
+      new MockLlmManager(),
+      { llm: { name: 'test-llm' }, shutdownTimeout } as ChatConfig,
+      new MockLoftHealthCheck(),
+      { executeChain: vi.fn() } as any,
+      { executeChain: vi.fn() } as any,
+      { executeChain: vi.fn() } as any,
+      new MockGenerateResponseProvider() as any
+    );
+
+  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])('rejects %s', (timeout) => {
+    expect(() => create(timeout)).toThrow(TypeError);
+  });
+
+  it.each([undefined, 0, 5000])('accepts %s', (timeout) => {
+    expect(() => create(timeout)).not.toThrow();
+  });
+});

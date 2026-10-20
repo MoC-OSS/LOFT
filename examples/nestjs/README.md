@@ -9,7 +9,7 @@ NestJS + LOFT + OpenAI example with PGLite. Demonstrates how to integrate LOFT i
 - **NestJS Module pattern** — `LoftModule` wraps LOFT as a self-contained, importable NestJS module
 - **NestJS Service pattern** — `LoftService` is an `@Injectable()` service encapsulating LOFT initialization and chat operations
 - **NestJS Controller pattern** — `ChatController` uses `@Controller()`, `@Post()`, `@Get()` decorators
-- **NestJS lifecycle hooks** — `OnModuleInit` for PGLite + LOFT setup, `OnModuleDestroy` for three-step shutdown
+- **NestJS lifecycle hooks** — `OnModuleInit` for PGLite + LOFT setup, `OnModuleDestroy` for two-step shutdown
 - **Dual DI coexistence** — LOFT's Inversify DI and NestJS DI running side by side without conflict
 - Multi-turn conversations with persistent sessions (same as express-history)
 - PGLite as a zero-config in-process PostgreSQL (starts automatically, no Docker)

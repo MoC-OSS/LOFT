@@ -43,6 +43,20 @@ describe('ManifestManager.validate()', () => {
     expect(repository.upload).toHaveBeenCalledTimes(1);
   });
 
+  it('writes the cause of a load error to the error file', async () => {
+    const repository = storage(VALID);
+    repository.get.mockRejectedValueOnce(
+      new Error('Error reading/parsing JSON from manifest.json', { cause: new SyntaxError('Unexpected token }') })
+    );
+    const manager = new ManifestManager(repository, CONFIG);
+
+    await expect(manager.validate()).rejects.toThrow();
+    expect(repository.upload).toHaveBeenCalledWith(expect.any(String), {
+      error: 'Error reading/parsing JSON from manifest.json',
+      cause: 'Unexpected token }'
+    });
+  });
+
   it('rejects when the manifests cannot be loaded', async () => {
     const repository = storage(VALID);
     repository.get.mockRejectedValueOnce(new Error('bucket not found'));

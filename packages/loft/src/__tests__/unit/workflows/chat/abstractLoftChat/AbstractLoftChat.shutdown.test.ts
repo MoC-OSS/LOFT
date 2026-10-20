@@ -47,6 +47,21 @@ describe('AbstractLoftChat shutdown', () => {
     await expect(shutdown).resolves.toBeUndefined();
   });
 
+  it('rejects a call started inside an operation that has ended since', async () => {
+    const chat = new TestChat();
+    const { opened, open } = gate();
+    let late!: Promise<string>;
+    await chat.run('generate', async () => {
+      // Not awaited, so it outlives the operation
+      late = opened.then(() => chat.run('addMessages', async () => 'stored'));
+    });
+
+    await chat.shutdown();
+    open();
+
+    await expect(late).rejects.toBeInstanceOf(ShutdownError);
+  });
+
   it('rejects a new operation once shutdown() began', async () => {
     const chat = new TestChat();
     await chat.shutdown();

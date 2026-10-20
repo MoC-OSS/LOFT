@@ -15,7 +15,7 @@ Full-featured Express + LOFT + Anthropic example with Docker PostgreSQL, middlew
 - **Full session CRUD** — create, get by ID, delete
 - **Multi-turn context** — LOFT automatically replays chat history to the LLM on each generate call
 - Zod environment validation at startup
-- Three-step graceful shutdown with re-entrancy guard via SIGINT/SIGTERM
+- Two-step graceful shutdown with re-entrancy guard via SIGINT/SIGTERM
 
 ## Prerequisites
 

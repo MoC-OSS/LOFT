@@ -105,6 +105,7 @@ After `shutdown()` is called:
 - Active operations continue to completion, including the steps they start after `shutdown()` was called
 - New operations throw `ShutdownError`
 - The `shutdown()` promise resolves when all active operations finish, or after `ChatConfig.shutdownTimeout` milliseconds with a warning in the log; without the setting it waits as long as they run
+- After the timeout, `loft.shutdown()` stops the LLM strategies and the tracer although operations still run: a call waiting in a rate-limiter queue may never finish, and the spans those operations end later are lost. Pick a timeout longer than your slowest request
 - LOFT logs each step at INFO level
 
 ## Missing Sessions

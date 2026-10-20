@@ -49,7 +49,10 @@ export abstract class AbstractLoftChat implements Chat.AbstractLoftChatInterface
   }
 
   protected async withOperation<T>(operationId: string, operation: () => Promise<T>): Promise<T> {
-    const insideOperation = this.currentOperation.getStore() !== undefined;
+    // A step of a running operation is still accepted. A call that only started inside an operation that has
+    // ended since (a promise nobody awaited) is not.
+    const parent = this.currentOperation.getStore();
+    const insideOperation = parent !== undefined && this.activeOperations.has(parent);
     if (this.isShuttingDown && !insideOperation && !this.activeOperations.has(operationId)) {
       throw new ShutdownError(operationId, 'LOFT Chat: Service is shutting down, new operations are not accepted');
     }
