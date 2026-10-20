@@ -29,9 +29,15 @@ function ensureInitialized() {
 async function doInitialize() {
   console.log('Cold start: initializing PGLite + LOFT...');
   const db = await initializeDatabase();
-  const { loft, loftConstructor } = await initializeLoft(db.pool);
-  console.log('LOFT initialized with OpenAI gpt-4o-mini strategy');
-  return { loft, loftConstructor, db };
+  try {
+    const { loft, loftConstructor } = await initializeLoft(db.pool);
+    console.log('LOFT initialized with OpenAI gpt-4o-mini strategy');
+    return { loft, loftConstructor, db };
+  } catch (error) {
+    // The next invocation retries with a new database, so close this one
+    await db.close().catch(() => undefined);
+    throw error;
+  }
 }
 
 function jsonResponse(statusCode: number, body: Record<string, unknown>): APIGatewayProxyResult {

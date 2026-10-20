@@ -23,17 +23,31 @@ export interface Database {
 export async function initializeDatabase(): Promise<Database> {
   // The migrations default ids to uuid_generate_v4(), which comes from the uuid-ossp extension
   const db = new PGlite({ extensions: { uuid_ossp } });
-  const port = await findFreePort();
-  const server = new PGLiteSocketServer({ db, port, host: '127.0.0.1' });
-  await server.start();
+  let port: number;
+  let server: PGLiteSocketServer;
+  try {
+    port = await findFreePort();
+    server = new PGLiteSocketServer({ db, port, host: '127.0.0.1' });
+    await server.start();
+  } catch (error) {
+    await db.close().catch(() => undefined);
+    throw error;
+  }
 
   const databaseUrl = `postgresql://postgres@127.0.0.1:${port}/postgres`;
   // PGlite serves one connection at a time
   const pool = new Pool({ connectionString: databaseUrl, max: 1 });
+  // Closes all three even when one of them fails
   const close = async () => {
-    await pool.end();
-    await server.stop();
-    await db.close();
+    try {
+      await pool.end();
+    } finally {
+      try {
+        await server.stop();
+      } finally {
+        await db.close();
+      }
+    }
   };
 
   try {
@@ -51,8 +65,8 @@ export async function initializeDatabase(): Promise<Database> {
       pool
     );
   } catch (error) {
-    // The open socket server would keep the process running
-    await close();
+    // The open socket server would keep the process running. Keep the setup error, not a close error.
+    await close().catch(() => undefined);
     throw error;
   }
 
