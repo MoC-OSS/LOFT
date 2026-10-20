@@ -16,7 +16,8 @@ export default defineConfig({
       // coverage maps to the source and counts only real branches (Vitest 3 also counted each function as a branch).
       // Raise them as tests are added, never lower them.
       thresholds: {
-        'packages/loft/src/**': { lines: 79, branches: 76, functions: 72, statements: 79 },
+        'packages/loft/src/**': { lines: 88, branches: 78, functions: 86, statements: 87 },
+        'packages/loft-llm-call-manager/src/**': { lines: 96, branches: 89, functions: 100, statements: 96 },
         'packages/loft-agents/src/**': { lines: 98, branches: 88, functions: 95, statements: 97 },
         'packages/loft-definitions/src/**': { lines: 77, branches: 79, functions: 64, statements: 77 },
         'packages/loft-openai-strategy/src/**': { lines: 43, branches: 32, functions: 47, statements: 44 },
