@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { errorStatus, isRetryableError, retryAfterMs, retryDelayMs } from '../..';
+import { errorStatus, isRetryableError, retryAfterMs, retryDelayMs, waitForRetry } from '../..';
 
 const withStatus = (status: number) => Object.assign(new Error(`status ${status}`), { status });
 
@@ -23,6 +23,16 @@ describe('retry policy', () => {
     expect(isRetryableError(Object.assign(new Error('reset'), { code: 'ECONNRESET' }))).toBe(true);
     expect(isRetryableError(Object.assign(new Error('Connection error.'), { name: 'APIConnectionError' }))).toBe(true);
     expect(isRetryableError(new TypeError('fetch failed', { cause: { code: 'UND_ERR_SOCKET' } }))).toBe(true);
+  });
+
+  it('retries an error whose class, not its name, is a connection error', () => {
+    // Like the SDKs: the class is APIConnectionTimeoutError, the name stays 'Error'
+    class APIConnectionError extends Error {}
+    class APIConnectionTimeoutError extends APIConnectionError {}
+
+    expect(new APIConnectionTimeoutError('timed out').name).toBe('Error');
+    expect(isRetryableError(new APIConnectionTimeoutError('timed out'))).toBe(true);
+    expect(isRetryableError(new APIConnectionError('Connection error.'))).toBe(true);
   });
 
   it('does not retry other errors', () => {
@@ -60,5 +70,26 @@ describe('retry policy', () => {
     expect(retryDelayMs(new Error('x'), 20, 1000)).toBeGreaterThanOrEqual(30_000);
     expect(retryDelayMs(new Error('x'), 20, 1000)).toBeLessThanOrEqual(60_000);
     expect(retryDelayMs(new Error('x'), 1, 0)).toBe(0);
+  });
+
+  it('ignores a retryDelay that is not a number instead of throwing', () => {
+    expect(retryDelayMs(new Error('x'), 1, Number.NaN)).toBe(0);
+    expect(retryDelayMs(new Error('x'), 1, undefined as unknown as number)).toBe(0);
+    expect(retryDelayMs(new Error('x'), 1, -100)).toBe(0);
+  });
+
+  it('ends the wait before a retry when the signal aborts', async () => {
+    vi.useFakeTimers();
+    try {
+      const controller = new AbortController();
+      const wait = waitForRetry(60_000, controller.signal);
+      controller.abort(new Error('client went away'));
+
+      await expect(wait).rejects.toThrow('client went away');
+      expect(vi.getTimerCount()).toBe(0);
+      await expect(waitForRetry(10, controller.signal)).rejects.toThrow('client went away');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -22,8 +22,9 @@ const NETWORK_ERROR_CODES = new Set([
   'UND_ERR_BODY_TIMEOUT'
 ]);
 
-// The connection errors of the OpenAI and Anthropic SDKs, which carry no status
-const NETWORK_ERROR_NAMES = new Set(['APIConnectionError', 'APIConnectionTimeoutError']);
+// The connection errors of the OpenAI and Anthropic SDKs, which carry no status. Their instances keep the name
+// 'Error', so these are matched against the class names along the prototype chain.
+const NETWORK_ERROR_CLASSES = new Set(['APIConnectionError', 'APIConnectionTimeoutError']);
 
 const DEFAULT_MAX_DELAY_MS = 60_000;
 
@@ -59,11 +60,23 @@ export function errorStatus(error: unknown): number | undefined {
   return undefined;
 }
 
+// The name of the error and the names of its classes, from the error's own class up to Error
+function errorClassNames(item: ErrorLike): string[] {
+  const names = typeof item.name === 'string' ? [item.name] : [];
+  let prototype: unknown = Object.getPrototypeOf(item);
+  while (prototype && prototype !== Error.prototype && prototype !== Object.prototype && names.length < 10) {
+    const name = (prototype as { constructor?: { name?: unknown } }).constructor?.name;
+    if (typeof name === 'string') names.push(name);
+    prototype = Object.getPrototypeOf(prototype);
+  }
+  return names;
+}
+
 function isNetworkError(error: unknown): boolean {
   return errorChain(error).some(
     (item) =>
       (typeof item.code === 'string' && NETWORK_ERROR_CODES.has(item.code)) ||
-      (typeof item.name === 'string' && NETWORK_ERROR_NAMES.has(item.name)) ||
+      errorClassNames(item).some((name) => NETWORK_ERROR_CLASSES.has(name)) ||
       (item instanceof TypeError && item.message === 'fetch failed')
   );
 }
@@ -129,7 +142,26 @@ export function retryDelayMs(
 ): number {
   const requested = retryAfterMs(error);
   if (requested !== undefined) return Math.min(requested, maxDelayMs);
-  const backoff = Math.floor(Math.min(baseDelayMs * 2 ** (attempt - 1), maxDelayMs));
+  // A missing or invalid delay (NaN from an unset environment variable, say) must not replace the provider error
+  const base = Number.isFinite(baseDelayMs) && baseDelayMs > 0 ? baseDelayMs : 0;
+  const exponent = Number.isFinite(attempt) && attempt > 1 ? attempt - 1 : 0;
+  const backoff = Math.floor(Math.min(base * 2 ** exponent, maxDelayMs));
   const half = Math.floor(backoff / 2);
   return half + randomInt(0, backoff - half + 1);
+}
+
+/** Waits `ms` before a retry, and rejects with the signal's reason as soon as `signal` aborts */
+export function waitForRetry(ms: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) return Promise.reject(signal.reason);
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(signal?.reason);
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    signal?.addEventListener('abort', onAbort, { once: true });
+  });
 }

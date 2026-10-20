@@ -169,7 +169,7 @@ app.post('/api/chat', async (req, res) => {
 
 ### Retry with backoff
 
-LOFT's `GenerateCallManager` handles retries at the LLM API call level (configurable via `retryDelay` and `retryAttemptsLimit`). For application-level retries:
+LOFT's `GenerateCallManager` retries an LLM API call that failed with 408, 429, a 5xx or a network error, with exponential backoff (configurable via `retryDelay` and `retryAttemptsLimit`, see [Call manager](./llm-strategies.md)). Other errors, such as a 400 or 401, are thrown at once. For application-level retries:
 
 ```typescript
 async function generateWithRetry(options: Chat.GenerateOptions, maxRetries = 3): Promise<Chat.GenerateResult> {

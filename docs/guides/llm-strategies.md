@@ -254,5 +254,7 @@ The `GenerateCallManager` config controls retries:
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `highPriorityTasksLimit` | number | Max high-priority tasks in queue before rejection |
-| `retryDelay` | number | Delay between retries (ms) |
-| `retryAttemptsLimit` | number | Max retry attempts before failure |
+| `retryDelay` | number | Base of the backoff between attempts (ms): doubled for each retry, with jitter, at most 60 s |
+| `retryAttemptsLimit` | number | Max attempts, the first one included |
+
+Only failures a new attempt can fix are retried: 408, 429 and 5xx responses and network failures, such as the SDKs' connection and timeout errors. A 400, 401 or 404 is thrown at once. A `Retry-After` (or `retry-after-ms`) header from the provider sets the wait instead, up to 60 s. The queue runs one call at a time, so the calls behind a waiting retry wait too; aborting the call's `signal` ends the wait.

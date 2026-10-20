@@ -145,6 +145,21 @@ describe('GenerateCallManager', () => {
       expect(generate).toHaveBeenCalledTimes(1);
     });
 
+    it('stops waiting for Retry-After when the signal aborts', async () => {
+      const controller = new AbortController();
+      generate.mockImplementationOnce(async () => {
+        setTimeout(() => controller.abort(new Error('client went away')), 10);
+        throw providerError(429, 'rate limited', { 'retry-after': '60' });
+      });
+
+      const started = Date.now();
+      await expect(manager.addHighPriorityTask(REQUEST, { signal: controller.signal })).rejects.toThrow(
+        'client went away'
+      );
+      expect(Date.now() - started).toBeLessThan(5000);
+      expect(generate).toHaveBeenCalledTimes(1);
+    });
+
     it('waits as long as Retry-After asks before retrying a 429 response', async () => {
       vi.useFakeTimers();
       try {

@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 import * as Strategy from '../../strategies';
-import { isRetryableError, retryDelayMs } from '../utils/retryPolicy';
+import { isRetryableError, retryDelayMs, waitForRetry } from '../utils/retryPolicy';
 import { Logger } from './Logger';
 
 const log = new Logger('CallManagerStrategy');
@@ -18,10 +18,9 @@ const DEFAULT_RETRY_DELAY_MS = 500;
 export class HttpCallManagerStrategy implements Strategy.CallManager {
   constructor(private readonly config: CallManagerAdapterConfig) {}
 
-  // Waits before the next attempt; always true, so it can sit in the loop condition
-  private async waitBeforeRetry(error: unknown, attempt: number): Promise<boolean> {
-    const delay = retryDelayMs(error, attempt, this.config.retryDelay ?? DEFAULT_RETRY_DELAY_MS);
-    await new Promise((resolve) => setTimeout(resolve, delay));
+  // Waits before the next attempt, until the signal aborts; always true, so it can sit in the loop condition
+  private async waitBeforeRetry(error: unknown, attempt: number, signal?: AbortSignal): Promise<boolean> {
+    await waitForRetry(retryDelayMs(error, attempt, this.config.retryDelay ?? DEFAULT_RETRY_DELAY_MS), signal);
     return true;
   }
 
@@ -44,7 +43,7 @@ export class HttpCallManagerStrategy implements Strategy.CallManager {
         log.error('call to loft-llm-call-manager-service failed', error);
         lastError = error;
       }
-    } while (++attempts < this.config.retryAttempts && (await this.waitBeforeRetry(lastError, attempts)));
+    } while (++attempts < this.config.retryAttempts && (await this.waitBeforeRetry(lastError, attempts, signal)));
 
     throw new Error(`CallManager doesn't work`, { cause: lastError });
   }

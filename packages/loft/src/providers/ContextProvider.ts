@@ -25,6 +25,10 @@ export class ContextProvider implements ContextProviderInterface {
     @inject(Container) container: Container,
     @inject(DI_TYPES.ChatConfig) @optional() private readonly chatConfig?: ChatConfig
   ) {
+    const historyLimit = chatConfig?.historyLimit;
+    if (historyLimit !== undefined && !(Number.isInteger(historyLimit) && historyLimit >= 0)) {
+      throw new TypeError(`ChatConfig.historyLimit must be an integer >= 0, got ${historyLimit}`);
+    }
     this.container = container;
   }
 
@@ -55,7 +59,10 @@ export class ContextProvider implements ContextProviderInterface {
     );
 
     if (!chatHistoryData) {
-      chatHistoryData = await chatHistoryManager.getMessages(sessionId, { limit: this.chatConfig?.historyLimit });
+      const limit = this.chatConfig?.historyLimit;
+      chatHistoryData = await (limit === undefined
+        ? chatHistoryManager.getMessages(sessionId)
+        : chatHistoryManager.getMessages(sessionId, { limit }));
     }
     return new ChatHistory(sessionId, chatHistoryManager, chatHistoryData);
   }

@@ -8,3 +8,5 @@
 
 - `Repository.ChatHistory.getMessages()` takes an optional `{ limit }`. The PostgreSQL repository reads only the latest messages; a custom repository that ignores it still works, as the chat history manager keeps the latest messages itself.
 - `getChatHistory()` still returns the whole history.
+- A `historyLimit` that is not an integer of 0 or more is rejected with a `TypeError`.
+- Without `historyLimit`, the chat history manager is called with the session id only, as before.

@@ -51,7 +51,7 @@ Each LLM integration is composed of three layers:
 │  GenerateCallManager                              │
 │                                                   │
 │  Handles: rate limiting (p-queue), retries with   │
-│  a fixed delay (retryDelay), token counting       │
+│  backoff (retryDelay), token counting             │
 │                                                   │
 │  Import: @moc-global/loft-llm-call-manager        │
 └──────────────────────┬───────────────────────────┘
@@ -211,7 +211,7 @@ interface CallManager {
 The `GenerateCallManager` (from `@moc-global/loft-llm-call-manager`) handles the actual call management:
 
 - **Priority queuing** via `p-queue` (single concurrency by default)
-- **Retry with delay** on failures (configurable `retryDelay` and `retryAttemptsLimit`)
+- **Retry with backoff** on 408, 429, 5xx and network failures (configurable `retryDelay` and `retryAttemptsLimit`)
 - **High-priority task limit** to prevent queue saturation
 
 ```typescript
@@ -219,8 +219,8 @@ const callManager = new GenerateCallManager<OpenAiRequest, OpenAiResponse>(
   'gpt-4o-mini',                          // name (for logging)
   {
     highPriorityTasksLimit: 10,            // max concurrent high-priority tasks
-    retryDelay: 1000,                      // ms between retries
-    retryAttemptsLimit: 3                  // max retry attempts
+    retryDelay: 1000,                      // backoff base in ms, doubled for each retry
+    retryAttemptsLimit: 3                  // max attempts, the first one included
   },
   openAiCallStrategy                       // the actual API caller
 );

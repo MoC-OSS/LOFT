@@ -1,9 +1,8 @@
-import { isRetryableError, Logger, retryDelayMs, Strategy } from '@moc-global/loft-definitions';
+import { isRetryableError, Logger, retryDelayMs, Strategy, waitForRetry } from '@moc-global/loft-definitions';
 import PQueue from 'p-queue';
 
 import { TooManyHighPriorityTasksError } from './errors';
 import { GenerateConfig } from './types';
-import { delay } from './utils';
 
 const log = new Logger('LlmCallManager');
 
@@ -86,7 +85,8 @@ export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.Gener
         lastError = error;
         attempt++;
         if (attempt < this.config.retryAttemptsLimit) {
-          await delay(retryDelayMs(error, attempt, this.config.retryDelay));
+          // An abort ends the wait: a Retry-After of up to 60 s holds the queue slot meanwhile
+          await waitForRetry(retryDelayMs(error, attempt, this.config.retryDelay), options?.signal);
         }
       }
     } while (attempt < this.config.retryAttemptsLimit);
