@@ -243,8 +243,11 @@ describe('LoftConstructor and ChatConstructor', () => {
     await loft.shutdown();
   });
 
-  // A bug, left for its own fix: the manifest manager swallows the load error, so validateManifest() resolves
-  it.todo('reject an invalid manifest on validateManifest()');
+  it('reject an invalid manifest on validateManifest()', async () => {
+    const { loftConstructor } = build({ manifests: { llmManifests: 'not an object' } });
+
+    await expect(loftConstructor.validateManifest()).rejects.toThrow();
+  });
 
   it('shut the tracer down on gracefulShutdown()', async () => {
     const shutdownAsync = vi.fn().mockResolvedValue(undefined);
