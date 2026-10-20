@@ -51,7 +51,7 @@ Each LLM integration is composed of three layers:
 │  GenerateCallManager                              │
 │                                                   │
 │  Handles: rate limiting (p-queue), retries with   │
-│  a fixed delay (retryDelay), token counting       │
+│  backoff (retryDelay), token counting             │
 │                                                   │
 │  Import: @moc-global/loft-llm-call-manager        │
 └──────────────────────┬───────────────────────────┘
@@ -158,11 +158,14 @@ The out-of-the-box implementation is `@moc-global/loft-session-pg-repository` (K
 // packages/loft-definitions/src/repositories/ChatHistory.ts
 export interface ChatHistory {
   addMessages(sessionId: string, messages: CreateMessage[]): Promise<Message[]>;
-  getMessages(sessionId: string): Promise<Message[]>;
+  // With options.limit: only the latest messages, at most that many, still in chronological order
+  getMessages(sessionId: string, options?: { limit?: number }): Promise<Message[]>;
   checkHealth(): Promise<boolean>;
   end(): Promise<void>;
 }
 ```
+
+A repository that ignores `limit` still works: the chat history manager keeps the latest messages itself, but the database then reads the whole history.
 
 The out-of-the-box implementation is `@moc-global/loft-chat-history-pg-repository` (Kysely ORM with PostgreSQL). Like `Session`, this interface is database-agnostic and can be implemented for any storage backend.
 
@@ -208,7 +211,7 @@ interface CallManager {
 The `GenerateCallManager` (from `@moc-global/loft-llm-call-manager`) handles the actual call management:
 
 - **Priority queuing** via `p-queue` (single concurrency by default)
-- **Retry with delay** on failures (configurable `retryDelay` and `retryAttemptsLimit`)
+- **Retry with backoff** on 408, 429, 5xx and network failures (configurable `retryDelay` and `retryAttemptsLimit`)
 - **High-priority task limit** to prevent queue saturation
 
 ```typescript
@@ -216,8 +219,8 @@ const callManager = new GenerateCallManager<OpenAiRequest, OpenAiResponse>(
   'gpt-4o-mini',                          // name (for logging)
   {
     highPriorityTasksLimit: 10,            // max concurrent high-priority tasks
-    retryDelay: 1000,                      // ms between retries
-    retryAttemptsLimit: 3                  // max retry attempts
+    retryDelay: 1000,                      // backoff base in ms, doubled for each retry
+    retryAttemptsLimit: 3                  // max attempts, the first one included
   },
   openAiCallStrategy                       // the actual API caller
 );

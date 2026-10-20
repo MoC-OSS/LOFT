@@ -11,16 +11,24 @@ import {
   Repository,
   Type
 } from '@moc-global/loft-definitions';
-import { Container, inject, injectable } from 'inversify';
+import { Container, inject, injectable, optional } from 'inversify';
 
 import { ChatHistory, Session } from '../entities';
+import { ChatConfig } from '../types';
 
 @injectable()
 export class ContextProvider implements ContextProviderInterface {
   private container: Container;
   protected readonly log = new Logger('ContextProvider');
 
-  constructor(@inject(Container) container: Container) {
+  constructor(
+    @inject(Container) container: Container,
+    @inject(DI_TYPES.ChatConfig) @optional() private readonly chatConfig?: ChatConfig
+  ) {
+    const historyLimit = chatConfig?.historyLimit;
+    if (historyLimit !== undefined && !(Number.isInteger(historyLimit) && historyLimit >= 0)) {
+      throw new TypeError(`ChatConfig.historyLimit must be an integer >= 0, got ${historyLimit}`);
+    }
     this.container = container;
   }
 
@@ -51,7 +59,10 @@ export class ContextProvider implements ContextProviderInterface {
     );
 
     if (!chatHistoryData) {
-      chatHistoryData = await chatHistoryManager.getMessages(sessionId);
+      const limit = this.chatConfig?.historyLimit;
+      chatHistoryData = await (limit === undefined
+        ? chatHistoryManager.getMessages(sessionId)
+        : chatHistoryManager.getMessages(sessionId, { limit }));
     }
     return new ChatHistory(sessionId, chatHistoryManager, chatHistoryData);
   }

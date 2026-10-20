@@ -2,6 +2,7 @@ import { Interface, Logger, Strategy } from '@moc-global/loft-definitions';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import { LlmCallManagerLongAwaitError } from '../../errors';
 import { GenerateWithQueueManager } from '../../GenerateWithQueueManager';
 import { GenerateWithQueueConfig } from '../../types';
 
@@ -23,10 +24,12 @@ describe('GenerateWithQueueManager', () => {
   const outgoingPublish = vi.fn<(message: string) => Promise<void>>();
   const unhandled = vi.fn();
   const stopRateLimiter = vi.fn();
+  const awaitBeforeCall = vi.fn();
+  const deadLetterPublish = vi.fn<(message: string) => Promise<void>>();
   const managers: GenerateWithQueueManager<unknown, unknown>[] = [];
 
   // The manager starts polling the queue as soon as it is constructed
-  function startManager() {
+  function startManager(options: { deadLetter?: boolean; config?: Partial<GenerateWithQueueConfig> } = {}) {
     const llmApi = {
       generate,
       reduceMessages: () => 'hello',
@@ -34,7 +37,7 @@ describe('GenerateWithQueueManager', () => {
       generateRequestValidationSchema: () =>
         z.object({ sessionId: z.string(), llmName: z.string(), llmBody: z.unknown(), callContext: z.unknown() }),
       tokenRateLimiter: {
-        awaitBeforeCall: vi.fn(),
+        awaitBeforeCall,
         setUsedTokens: vi.fn(),
         setUsedRequest: vi.fn(),
         stop: stopRateLimiter
@@ -46,10 +49,11 @@ describe('GenerateWithQueueManager', () => {
 
     const manager = new GenerateWithQueueManager<unknown, unknown>(
       'test',
-      CONFIG,
+      { ...CONFIG, ...options.config },
       llmApi,
       queue(incomingPublish),
-      queue(outgoingPublish)
+      queue(outgoingPublish),
+      options.deadLetter ? queue(deadLetterPublish) : undefined
     );
     managers.push(manager);
     return manager;
@@ -63,7 +67,16 @@ describe('GenerateWithQueueManager', () => {
     // setImmediate stays real so the test can wait for unhandled-rejection reports
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     process.on('unhandledRejection', unhandled);
-    for (const mock of [generate, consume, incomingPublish, outgoingPublish, unhandled, stopRateLimiter]) {
+    for (const mock of [
+      generate,
+      consume,
+      incomingPublish,
+      outgoingPublish,
+      deadLetterPublish,
+      unhandled,
+      stopRateLimiter,
+      awaitBeforeCall
+    ]) {
       mock.mockReset();
     }
     incomingPublish.mockResolvedValue(undefined);
@@ -101,6 +114,62 @@ describe('GenerateWithQueueManager', () => {
     expect(generate).toHaveBeenCalled();
     expect(outgoingPublish).not.toHaveBeenCalled();
     expect(unhandled).not.toHaveBeenCalled();
+  });
+
+  describe('a task that waits too long for the rate limiter', () => {
+    const published = (publish: typeof incomingPublish) => publish.mock.calls.map(([message]) => JSON.parse(message));
+
+    beforeEach(() => {
+      awaitBeforeCall.mockRejectedValue(new LlmCallManagerLongAwaitError('Too long await before call'));
+    });
+
+    it('goes back to the incoming queue with its attempts counted', async () => {
+      consume.mockReset().mockResolvedValueOnce(JSON.stringify({ ...TASK, requeueAttempts: 2 }));
+      consume.mockResolvedValue(undefined);
+      startManager();
+
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(published(incomingPublish)).toEqual([{ ...TASK, requeueAttempts: 3 }]);
+      expect(outgoingPublish).not.toHaveBeenCalled();
+    });
+
+    it('goes to the outgoing queue as an error after maxRequeueAttempts', async () => {
+      consume.mockReset().mockResolvedValueOnce(JSON.stringify({ ...TASK, requeueAttempts: 3 }));
+      consume.mockResolvedValue(undefined);
+      startManager({ config: { maxRequeueAttempts: 3 } });
+
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(incomingPublish).not.toHaveBeenCalled();
+      expect(published(outgoingPublish)).toEqual([
+        {
+          sessionId: 'session-1',
+          llmName: 'fake',
+          callContext: {},
+          priority: 0,
+          error: { name: 'LlmCallManagerLongAwaitError', message: 'Too long await before call' }
+        }
+      ]);
+    });
+
+    it('goes to the dead-letter queue after maxRequeueAttempts when there is one', async () => {
+      consume.mockReset().mockResolvedValueOnce(JSON.stringify({ ...TASK, requeueAttempts: 10 }));
+      consume.mockResolvedValue(undefined);
+      startManager({ deadLetter: true });
+
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(incomingPublish).not.toHaveBeenCalled();
+      expect(outgoingPublish).not.toHaveBeenCalled();
+      expect(published(deadLetterPublish)).toEqual([
+        {
+          ...TASK,
+          requeueAttempts: 10,
+          error: { name: 'LlmCallManagerLongAwaitError', message: 'Too long await before call' }
+        }
+      ]);
+    });
   });
 
   it('stops polling the queue and the rate limiter on stop()', async () => {

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { ChatConstructor } from '@moc-global/loft';
+import { ChatConfig, ChatConstructor } from '@moc-global/loft';
 import { Interface, Strategy, Type } from '@moc-global/loft-definitions';
 import { ScriptedLLMStrategy, ScriptedMessage, ScriptedReply } from '@moc-global/loft-test-suite';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -17,6 +17,8 @@ export interface ScriptedChatOptions {
   /** Metadata per MCP client name */
   mcpMetadata?: Record<string, Partial<Interface.MCP.MCPClientMetadata>>;
   tracer?: Strategy.Tracer.TracerFactory;
+  /** The fifth `ChatConstructor` argument */
+  chatConfig?: ChatConfig;
   /** Runs before the LOFT instance is created, to register middleware, interceptors or computers */
   configure?: (setup: { chatConstructor: ChatConstructor; loftConstructor: LoftConstructorType }) => void;
 }
@@ -29,7 +31,7 @@ export async function startScriptedChat(
   replies: ScriptedReply[],
   options: ScriptedChatOptions = {}
 ) {
-  const chatConstructor = createChatConstructor(testDb);
+  const chatConstructor = createChatConstructor(testDb, options.chatConfig);
   const loftConstructor = createLoftConstructor(chatConstructor, options.tracer);
   const llm = new ScriptedLLMStrategy(SCRIPTED_LLM, replies);
   await loftConstructor.registerLlmStrategy(SCRIPTED_LLM, llm);

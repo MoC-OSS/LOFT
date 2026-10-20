@@ -35,8 +35,14 @@ export class ChatHistoryRepository extends MessageQueries implements Repository.
     return appendedMessages as unknown as Type.Entity.ChatHistory;
   }
 
-  async getMessages(sessionId: Type.Entity.Session['id']): Promise<Type.Entity.ChatHistory> {
-    const messages = await this.getBySessionIdQuery(sessionId).execute();
+  async getMessages(
+    sessionId: Type.Entity.Session['id'],
+    options?: Repository.GetMessagesOptions
+  ): Promise<Type.Entity.ChatHistory> {
+    const messages =
+      options?.limit === undefined
+        ? await this.getBySessionIdQuery(sessionId).execute()
+        : (await this.getLatestBySessionIdQuery(sessionId, options.limit).execute()).reverse();
     return messages as unknown as Type.Entity.ChatHistory;
   }
 

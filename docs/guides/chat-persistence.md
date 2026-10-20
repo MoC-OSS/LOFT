@@ -317,6 +317,21 @@ The example applications demonstrate different persistence patterns:
 
 ## Production Considerations
 
+### Long sessions
+
+Every request loads the session's history before the context window cropper cuts it to what the model takes. For long sessions, `ChatConfig.historyLimit` bounds what the database reads: a request loads only that many of the latest messages. Set it above what your context windows hold, so the cropper still decides what the model sees. It must be an integer of 0 or more.
+
+- The limit counts every stored message, including those with `llmIgnore`, which the strategies leave out afterwards, so the model can see fewer than `historyLimit` messages.
+- A limited history does not start with tool results whose tool call was cut off. A `system` message stored at the start of the session is cut off like any other message.
+- Message patches are still read for the whole session.
+- `getChatHistory()` still returns the whole history.
+
+```typescript
+new ChatConstructor(sessionRepositoryConstructor, chatHistoryRepositoryConstructor, undefined, undefined, {
+  historyLimit: 200
+});
+```
+
 ### Connection Pool Sizing
 
 ```typescript

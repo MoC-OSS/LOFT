@@ -30,8 +30,12 @@ export abstract class AbstractChatHistoryManager implements Repository.ChatHisto
   }
 
   // Chat History Repository
-  async getMessages(sessionId: Type.Entity.Session['id']): Promise<Type.Entity.Message[]> {
-    const chatHistory = await this.chatHistoryRepository.getMessages(sessionId);
+  async getMessages(
+    sessionId: Type.Entity.Session['id'],
+    options?: Repository.GetMessagesOptions
+  ): Promise<Type.Entity.Message[]> {
+    let chatHistory = await this.chatHistoryRepository.getMessages(sessionId, options);
+    if (options?.limit !== undefined) chatHistory = keepLatest(chatHistory, options.limit);
     const patches = await this.chatHistoryPatcherRepository?.getPatches(sessionId);
     if (!patches) return chatHistory;
     return patchMessages(chatHistory, patches);
@@ -92,6 +96,16 @@ export abstract class AbstractChatHistoryManager implements Repository.ChatHisto
   async end(): Promise<void> {
     await Promise.all([this.chatHistoryRepository.end(), this.chatHistoryPatcherRepository?.end()]);
   }
+}
+
+/**
+ * The latest `limit` messages, also when a custom repository ignores the limit. A limited history does not start
+ * with tool results, whose tool calls were left out: providers reject a result without its call.
+ */
+function keepLatest(messages: Type.Entity.Message[], limit: number): Type.Entity.Message[] {
+  const latest = messages.slice(Math.max(0, messages.length - limit));
+  const firstKept = latest.findIndex((message) => message.role !== Type.LLM.UnifiedMessageRole.tool);
+  return firstKept === -1 ? [] : latest.slice(firstKept);
 }
 
 function applyPatch(message: Type.Entity.Message, patch: Type.Entity.MessagePatch): void {

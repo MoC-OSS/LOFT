@@ -1,7 +1,14 @@
 import 'reflect-metadata';
 
 import { Type } from '@moc-global/loft-definitions';
-import { Kysely } from 'kysely';
+import {
+  CamelCasePlugin,
+  DummyDriver,
+  Kysely,
+  PostgresAdapter,
+  PostgresIntrospector,
+  PostgresQueryCompiler
+} from 'kysely';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Database } from '../../dbTypes';
@@ -34,5 +41,38 @@ describe('ChatHistoryRepository.addMessages', () => {
       `Cannot add a message of session ${OTHER_SESSION_ID} to session ${SESSION_ID}`
     );
     expect(insertInto).not.toHaveBeenCalled();
+  });
+});
+
+describe('ChatHistoryRepository.getMessages with a limit', () => {
+  const dummyDb = new Kysely<Database>({
+    dialect: {
+      createAdapter: () => new PostgresAdapter(),
+      createDriver: () => new DummyDriver(),
+      createIntrospector: (kysely) => new PostgresIntrospector(kysely),
+      createQueryCompiler: () => new PostgresQueryCompiler()
+    },
+    plugins: [new CamelCasePlugin()]
+  });
+
+  it('asks the database for the latest messages only', () => {
+    const repository = new ChatHistoryRepository(dummyDb, { schema: 'chat' }, {} as HealthCheckService);
+
+    const { sql, parameters } = repository.getLatestBySessionIdQuery(SESSION_ID, 20).compile();
+
+    expect(sql).toContain('order by "chat"."message"."sequence_id" desc limit $2');
+    expect(parameters).toEqual([SESSION_ID, 20]);
+  });
+
+  it('returns them in chronological order', async () => {
+    const repository = new ChatHistoryRepository(dummyDb, { schema: 'chat' }, {} as HealthCheckService);
+    const newestFirst = [{ id: 'third' }, { id: 'second' }];
+    vi.spyOn(repository, 'getLatestBySessionIdQuery').mockReturnValue({
+      execute: async () => newestFirst
+    } as unknown as ReturnType<ChatHistoryRepository['getLatestBySessionIdQuery']>);
+
+    const messages = await repository.getMessages(SESSION_ID, { limit: 2 });
+
+    expect(messages.map(({ id }) => id)).toEqual(['second', 'third']);
   });
 });

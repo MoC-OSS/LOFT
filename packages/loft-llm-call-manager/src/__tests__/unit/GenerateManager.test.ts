@@ -106,8 +106,12 @@ describe('GenerateCallManager', () => {
   });
 
   describe('retries without a signal', () => {
+    // A provider SDK error: the HTTP status and the response headers
+    const providerError = (status: number, message: string, headers: Record<string, string> = {}) =>
+      Object.assign(new Error(message), { status, headers });
+
     it('retries a failing call and returns the first success', async () => {
-      generate.mockRejectedValueOnce(new Error('fail 1')).mockRejectedValueOnce(new Error('fail 2'));
+      generate.mockRejectedValueOnce(providerError(503, 'fail 1')).mockRejectedValueOnce(providerError(429, 'fail 2'));
       generate.mockResolvedValue('response');
 
       await expect(manager.addHighPriorityTask(REQUEST)).resolves.toBe('response');
@@ -117,12 +121,69 @@ describe('GenerateCallManager', () => {
     });
 
     it('rejects with the last error after retryAttemptsLimit attempts', async () => {
-      generate.mockRejectedValueOnce(new Error('fail 1')).mockRejectedValueOnce(new Error('fail 2'));
-      generate.mockRejectedValue(new Error('fail 3'));
+      generate.mockRejectedValueOnce(providerError(500, 'fail 1')).mockRejectedValueOnce(providerError(502, 'fail 2'));
+      generate.mockRejectedValue(providerError(503, 'fail 3'));
 
       await expect(manager.addHighPriorityTask(REQUEST)).rejects.toThrow('fail 3');
 
       expect(generate).toHaveBeenCalledTimes(CONFIG.retryAttemptsLimit);
+    });
+
+    it.each([400, 401, 404])('does not retry a %i response', async (status) => {
+      generate.mockRejectedValue(providerError(status, 'bad request'));
+
+      await expect(manager.addHighPriorityTask(REQUEST)).rejects.toThrow('bad request');
+
+      expect(generate).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry an error that is not a provider or network failure', async () => {
+      generate.mockRejectedValue(new TypeError('cannot read the response'));
+
+      await expect(manager.addHighPriorityTask(REQUEST)).rejects.toThrow('cannot read the response');
+
+      expect(generate).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops waiting for Retry-After when the signal aborts', async () => {
+      const controller = new AbortController();
+      generate.mockImplementationOnce(async () => {
+        setTimeout(() => controller.abort(new Error('client went away')), 10);
+        throw providerError(429, 'rate limited', { 'retry-after': '60' });
+      });
+
+      const started = Date.now();
+      await expect(manager.addHighPriorityTask(REQUEST, { signal: controller.signal })).rejects.toThrow(
+        'client went away'
+      );
+      expect(Date.now() - started).toBeLessThan(5000);
+      expect(generate).toHaveBeenCalledTimes(1);
+    });
+
+    it('waits as long as Retry-After asks before retrying a 429 response', async () => {
+      vi.useFakeTimers();
+      try {
+        const llmApi = {
+          generate,
+          reduceMessages: () => 'hello',
+          extractUsedTokens: () => 1,
+          tokenRateLimiter: { awaitBeforeCall, setUsedTokens: vi.fn(), setUsedRequest: vi.fn() },
+          llmTokenizer: { calculateTokensFromString: () => 1 }
+        } as unknown as Strategy.LLM.LLMApi;
+        const slow = new GenerateCallManager<Body, unknown>('test', { ...CONFIG, retryDelay: 100 }, llmApi);
+        generate.mockRejectedValueOnce(providerError(429, 'rate limited', { 'retry-after': '2' }));
+        generate.mockResolvedValue('response');
+
+        const result = slow.addHighPriorityTask(REQUEST);
+        await vi.advanceTimersByTimeAsync(1999);
+        expect(generate).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(1);
+
+        await expect(result).resolves.toBe('response');
+        expect(generate).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

@@ -62,6 +62,7 @@ At every level, the default `PinoLoggerStrategy` replaces credentials with `[Red
 // packages/loft/src/types/config.ts
 interface ChatConfig {
   shutdownTimeout?: number;          // Max wait of shutdown() for active operations, in ms (>= 0). Default: no limit
+  historyLimit?: number;             // Latest history messages a request loads (integer >= 0). Default: all
   mcp?: {
     toolCacheTtl?: number;           // MCP tool list cache TTL in ms. Default: 60000 (1 min)
     maxCallsPerGenerate?: number;    // Max MCP tool execution loop iterations. Default: 10
@@ -167,8 +168,8 @@ interface LlmTokenRateLimiterConfig {
 // packages/loft-llm-call-manager/src/types.ts
 interface GenerateConfig {
   highPriorityTasksLimit: number;   // Max high-priority tasks in queue
-  retryDelay: number;               // Delay between retries (ms)
-  retryAttemptsLimit: number;       // Maximum retry attempts
+  retryDelay: number;               // Base of the exponential backoff between retries (ms); Retry-After overrides it
+  retryAttemptsLimit: number;       // Attempts per call; only 408, 429, 5xx and network failures are retried
 }
 ```
 

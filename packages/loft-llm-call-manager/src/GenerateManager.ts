@@ -1,9 +1,8 @@
-import { Logger, Strategy } from '@moc-global/loft-definitions';
+import { isRetryableError, Logger, retryDelayMs, Strategy, waitForRetry } from '@moc-global/loft-definitions';
 import PQueue from 'p-queue';
 
 import { TooManyHighPriorityTasksError } from './errors';
 import { GenerateConfig } from './types';
-import { delay } from './utils';
 
 const log = new Logger('LlmCallManager');
 
@@ -80,13 +79,14 @@ export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.Gener
         this.llmStrategy.tokenRateLimiter.setUsedRequest();
         return llmResponse;
       } catch (error) {
-        // An aborted call is not retried
-        if (options?.signal?.aborted) throw error;
+        // An aborted call is not retried, and neither is one that cannot succeed on a new attempt (400, 401, 404)
+        if (options?.signal?.aborted || !isRetryableError(error)) throw error;
         log.error('makeGenerateRequest attempt failed', error);
         lastError = error;
         attempt++;
         if (attempt < this.config.retryAttemptsLimit) {
-          await delay(this.config.retryDelay);
+          // An abort ends the wait: a Retry-After of up to 60 s holds the queue slot meanwhile
+          await waitForRetry(retryDelayMs(error, attempt, this.config.retryDelay), options?.signal);
         }
       }
     } while (attempt < this.config.retryAttemptsLimit);

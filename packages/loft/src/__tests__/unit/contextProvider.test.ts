@@ -314,9 +314,21 @@ describe('ContextProvider', () => {
       // Call get method
       const context = await contextProvider.get(sessionId);
 
-      // Verify chat history was properly loaded
+      // Verify chat history was properly loaded, all of it without a historyLimit
       expect(chatHistoryManager.getMessages).toHaveBeenCalledWith(sessionId);
       expect(context.chatHistory).toBeDefined();
+    });
+
+    it('loads at most ChatConfig.historyLimit messages', async () => {
+      chatHistoryManager.getMessages.mockResolvedValue(sampleMessages);
+
+      await new ContextProvider(container, { historyLimit: 20 }).get(sessionId);
+
+      expect(chatHistoryManager.getMessages).toHaveBeenCalledWith(sessionId, { limit: 20 });
+    });
+
+    it.each([-1, 1.5, Number.NaN])('rejects a historyLimit of %s', (historyLimit) => {
+      expect(() => new ContextProvider(container, { historyLimit })).toThrow(TypeError);
     });
   });
 

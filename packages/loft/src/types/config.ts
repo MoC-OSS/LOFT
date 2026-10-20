@@ -12,6 +12,11 @@ export interface ChatConfig {
    * so the process can exit. No limit when unset.
    */
   shutdownTimeout?: number;
+  /**
+   * The most messages of a session's history that a request loads into its context: the latest ones. Default: all.
+   * Set it to bound the database load of long sessions; the context window cropper then works on these messages.
+   */
+  historyLimit?: number;
   mcp?: {
     toolCacheTtl?: number;
     maxCallsPerGenerate?: number;
