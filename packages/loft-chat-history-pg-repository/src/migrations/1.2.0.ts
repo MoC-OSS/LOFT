@@ -44,12 +44,12 @@ export async function down(db: Kysely<unknown>, { schema: SCHEMA }: MigrationCon
     ALTER COLUMN content DROP DEFAULT
   `.execute(db);
 
-  // Extract the text field from the first object with type='text'
+  // Keep the text of the first part with type='text'. Postgres does not allow a subquery in USING, `#>> '{}'`
+  // reads the JSON string without quotes, and a message without text (a tool call, an image) becomes '' because
+  // content is NOT NULL
   await sql`
-    ALTER TABLE ${sql.id(SCHEMA, 'message')} 
-    ALTER COLUMN content TYPE varchar 
-    USING (
-      SELECT jsonb_path_query_first(content, '$[*] ? (@.type == "text")."text"')::text
-    )
+    ALTER TABLE ${sql.id(SCHEMA, 'message')}
+    ALTER COLUMN content TYPE varchar
+    USING COALESCE(jsonb_path_query_first(content, '$[*] ? (@.type == "text")."text"') #>> '{}', '')
   `.execute(db);
 }
