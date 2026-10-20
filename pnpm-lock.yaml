@@ -597,12 +597,6 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.134.0
         version: 0.134.0(zod@3.25.67)
-      '@electric-sql/pglite':
-        specifier: 0.5.8
-        version: 0.5.8
-      '@electric-sql/pglite-socket':
-        specifier: 0.2.11
-        version: 0.2.11(@electric-sql/pglite-age@0.0.9(@electric-sql/pglite@0.5.8))(@electric-sql/pglite-pg_hashids@0.0.9(@electric-sql/pglite@0.5.8))(@electric-sql/pglite-pg_ivm@0.0.9(@electric-sql/pglite@0.5.8))(@electric-sql/pglite-pg_textsearch@0.0.10(@electric-sql/pglite@0.5.8))(@electric-sql/pglite-pg_uuidv7@0.0.9(@electric-sql/pglite@0.5.8))(@electric-sql/pglite-pgtap@0.0.9(@electric-sql/pglite@0.5.8))(@electric-sql/pglite-pgvector@0.0.9(@electric-sql/pglite@0.5.8))(@electric-sql/pglite@0.5.8)
       '@google/genai':
         specifier: ^2.30.0
         version: 2.30.0(@modelcontextprotocol/sdk@1.32.1(zod@3.25.67))
