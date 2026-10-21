@@ -1,6 +1,6 @@
 {
   "name": "@moc-global/loft-queue-sqs-strategy",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "AWS SQS queue strategy for queued generation in the LOFT framework",
   "keywords": [
     "loft",

@@ -1,5 +1,44 @@
 # @moc-global/loft-definitions
 
+## 1.9.0
+
+### Minor Changes
+
+- 5e97c38: `ChatConfig.historyLimit` bounds how much history a request loads. A request then loads only that many of the latest messages of the session, still in chronological order, instead of the whole history; the default stays all of it. A limited history does not start with tool results whose tool call was cut off.
+
+  - `Repository.ChatHistory.getMessages()` takes an optional `{ limit }`. The PostgreSQL repository reads only the latest messages; a custom repository that ignores it still works, as the chat history manager keeps the latest messages itself.
+  - `getChatHistory()` still returns the whole history.
+  - A `historyLimit` that is not an integer of 0 or more is rejected with a `TypeError`.
+  - Without `historyLimit`, the chat history manager is called with the session id only, as before.
+
+- 5e97c38: The call managers retry only what can succeed on a new attempt, with backoff.
+
+  - `GenerateCallManager` and `HttpCallManagerStrategy` retry 408, 429 and 5xx responses and network failures, and no longer retry a 400, 401 or 404, or any other error.
+  - The wait doubles with each attempt, from `retryDelay`, between half and all of it at random (jitter), at most 60 s. A `Retry-After` (or `retry-after-ms`) header from the provider sets the wait instead.
+  - `HttpCallManagerStrategy` waited nothing between attempts; it now takes an optional `retryDelay` (default 500 ms). `call()` and `streamCall()` throw the axios error itself for a response that is not retried (a 400, 401 or 404, say), instead of `Error("CallManager doesn't work")`; that error is still thrown, with the last error as its `cause`, when the retries run out.
+  - `GenerateWithStreamManager` follows the same policy instead of retrying every error after a fixed delay.
+  - The connection and timeout errors of the OpenAI and Anthropic SDKs are retried; they are recognised by their class, as their `name` is `Error`.
+  - Aborting the call's `signal` ends the wait before a retry. An invalid `retryDelay` (NaN, say) counts as 0 instead of replacing the provider error.
+  - `@moc-global/loft-definitions` exports the policy: `isRetryableError()`, `retryDelayMs()`, `retryAfterMs()`, `errorStatus()` and `waitForRetry()`.
+
+- 839476f: Add `SessionNotFoundError`, so an application can tell a missing session apart from a database or provider failure, for example to answer 404.
+
+  - `@moc-global/loft-definitions` exports it. It extends `ChatError` and has the `sessionId`, or the `externalKey` the session was looked up by. A custom `Repository.Session` should throw it from `getById()`, `getByExternalKey()`, `updateById()` and `deleteById()`.
+  - The PostgreSQL session repository throws it instead of a plain `Error` (or Kysely's `NoResultError` from `updateById()`). It reaches the caller unchanged from `generate()`, `addMessages()`, `getSessionById()`, `getSessionByExternalKey()`, `updateSessionSettings()` and `deleteSession()`. The message stays `Session with id <id> not found`; for an external key it now shows the key as JSON instead of `[object Object]`.
+  - `updateSessionSettings()` throws it too when a custom repository returns nothing for the session.
+
+- 89ba02e: `LoftConstructor.validateManifest()` now rejects when the manifests cannot be loaded or are invalid, as its docs say. It resolved in every case: it called `ManifestManager.updateCache()`, which logs a failed load and keeps the stale cache. `ManifestManager` gets a `validate()` method that reports the error. `Interface.ManifestManager` declares it as optional, and `validateManifest()` falls back to `updateCache()` for a manager without it. Request handling keeps using the stale cache as before.
+
+### Patch Changes
+
+- b009ff6: Drop the `uuid` dependency: ids come from `node:crypto` `randomUUID`, and the `UUID` schema accepts the same values as before. `loft-definitions` updates `pino` from 8 to 10.
+- f844df9: Errors keep their cause instead of losing it.
+
+  - `FsRepository` throws an `Error` with the file system error as its `cause`, not a string, and no longer logs it first; `ManifestManager` logs it once.
+  - `HttpCallManagerStrategy` keeps the last failure as the `cause` of "CallManager doesn't work" and "stream call doesn't work".
+
+- fd8dad3: The middleware chain now copies the payload before the first middleware as well, not only between middlewares. A middleware that changed its input object used to change the caller's object too; code that relied on that by accident now sees the caller's payload unchanged.
+
 ## 1.8.0
 
 ### Minor Changes

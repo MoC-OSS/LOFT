@@ -1,5 +1,23 @@
 # @moc-global/loft-session-pg-repository
 
+## 2.0.0
+
+### Major Changes
+
+- 64a5326: Require Node.js 22.12 or later, for Kysely 0.29 and p-queue 10.
+
+  The PostgreSQL repositories move from Kysely 0.28 to 0.29, and the call manager from p-queue 6 to 10. Both ship only ES modules, and the CommonJS build loads them with `require()`, which Node.js supports without a flag from 22.12. To upgrade, run Node.js 22.12 or later. The migrations, the migration CLIs and the database schema are unchanged. If you create the dialect with your own `kysely` package rather than the re-exported `SessionPostgresDialect` and `ChatHistoryPostgresDialect`, update it to 0.29 as well.
+
+  `loft-llm-call-manager`: `GenerateCallManager.taskPQueue` is now typed as the new `TaskQueue` interface (`size`, `sizeBy()` and `add()`) instead of the p-queue class, because p-queue 10 publishes its types only through `exports`, which `moduleResolution: node` does not read. Code that calls other p-queue methods on `taskPQueue` needs a cast.
+
+### Minor Changes
+
+- 839476f: Add `SessionNotFoundError`, so an application can tell a missing session apart from a database or provider failure, for example to answer 404.
+
+  - `@moc-global/loft-definitions` exports it. It extends `ChatError` and has the `sessionId`, or the `externalKey` the session was looked up by. A custom `Repository.Session` should throw it from `getById()`, `getByExternalKey()`, `updateById()` and `deleteById()`.
+  - The PostgreSQL session repository throws it instead of a plain `Error` (or Kysely's `NoResultError` from `updateById()`). It reaches the caller unchanged from `generate()`, `addMessages()`, `getSessionById()`, `getSessionByExternalKey()`, `updateSessionSettings()` and `deleteSession()`. The message stays `Session with id <id> not found`; for an external key it now shows the key as JSON instead of `[object Object]`.
+  - `updateSessionSettings()` throws it too when a custom repository returns nothing for the session.
+
 ## 1.3.0
 
 ### Minor Changes

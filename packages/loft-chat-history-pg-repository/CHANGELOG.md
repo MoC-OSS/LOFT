@@ -1,5 +1,28 @@
 # @moc-global/loft-chat-history-pg-repository
 
+## 2.0.0
+
+### Major Changes
+
+- 64a5326: Require Node.js 22.12 or later, for Kysely 0.29 and p-queue 10.
+
+  The PostgreSQL repositories move from Kysely 0.28 to 0.29, and the call manager from p-queue 6 to 10. Both ship only ES modules, and the CommonJS build loads them with `require()`, which Node.js supports without a flag from 22.12. To upgrade, run Node.js 22.12 or later. The migrations, the migration CLIs and the database schema are unchanged. If you create the dialect with your own `kysely` package rather than the re-exported `SessionPostgresDialect` and `ChatHistoryPostgresDialect`, update it to 0.29 as well.
+
+  `loft-llm-call-manager`: `GenerateCallManager.taskPQueue` is now typed as the new `TaskQueue` interface (`size`, `sizeBy()` and `add()`) instead of the p-queue class, because p-queue 10 publishes its types only through `exports`, which `moduleResolution: node` does not read. Code that calls other p-queue methods on `taskPQueue` needs a cast.
+
+### Minor Changes
+
+- 5e97c38: `ChatConfig.historyLimit` bounds how much history a request loads. A request then loads only that many of the latest messages of the session, still in chronological order, instead of the whole history; the default stays all of it. A limited history does not start with tool results whose tool call was cut off.
+
+  - `Repository.ChatHistory.getMessages()` takes an optional `{ limit }`. The PostgreSQL repository reads only the latest messages; a custom repository that ignores it still works, as the chat history manager keeps the latest messages itself.
+  - `getChatHistory()` still returns the whole history.
+  - A `historyLimit` that is not an integer of 0 or more is rejected with a `TypeError`.
+  - Without `historyLimit`, the chat history manager is called with the session id only, as before.
+
+### Patch Changes
+
+- 453ba5a: Rolling back migration `1.2.0` (`loft-chat-history-pg-migrate down`) works again. PostgreSQL rejected its `down` with "cannot use subquery in transform expression". `content` now gets the text of the first text part without JSON quotes, and a message without text (a tool call, an image) gets an empty string. Other parts are dropped, since the column holds text only.
+
 ## 1.4.0
 
 ### Minor Changes
