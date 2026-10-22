@@ -559,7 +559,7 @@ describe('QueryByArrayOfObjects', () => {
         expect(result.length).toBe(9);
 
         // Memory cleanup
-        global.gc && global.gc(); // Call garbage collector if enabled (run with `--expose-gc`)
+        global.gc?.(); // Call garbage collector if enabled (run with `--expose-gc`)
       })();
 
       const finalMemory = process.memoryUsage().heapUsed;

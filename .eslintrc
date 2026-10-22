@@ -28,7 +28,8 @@
       "warn",
       {
         "varsIgnorePattern": "^_",
-        "argsIgnorePattern": "^_"
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "none"
       }
     ],
     "unused-imports/no-unused-imports": "error",
@@ -38,7 +39,8 @@
         "vars": "all",
         "varsIgnorePattern": "^_",
         "args": "after-used",
-        "argsIgnorePattern": "^_"
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "none"
       }
     ]
   },

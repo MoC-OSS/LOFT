@@ -43,6 +43,8 @@ export interface BeforeGenerateChainStrategy<TContext, TPayload> extends BaseCha
   overrideGenerateResponse: OverrideGeneratePayload | null;
 }
 
+// Kept as an interface (not a type alias) so the exported declaration shape stays the same
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface StandardChainStrategy<TContext, TPayload> extends BaseChainStrategy<
   TContext,
   TPayload,
