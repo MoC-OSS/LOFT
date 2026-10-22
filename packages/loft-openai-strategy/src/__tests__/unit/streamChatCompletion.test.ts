@@ -16,8 +16,7 @@ import {
   CreateChatCompletionStream,
   generateStreamed,
   isStreamable,
-  streamChatCompletion,
-  streamErrorSummary
+  streamChatCompletion
 } from '../../streaming/streamChatCompletion';
 
 const FIXTURE_DIR = path.resolve(__dirname, '../fixtures/stream');
@@ -507,11 +506,6 @@ describe('streamed failures', () => {
       code: null
     });
     expect(JSON.stringify(logError.mock.calls)).not.toMatch(/server had an error|Partial/);
-  });
-
-  it('summarises values that are not objects by their type', () => {
-    expect(streamErrorSummary('boom')).toEqual({ name: 'string' });
-    expect(streamErrorSummary(undefined)).toEqual({ name: 'undefined' });
   });
 });
 

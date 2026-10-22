@@ -85,6 +85,27 @@ describe('toStreamError', () => {
     expect(toStreamError(wrapped(new ApiError(undefined, { type: 'api_error' }, 'oops'))).retryable).toBe(true);
   });
 
+  it("the OpenAI and Anthropic SDKs' request timeout is a timeout, matched by its class", () => {
+    // Like the SDKs' connection errors: the name 'Error', and own status, headers and error fields left undefined
+    class APIConnectionError extends ApiError {
+      constructor(message: string) {
+        super(undefined, undefined, message);
+      }
+    }
+    class APIConnectionTimeoutError extends APIConnectionError {}
+    const timedOut = new APIConnectionTimeoutError('Request timed out.');
+
+    expect(timedOut.name).toBe('Error');
+    expect(toStreamError(timedOut)).toEqual({
+      code: 'timeout',
+      message: 'The response took too long.',
+      retryable: true
+    });
+    expect(toStreamError(wrapped(timedOut))).toMatchObject({ code: 'timeout' });
+    // Only the timeout class: another connection error stays a provider error
+    expect(toStreamError(new APIConnectionError('Connection error.'))).toMatchObject({ code: 'provider_error' });
+  });
+
   it('a network failure without a status is a retryable provider_error, as the call manager retries it', () => {
     // What undici's fetch rejects with when the socket closes in the middle of a stream
     const socketError = Object.assign(new Error('other side closed'), { name: 'SocketError', code: 'UND_ERR_SOCKET' });

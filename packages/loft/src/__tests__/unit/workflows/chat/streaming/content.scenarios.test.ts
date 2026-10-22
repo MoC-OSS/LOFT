@@ -531,7 +531,7 @@ describe('Streamed content of different sizes and shapes (scripted model)', () =
   it('a 1 MB tool output reaches the model and the history but never an event', async () => {
     const marker = 'tool-output-marker-7f3a';
     const output = `${marker}${'x'.repeat(1024 * 1024 - marker.length * 2)}${marker}`;
-    expect(output.length).toBe(1024 * 1024);
+    expect(output).toHaveLength(1024 * 1024);
     const tool: Chat.AdditionalTool = {
       definition: {
         name: 'export_report',

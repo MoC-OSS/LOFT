@@ -1,4 +1,4 @@
-import { Logger, Strategy } from '@moc-global/loft-definitions';
+import { guardedStreamSink, Logger, providerErrorSummary, Strategy } from '@moc-global/loft-definitions';
 import { APIConnectionError, APIUserAbortError } from 'openai';
 import type { ChatCompletionChunk, ChatCompletionCreateParamsStreaming } from 'openai/resources/chat/completions';
 
@@ -91,19 +91,12 @@ export async function streamChatCompletion(
   const stream = await create(request, { signal });
 
   const accumulator = new ChatCompletionAccumulator(body.n ?? 1);
-  let sinkFailed = false;
+  // The sink must not throw; if it does, the reply is still built
+  const emit = guardedStreamSink(onEvent, (message) => log.warn(message));
   try {
     for await (const chunk of stream) {
       accumulator.add(chunk);
-      for (const event of eventsOf(chunk, accumulator)) {
-        try {
-          onEvent(event);
-        } catch {
-          // The sink must not throw; if it does, the reply is still built. Only the event type is logged
-          if (!sinkFailed) log.warn(`onEvent threw on a ${event.type} event; later failures are not logged`);
-          sinkFailed = true;
-        }
-      }
+      for (const event of eventsOf(chunk, accumulator)) emit(event);
     }
   } catch (error) {
     // The SDK fails to parse an event the body cut short (v7 parses the partial event at its end, v4 drops it). Every
@@ -120,17 +113,6 @@ export async function streamChatCompletion(
   return accumulator.result();
 }
 
-/**
- * What the log may say about a failed streamed request: the error's class, HTTP status, `type` and `code`. The message
- * and body are left out, as they can quote the provider's output.
- */
-export function streamErrorSummary(error: unknown): Record<string, unknown> {
-  if (!error || typeof error !== 'object') return { name: typeof error };
-  const { status, type, code } = error as { status?: unknown; type?: unknown; code?: unknown };
-  // The OpenAI SDK's errors keep the name 'Error', so the class name tells them apart
-  return { name: (error as { constructor?: { name?: unknown } }).constructor?.name, status, type, code };
-}
-
 /** `streamChatCompletion`, with a log of the failure that leaves out the provider's text. */
 export async function generateStreamed(
   create: CreateChatCompletionStream,
@@ -140,7 +122,7 @@ export async function generateStreamed(
   try {
     return await streamChatCompletion(create, body, options);
   } catch (error) {
-    log.error('streamed generate failed', streamErrorSummary(error));
+    log.error('streamed generate failed', providerErrorSummary(error));
     throw error;
   }
 }

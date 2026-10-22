@@ -89,11 +89,11 @@ describe('GenerateCallManager streaming', () => {
     });
   }
 
-  function managerWith(config: Partial<GenerateConfig> = {}) {
+  function managerWith(config: Partial<GenerateConfig> = {}, extractUsedTokens: () => number = () => ACTUAL) {
     const llmApi = {
       generate,
       reduceMessages: () => 'hello',
-      extractUsedTokens: () => ACTUAL,
+      extractUsedTokens,
       tokenRateLimiter: { acquire, awaitBeforeCall, setUsedTokens, setUsedRequest },
       llmTokenizer: { calculateTokensFromString: () => PREDICTED }
     } as unknown as Strategy.LLM.LLMApi;
@@ -915,6 +915,30 @@ describe('GenerateCallManager streaming', () => {
 
       expect(call.done).toBe(true);
       expect(setUsedTokens.mock.calls).toEqual([[ACTUAL - PREDICTED]]);
+    });
+
+    it('a reply whose usage cannot be read resolves and keeps the reservation, or charges only the request', async () => {
+      const unreadable = () => {
+        throw new TypeError("Cannot read properties of null (reading 'usage')");
+      };
+
+      script([{ event: DELTA }]);
+      const reserved = track(
+        managerWith({}, unreadable).addHighPriorityTask(REQUEST, { onEvent: sinkReturning(true) })
+      );
+      await vi.advanceTimersByTimeAsync(0);
+      expect(reserved).toEqual({ done: true, value: 'response' });
+      expect(setUsedTokens).not.toHaveBeenCalled();
+      expect(setUsedRequest).not.toHaveBeenCalled();
+
+      script([{ event: DELTA }]);
+      const unreserved = track(
+        managerWith({ reserveTokens: false }, unreadable).addHighPriorityTask(REQUEST, { onEvent: sinkReturning(true) })
+      );
+      await vi.advanceTimersByTimeAsync(0);
+      expect(unreserved).toEqual({ done: true, value: 'response' });
+      expect(setUsedTokens).not.toHaveBeenCalled();
+      expect(setUsedRequest).toHaveBeenCalledTimes(1);
     });
   });
 

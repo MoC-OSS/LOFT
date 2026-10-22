@@ -18,6 +18,8 @@ const MESSAGES: Record<Chat.ChatStreamErrorCode, string> = {
 // LOFT's own errors, matched by the literal name they set (the call manager's classes are not imported here)
 const TIMEOUT_ERROR_NAMES = new Set(['StreamIdleTimeoutError']);
 const RATE_LIMIT_ERROR_NAMES = new Set(['TooManyHighPriorityTasksError', 'LlmCallManagerLongAwaitError']);
+// The OpenAI and Anthropic SDKs' request timeout, matched by its class: its errors keep the name 'Error'
+const TIMEOUT_ERROR_CLASSES = new Set(['APIConnectionTimeoutError']);
 
 // How many errors of the cause chain are looked at: the error itself and its causes
 const MAX_CHAIN_LENGTH = 5;
@@ -49,6 +51,12 @@ function httpStatus(item: ErrorLike): number | undefined {
   return undefined;
 }
 
+// The name of the error's own class
+function className(item: ErrorLike): string {
+  const name = (item as { constructor?: { name?: unknown } }).constructor?.name;
+  return typeof name === 'string' ? name : '';
+}
+
 function streamError(code: Chat.ChatStreamErrorCode, retryable: boolean): StreamError {
   return { code, message: MESSAGES[code], retryable };
 }
@@ -67,6 +75,7 @@ function rateLimited(error: unknown): StreamError {
 export function toStreamError(error: unknown): StreamError {
   for (const item of errorChain(error)) {
     if (typeof item.name === 'string' && TIMEOUT_ERROR_NAMES.has(item.name)) return streamError('timeout', true);
+    if (TIMEOUT_ERROR_CLASSES.has(className(item))) return streamError('timeout', true);
     if (typeof item.name === 'string' && RATE_LIMIT_ERROR_NAMES.has(item.name)) return rateLimited(error);
 
     const status = httpStatus(item);

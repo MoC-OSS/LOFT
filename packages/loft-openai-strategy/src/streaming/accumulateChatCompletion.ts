@@ -86,6 +86,32 @@ function extend<T>(list: T[] | null, next: T[] | null | undefined): T[] | null {
   return list;
 }
 
+// Adds one tool call delta to the call at its index: the id, type and name arrive once, the input in fragments
+function addToolCallDelta(
+  toolCalls: Map<number, ToolCallState>,
+  delta: NonNullable<ChunkDelta['tool_calls']>[number]
+): void {
+  let toolCall = toolCalls.get(delta.index);
+  if (!toolCall) {
+    toolCall = { id: '', type: 'function', name: '', input: '' };
+    toolCalls.set(delta.index, toolCall);
+  }
+  if (delta.id) toolCall.id = delta.id;
+  if (delta.type === 'custom' || delta.custom) toolCall.type = 'custom';
+  const name = delta.function?.name ?? delta.custom?.name;
+  if (name) toolCall.name = name;
+  toolCall.input += delta.function?.arguments ?? delta.custom?.input ?? '';
+}
+
+// Adds an audio delta: the id and the expiry arrive once, the data and the transcript in fragments
+function addAudioDelta(audio: Partial<ChatCompletionAudio>, delta: NonNullable<ChunkDelta['audio']>): void {
+  const { id, data, transcript, expires_at: expiresAt } = delta;
+  if (id) audio.id = id;
+  if (expiresAt !== undefined) audio.expires_at = expiresAt;
+  if (data) audio.data = (audio.data ?? '') + data;
+  if (transcript) audio.transcript = (audio.transcript ?? '') + transcript;
+}
+
 function toolCallOf({ id, type, name, input }: ToolCallState): ChatCompletionMessageToolCall {
   return type === 'custom'
     ? { id, type, custom: { name, input } }
@@ -102,7 +128,7 @@ export class ChatCompletionAccumulator {
   private systemFingerprint?: string;
   private serviceTier?: ChatCompletion['service_tier'];
   private usage?: ChatCompletion['usage'];
-  private extras: Record<string, unknown> = {};
+  private readonly extras: Record<string, unknown> = {};
   private readonly choices = new Map<number, ChoiceState>();
 
   /** @param choiceCount The number of choices the request asked for (`n`); the completion needs every one of them. */
@@ -213,18 +239,7 @@ export class ChatCompletionAccumulator {
     choice.refusal = append(choice.refusal, delta.refusal);
     mergeDeltaExtras(choice.messageExtras, delta);
 
-    for (const toolCallDelta of delta.tool_calls ?? []) {
-      let toolCall = choice.toolCalls.get(toolCallDelta.index);
-      if (!toolCall) {
-        toolCall = { id: '', type: 'function', name: '', input: '' };
-        choice.toolCalls.set(toolCallDelta.index, toolCall);
-      }
-      if (toolCallDelta.id) toolCall.id = toolCallDelta.id;
-      if (toolCallDelta.type === 'custom' || toolCallDelta.custom) toolCall.type = 'custom';
-      const name = toolCallDelta.function?.name ?? toolCallDelta.custom?.name;
-      if (name) toolCall.name = name;
-      toolCall.input += toolCallDelta.function?.arguments ?? toolCallDelta.custom?.input ?? '';
-    }
+    for (const toolCallDelta of delta.tool_calls ?? []) addToolCallDelta(choice.toolCalls, toolCallDelta);
 
     if (delta.function_call) {
       choice.functionCall ??= { name: '', arguments: '' };
@@ -233,12 +248,8 @@ export class ChatCompletionAccumulator {
     }
 
     if (delta.audio) {
-      const { id, data, transcript, expires_at: expiresAt } = delta.audio;
       choice.audio ??= {};
-      if (id) choice.audio.id = id;
-      if (expiresAt !== undefined) choice.audio.expires_at = expiresAt;
-      if (data) choice.audio.data = (choice.audio.data ?? '') + data;
-      if (transcript) choice.audio.transcript = (choice.audio.transcript ?? '') + transcript;
+      addAudioDelta(choice.audio, delta.audio);
     }
   }
 

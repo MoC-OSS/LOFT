@@ -9,7 +9,7 @@ import { anthropicUsageToUnified } from '../../adapters/usage';
 import { AnthropicCallStrategy } from '../../AnthropicCallStrategy';
 import { AnthropicLoftStrategy } from '../../AnthropicLoftStrategy';
 import { AnthropicStrategyOptions } from '../../AnthropicStrategyOptions';
-import { generateStreamed, streamErrorSummary, streamMessage } from '../../streaming/streamMessage';
+import { generateStreamed, streamMessage } from '../../streaming/streamMessage';
 
 const FIXTURE_DIR = path.resolve(__dirname, '../fixtures/stream');
 const COMPLETED_FIXTURES = [
@@ -371,11 +371,6 @@ describe('streamed failures', () => {
       code: undefined
     });
     expect(JSON.stringify(logError.mock.calls)).not.toMatch(/Overloaded|Partial/);
-  });
-
-  it('summarises values that are not objects by their type', () => {
-    expect(streamErrorSummary('boom')).toEqual({ name: 'string' });
-    expect(streamErrorSummary(undefined)).toEqual({ name: 'undefined' });
   });
 });
 

@@ -73,7 +73,7 @@ function toFrame(event: Chat.ChatStreamEvent): string | undefined {
     return undefined;
   }
   // JSON.stringify escapes line breaks but not these two separators, which some parsers treat as line ends
-  json = json.replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+  json = json.replaceAll('\u2028', String.raw`\u2028`).replaceAll('\u2029', String.raw`\u2029`);
   return `event: ${event.type}\ndata: ${json}\n\n`;
 }
 

@@ -72,7 +72,7 @@ export class ChatEventEmitter implements Chat.GenerationEventSink {
     this.options = options;
 
     if (options.policyDefaulted && options.textPolicy === 'after-middleware') {
-      const key = [...outputMiddleware].sort().join('\n');
+      const key = [...outputMiddleware].sort((a, b) => a.localeCompare(b)).join('\n');
       if (!warnedMiddleware.has(key)) {
         warnedMiddleware.add(key);
         this.log.warn(
@@ -258,7 +258,8 @@ export class ChatEventEmitter implements Chat.GenerationEventSink {
 
   /**
    * Ends the call with abort when the signal was aborted, and with error otherwise. The abort's reason is `timeout`
-   * when the signal was aborted by a timeout, such as `AbortSignal.timeout()`.
+   * when the signal was aborted by a timeout, such as `AbortSignal.timeout()`. A step that is still open gets no
+   * step-finish: it did not finish, and the final event ends it.
    */
   fail(error: unknown, signal?: AbortSignal): void {
     if (!this.isOpen()) return;

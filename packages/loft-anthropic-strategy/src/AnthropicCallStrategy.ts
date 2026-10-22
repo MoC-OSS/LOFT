@@ -1,10 +1,10 @@
 import Anthropic, { ClientOptions } from '@anthropic-ai/sdk';
-import { Logger, Strategy } from '@moc-global/loft-definitions';
+import { Logger, providerErrorSummary, Strategy } from '@moc-global/loft-definitions';
 import { ZodSchema } from 'zod';
 import { z } from 'zod';
 
 import { AnthropicStrategyOptions } from './AnthropicStrategyOptions';
-import { generateStreamed, streamErrorSummary } from './streaming/streamMessage';
+import { generateStreamed } from './streaming/streamMessage';
 
 const log = new Logger('AnthropicStrategy');
 
@@ -35,7 +35,7 @@ export class AnthropicCallStrategy implements Strategy.LLM.LLMApi {
       try {
         body = { ...this.transformToAnthropicRequest(generalRequest), stream: false };
       } catch (error) {
-        log.error('streamed generate failed', streamErrorSummary(error));
+        log.error('streamed generate failed', providerErrorSummary(error));
         throw error;
       }
       const response = await generateStreamed(this.client, body, {

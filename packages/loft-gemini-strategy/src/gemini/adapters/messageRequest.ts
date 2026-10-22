@@ -161,6 +161,15 @@ function convertUnifiedMessageToGeminiContent(message: Type.Entity.Message): Con
   return { role, parts };
 }
 
+type ToolCallPart = Type.Entity.FullContentPart & { type: 'tool_call' };
+
+// Records the message's tool calls by callId; a later call with the same id replaces an earlier one
+function rememberToolCalls(message: Type.Entity.Message, toolCalls: Map<string, ToolCallPart>): void {
+  for (const part of message.content) {
+    if (part.type === 'tool_call' && part.callId) toolCalls.set(part.callId, part);
+  }
+}
+
 /**
  * Organizes unified messages into Gemini Content format, properly grouping consecutive tool results.
  *
@@ -174,7 +183,7 @@ export function organizeMessagesForGemini(messages: Type.Entity.Message[]): Cont
   const result: Content[] = [];
   // The tool calls made so far by callId; a later call with the same id replaces an earlier one, so a tool result
   // answers the latest call before it
-  const toolCalls = new Map<string, Type.Entity.FullContentPart & { type: 'tool_call' }>();
+  const toolCalls = new Map<string, ToolCallPart>();
 
   for (let i = 0; i < messages.length; i++) {
     const message = messages[i];
@@ -204,9 +213,7 @@ export function organizeMessagesForGemini(messages: Type.Entity.Message[]): Cont
 
     // For other messages (user, assistant, system), convert normally
     // System messages are converted to user role by convertUnifiedMessageToGeminiContent
-    for (const part of message.content) {
-      if (part.type === 'tool_call' && part.callId) toolCalls.set(part.callId, part);
-    }
+    rememberToolCalls(message, toolCalls);
     const content = convertUnifiedMessageToGeminiContent(message);
     // Gemini rejects a content without parts, such as a message whose only image was left out
     if (content.parts?.length) result.push(content);

@@ -1,6 +1,7 @@
 import {
   isRetryableError,
   Logger,
+  providerErrorSummary,
   retryDelayMs,
   Strategy,
   StreamIdleTimeoutError,
@@ -37,6 +38,13 @@ function assertTimeout(name: string, field: string, value: number | undefined) {
 // Matched by name, so the error still matches when an application ends up with two copies of loft-definitions
 function isStreamTimeout(error: unknown): boolean {
   return error instanceof Error && error.name === 'StreamIdleTimeoutError';
+}
+
+// An aborted call is not retried, and neither is one that cannot succeed on a new attempt (400, 401, 404). A streamed
+// call is not retried once its consumer was shown an event, which a new attempt would repeat.
+function canRetry(error: unknown, options: Strategy.LLM.CallOptions | undefined, progress: StreamProgress): boolean {
+  if (options?.signal?.aborted || progress.delivered) return false;
+  return isRetryableError(error) || (options?.onEvent !== undefined && isStreamTimeout(error));
 }
 
 /**
@@ -111,6 +119,7 @@ export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.Gener
    * Makes the call, with retries. Without a `reservation` it charges the used tokens and a request on success. With
    * one, the tokens and the request were taken before the call: success settles the tokens to the actual usage, a
    * failure before any provider event, in all its attempts, gives the tokens back, and an aborted call keeps them.
+   * The request stays counted in every case, as the provider counts the requests it received, failed ones included.
    *
    * With `options.onEvent` the call streams: each attempt sends `request-start` before the provider call, an attempt
    * that stays silent too long after its first output is aborted with `StreamIdleTimeoutError`, and no attempt is
@@ -135,11 +144,18 @@ export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.Gener
       throw error;
     }
 
-    const usedTokens = this.llmStrategy.extractUsedTokens(llmResponse);
+    // A response whose usage cannot be read is still a reply, which a streamed call may already have shown; the call
+    // then keeps what it reserved, or charges only the request
+    let usedTokens: number | undefined;
+    try {
+      usedTokens = this.llmStrategy.extractUsedTokens(llmResponse);
+    } catch (error) {
+      log.warn('Could not read the used tokens of the response', providerErrorSummary(error));
+    }
     if (reservation) {
-      tokenRateLimiter.setUsedTokens(usedTokens - reservation.tokens);
+      if (usedTokens !== undefined) tokenRateLimiter.setUsedTokens(usedTokens - reservation.tokens);
     } else {
-      tokenRateLimiter.setUsedTokens(usedTokens);
+      if (usedTokens !== undefined) tokenRateLimiter.setUsedTokens(usedTokens);
       tokenRateLimiter.setUsedRequest();
     }
     return llmResponse;
@@ -159,10 +175,7 @@ export class GenerateCallManager<T_LLM_Req, T_LLM_Res> implements Strategy.Gener
         if (!onEvent) return await this.llmStrategy.generate<T_LLM_Req, T_LLM_Res>(llmRequest, options);
         return await this.generateStreamed(llmRequest, { ...options, onEvent }, progress);
       } catch (error) {
-        // An aborted call is not retried, and neither is one that cannot succeed on a new attempt (400, 401, 404).
-        // A streamed call is not retried once its consumer was shown an event, which a new attempt would repeat.
-        if (options?.signal?.aborted || progress.delivered) throw error;
-        if (!isRetryableError(error) && !(onEvent && isStreamTimeout(error))) throw error;
+        if (!canRetry(error, options, progress)) throw error;
         log.error('makeGenerateRequest attempt failed', error);
         lastError = error;
         attempt++;

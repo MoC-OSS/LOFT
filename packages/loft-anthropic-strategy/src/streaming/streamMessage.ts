@@ -1,5 +1,5 @@
 import Anthropic, { AnthropicError, APIConnectionError, APIError, APIUserAbortError } from '@anthropic-ai/sdk';
-import { Logger, Strategy } from '@moc-global/loft-definitions';
+import { guardedStreamSink, Logger, providerErrorSummary, Strategy } from '@moc-global/loft-definitions';
 
 import { anthropicStreamUsage } from '../adapters/usage';
 
@@ -23,6 +23,36 @@ function hasPayload(delta: object): boolean {
   );
 }
 
+type RawEvent<T extends Anthropic.RawMessageStreamEvent['type']> = Extract<
+  Anthropic.RawMessageStreamEvent,
+  { type: T }
+>;
+
+// What a block shows as it starts: the text of a text block, the thinking of a thinking block, and an activity for a
+// text block with only citations, a thinking block with only a signature, and every other block
+function blockStartEvent(
+  block: RawEvent<'content_block_start'>['content_block']
+): Strategy.LLM.LlmStreamEvent | undefined {
+  if (block.type === 'text') {
+    if (block.text) return { type: 'text-delta', delta: block.text };
+    return block.citations?.length ? { type: 'activity' } : undefined;
+  }
+  if (block.type === 'thinking') {
+    if (block.thinking) return { type: 'reasoning-delta', delta: block.thinking };
+    return block.signature ? { type: 'activity' } : undefined;
+  }
+  return { type: 'activity' };
+}
+
+// What a delta shows: its text or thinking, or an activity for any other delta that is not empty
+function blockDeltaEvent(delta: RawEvent<'content_block_delta'>['delta']): Strategy.LLM.LlmStreamEvent | undefined {
+  if (delta.type === 'text_delta') return delta.text ? { type: 'text-delta', delta: delta.text } : undefined;
+  if (delta.type === 'thinking_delta') {
+    return delta.thinking ? { type: 'reasoning-delta', delta: delta.thinking } : undefined;
+  }
+  return hasPayload(delta) ? { type: 'activity' } : undefined;
+}
+
 // What one raw event shows: the text of text blocks, the thinking of thinking blocks, an activity for every other
 // non-empty block or delta (tool use and its input, signatures, citations, redacted thinking, server tools), and the
 // usage of the message events
@@ -43,27 +73,13 @@ function* eventsOf(event: Anthropic.RawMessageStreamEvent, known: Known): Genera
       return;
     }
     case 'content_block_start': {
-      const block = event.content_block;
-      if (block.type === 'text') {
-        if (block.text) yield { type: 'text-delta', delta: block.text };
-        else if (block.citations?.length) yield { type: 'activity' };
-      } else if (block.type === 'thinking') {
-        if (block.thinking) yield { type: 'reasoning-delta', delta: block.thinking };
-        else if (block.signature) yield { type: 'activity' };
-      } else {
-        yield { type: 'activity' };
-      }
+      const shown = blockStartEvent(event.content_block);
+      if (shown) yield shown;
       return;
     }
     case 'content_block_delta': {
-      const { delta } = event;
-      if (delta.type === 'text_delta') {
-        if (delta.text) yield { type: 'text-delta', delta: delta.text };
-      } else if (delta.type === 'thinking_delta') {
-        if (delta.thinking) yield { type: 'reasoning-delta', delta: delta.thinking };
-      } else if (hasPayload(delta)) {
-        yield { type: 'activity' };
-      }
+      const shown = blockDeltaEvent(event.delta);
+      if (shown) yield shown;
       return;
     }
     default:
@@ -95,7 +111,8 @@ export async function streamMessage(
   const stream = client.messages.stream(body, { signal });
 
   const known: Known = {};
-  let sinkFailed = false;
+  // The sink must not throw; if it does, the reply is still built
+  const emit = guardedStreamSink(onEvent, (message) => log.warn(message));
   let stopped = false;
   // Set once the response arrived. An error before it, such as missing credentials, is not a stream cut short
   let connected = false;
@@ -105,15 +122,7 @@ export async function streamMessage(
   try {
     for await (const event of stream) {
       if (event.type === 'message_stop') stopped = true;
-      for (const streamEvent of eventsOf(event, known)) {
-        try {
-          onEvent(streamEvent);
-        } catch {
-          // The sink must not throw; if it does, the reply is still built. Only the event type is logged
-          if (!sinkFailed) log.warn(`onEvent threw on a ${streamEvent.type} event; later failures are not logged`);
-          sinkFailed = true;
-        }
-      }
+      for (const streamEvent of eventsOf(event, known)) emit(streamEvent);
     }
     // An abort can end the events without an error; reject as a non-streamed request does
     if (signal?.aborted) throw new APIUserAbortError();
@@ -133,17 +142,6 @@ export async function streamMessage(
   }
 }
 
-/**
- * What the log may say about a failed streamed request: the error's class, HTTP status, `type` and `code`. The message
- * and body are left out, as they can quote the provider's output.
- */
-export function streamErrorSummary(error: unknown): Record<string, unknown> {
-  if (!error || typeof error !== 'object') return { name: typeof error };
-  const { status, type, code } = error as { status?: unknown; type?: unknown; code?: unknown };
-  // The SDK's errors keep the name 'Error', so the class name tells them apart
-  return { name: (error as { constructor?: { name?: unknown } }).constructor?.name, status, type, code };
-}
-
 /** `streamMessage`, with a log of the failure that leaves out the provider's text. */
 export async function generateStreamed(
   client: Anthropic,
@@ -153,7 +151,7 @@ export async function generateStreamed(
   try {
     return await streamMessage(client, body, options);
   } catch (error) {
-    log.error('streamed generate failed', streamErrorSummary(error));
+    log.error('streamed generate failed', providerErrorSummary(error));
     throw error;
   }
 }

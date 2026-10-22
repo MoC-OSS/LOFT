@@ -17,8 +17,8 @@ SESSION_ID=$(echo "$SESSION_RESPONSE" | jq -r .sessionId)
 echo "Session ID: ${SESSION_ID}"
 echo ""
 
-if [ "$SESSION_ID" = "null" ] || [ -z "$SESSION_ID" ]; then
-  echo "ERROR: Failed to create session. Aborting."
+if [[ "$SESSION_ID" == "null" || -z "$SESSION_ID" ]]; then
+  echo "ERROR: Failed to create session. Aborting." >&2
   exit 1
 fi
 

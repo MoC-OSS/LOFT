@@ -2,19 +2,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { ApiError, GenerateContentParameters, GenerateContentResponse } from '@google/genai';
-import { isRetryableError, Logger, Strategy, Type } from '@moc-global/loft-definitions';
+import { isRetryableError, Logger, providerErrorSummary, Strategy, Type } from '@moc-global/loft-definitions';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { GeminiCallStrategy } from '../../gemini/GeminiCallStrategy';
 import { GeminiLoftStrategy } from '../../gemini/GeminiLoftStrategy';
 import { GeminiStrategyOptions } from '../../gemini/GeminiStrategyOptions';
 import { accumulateGenerateContent } from '../../gemini/streaming/accumulateGenerateContent';
-import {
-  generateStreamed,
-  isStreamable,
-  streamErrorSummary,
-  streamGenerateContent
-} from '../../gemini/streaming/streamGenerateContent';
+import { generateStreamed, isStreamable, streamGenerateContent } from '../../gemini/streaming/streamGenerateContent';
 import { GeminiRequest } from '../../VertexAiTypes';
 
 const FIXTURE_DIR = path.resolve(__dirname, '../fixtures/stream');
@@ -470,7 +465,7 @@ describe('streamed failures', () => {
       code: 'UNAVAILABLE'
     });
 
-    expect(streamErrorSummary(renamed)).toEqual({
+    expect(providerErrorSummary(renamed)).toEqual({
       name: 'ApiError',
       status: 503,
       type: 'server_error',
@@ -490,16 +485,6 @@ describe('streamed failures', () => {
       code: undefined
     });
     expect(JSON.stringify(logError.mock.calls)).not.toMatch(/Partial secret/);
-  });
-
-  it('summarises values that are not objects by their type, and nameless errors by their class', () => {
-    expect(streamErrorSummary('boom')).toEqual({ name: 'string' });
-    expect(streamErrorSummary(undefined)).toEqual({ name: 'undefined' });
-    expect(streamErrorSummary(Object.create({ constructor: { name: 'Custom' } }) as object)).toEqual({
-      name: 'Custom',
-      status: undefined,
-      code: undefined
-    });
   });
 });
 

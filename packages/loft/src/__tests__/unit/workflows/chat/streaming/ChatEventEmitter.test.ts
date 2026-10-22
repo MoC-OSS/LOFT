@@ -229,6 +229,24 @@ describe('ChatEventEmitter', () => {
       expect(reasonOf(abortedWith({ name: 'TimeoutError' }))).toBe('cancelled');
     });
 
+    it('a step cut short by an error or an abort gets no step-finish; the final event ends it', () => {
+      const cutShort = (signal?: AbortSignal) => {
+        const { emitter, events } = setup();
+        const step = emitter.stepStart();
+        const sink = sinkOf(emitter, step);
+        sink({ type: 'request-start' });
+        sink({ type: 'text-delta', delta: 'Hal' });
+        emitter.fail(Object.assign(new Error('stream reset'), { status: 503 }), signal);
+        return shape(events);
+      };
+      const controller = new AbortController();
+      controller.abort();
+
+      const before = ['start', 'step-start', 'status:queued', 'status:generating', 'text-delta'];
+      expect(cutShort()).toEqual([...before, 'error']);
+      expect(cutShort(controller.signal)).toEqual([...before, 'abort']);
+    });
+
     it('messages never include the cause text', () => {
       const { emitter, events } = setup();
       const cause = Object.assign(new Error('secret provider detail'), { status: 500 });

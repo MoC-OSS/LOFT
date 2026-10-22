@@ -1,5 +1,5 @@
 import type { GenerateContentResponse, Part } from '@google/genai';
-import { Logger, Strategy } from '@moc-global/loft-definitions';
+import { guardedStreamSink, Logger, providerErrorSummary, Strategy } from '@moc-global/loft-definitions';
 
 import type { GeminiRequest } from '../../VertexAiTypes';
 import { geminiUsageToUnified } from '../adapters/usage';
@@ -86,19 +86,12 @@ export async function streamGenerateContent(
   const chunks = await stream();
 
   const accumulator = new GenerateContentAccumulator(candidateCount ?? 1);
-  let sinkFailed = false;
+  // The sink must not throw; if it does, the reply is still built
+  const emit = guardedStreamSink(onEvent, (message) => log.warn(message));
   try {
     for await (const chunk of chunks) {
       accumulator.add(chunk);
-      for (const event of eventsOf(chunk, accumulator)) {
-        try {
-          onEvent(event);
-        } catch {
-          // The sink must not throw; if it does, the reply is still built. Only the event type is logged
-          if (!sinkFailed) log.warn(`onEvent threw on a ${event.type} event; later failures are not logged`);
-          sinkFailed = true;
-        }
-      }
+      for (const event of eventsOf(chunk, accumulator)) emit(event);
     }
   } catch (error) {
     // Only a body that ends inside an event is a stream cut short; every other error, the API's error objects among
@@ -114,16 +107,6 @@ export async function streamGenerateContent(
   return accumulator.result();
 }
 
-/**
- * What the log may say about a failed streamed request: the error's class, HTTP status, `type` and `code`, as the other
- * providers log it. The message is left out, as the SDK quotes the provider's response in it.
- */
-export function streamErrorSummary(error: unknown): Record<string, unknown> {
-  if (!error || typeof error !== 'object') return { name: typeof error };
-  const { status, type, code } = error as { status?: unknown; type?: unknown; code?: unknown };
-  return { name: (error as { constructor?: { name?: unknown } }).constructor?.name, status, type, code };
-}
-
 /** `streamGenerateContent`, with a log of the failure that leaves out the provider's text. */
 export async function generateStreamed(
   stream: OpenGenerateContentStream,
@@ -132,7 +115,7 @@ export async function generateStreamed(
   try {
     return await streamGenerateContent(stream, options);
   } catch (error) {
-    log.error('streamed generate failed', streamErrorSummary(error));
+    log.error('streamed generate failed', providerErrorSummary(error));
     throw error;
   }
 }

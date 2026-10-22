@@ -50,6 +50,8 @@ describe('AdditionalTool handler context', () => {
   });
 
   it('handler argument types stay checked', () => {
+    expectTypeOf<AdditionalTool['handler']>().parameter(0).toEqualTypeOf<Record<string, unknown>>();
+
     const wrongArgs: AdditionalTool = {
       definition,
       // @ts-expect-error the first parameter is a record of unknown values
