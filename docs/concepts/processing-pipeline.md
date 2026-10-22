@@ -248,7 +248,7 @@ Beyond `generate()`, the chat interface exposes:
 | Method | Description |
 |--------|-------------|
 | `createSession(options)` | Create a new session in the database |
-| `deleteSession(sessionId)` | Delete a session |
+| `deleteSession(sessionId)` | Delete a session. Its messages stay in the chat history ([details](../guides/chat-persistence.md#5-using-sessions)) |
 | `getSessionById(sessionId)` | Retrieve a session |
 | `getSessionByExternalKey(key)` | Retrieve a session by external identifier |
 | `updateSessionSettings(sessionId, correlatorId, settings)` | Update session configuration (deep-merges `ctx`) |

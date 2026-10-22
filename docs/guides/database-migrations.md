@@ -139,7 +139,7 @@ The `focus_state` table stores the fields a Focus agent has collected, one row p
 The `message` table stores conversation messages:
 
 - `id` — UUID primary key
-- `session_id` — The session's id. There is no foreign key constraint: sessions and history can live in different schemas or databases
+- `session_id` — The session's id. There is no foreign key constraint: sessions and history can live in different schemas or databases. Deleting a session keeps its messages on purpose
 - `content` — JSONB array of content parts
 - `role` — Message role (user, assistant, system, tool)
 - `author` — Message author identifier
