@@ -767,7 +767,7 @@ describe('ManifestManager and LlmManager Integration', () => {
         await llmManager.generate(mockContext, 'openai', 'default', messages, additionalTools, 30);
 
         // Assert — additional tool handler was called, MCP was NOT called
-        expect(handlerFn).toHaveBeenCalledWith({ value: 'test' });
+        expect(handlerFn).toHaveBeenCalledWith({ value: 'test' }, { signal: undefined, emit: expect.any(Function) });
         expect(mockMCPManager.callTool).not.toHaveBeenCalled();
       });
 

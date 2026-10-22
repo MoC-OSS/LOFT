@@ -19,6 +19,11 @@ export interface ScriptedChatOptions {
   tracer?: Strategy.Tracer.TracerFactory;
   /** The fifth `ChatConstructor` argument */
   chatConfig?: ChatConfig;
+  /**
+   * Sends the model calls through this call manager strategy, for example a `NativeCallManagerStrategy` around a
+   * `GenerateCallManager` that runs a `ScriptedLLMApi`. Then `replies` must be empty: script the API instead.
+   */
+  callManagerStrategy?: Strategy.CallManager;
   /** Runs before the LOFT instance is created, to register middleware, interceptors or computers */
   configure?: (setup: { chatConstructor: ChatConstructor; loftConstructor: LoftConstructorType }) => void;
 }
@@ -33,7 +38,7 @@ export async function startScriptedChat(
 ) {
   const chatConstructor = createChatConstructor(testDb, options.chatConfig);
   const loftConstructor = createLoftConstructor(chatConstructor, options.tracer);
-  const llm = new ScriptedLLMStrategy(SCRIPTED_LLM, replies);
+  const llm = new ScriptedLLMStrategy(SCRIPTED_LLM, replies, options.callManagerStrategy);
   await loftConstructor.registerLlmStrategy(SCRIPTED_LLM, llm);
   for (const [name, client] of Object.entries(options.mcpClients ?? {})) {
     await chatConstructor.useMcpClient(name, client, options.mcpMetadata?.[name]);

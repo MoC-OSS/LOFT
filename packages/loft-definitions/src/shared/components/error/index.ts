@@ -5,3 +5,4 @@ export * from './GetPendingMessagesError';
 export * from './ProcessSessionActionsError';
 export * from './SessionNotFoundError';
 export * from './ShutdownError';
+export * from './StreamIdleTimeoutError';

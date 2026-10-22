@@ -188,11 +188,11 @@ interface FocusStatus {
 ```typescript
 interface AdditionalTool {
   definition: { name: string; description: string; inputSchema: { ... } };
-  handler: (args: Record<string, unknown>) => Promise<AdditionalToolResult>;
+  handler(args: Record<string, unknown>, context?: AdditionalToolContext): Promise<AdditionalToolResult>;
 }
 ```
 
-Additional tools are passed via `GenerateOptions.additionalTools`, merged with MCP tool definitions at the LLM layer. Tool calls are routed locally (handler function) instead of through MCPManager.
+Additional tools are passed via `GenerateOptions.additionalTools`, merged with MCP tool definitions at the LLM layer. Tool calls are routed locally (handler function) instead of through MCPManager. LOFT passes the handler a `context` with the abort signal of the `generate()` call; see [Additional Tools](../../guides/tools.md).
 
 ### 2.5 Orchestrator — Graph Execution Engine
 
@@ -666,7 +666,7 @@ packages/loft-definitions/src/shared/components/
 | AutoGen | Not conversation-based coordination — structured SharedContext + typed Focus |
 | Swarm | Focus for structured collection, Team encapsulation, parallel execution |
 
-Key differentiator: **each agent is a production-grade LOFT instance** with full middleware, tools, streaming, manifests — not a thin wrapper around an LLM call.
+Key differentiator: **each agent is a production-grade LOFT instance** with full middleware, tools, manifests — not a thin wrapper around an LLM call. (A single LOFT chat can stream its reply with `chat.generate({ onEvent })`; the orchestrator does not stream its nodes' events yet, see decision 6.)
 
 ---
 

@@ -214,6 +214,26 @@ chatConstructor.registerAfterGenerateMiddleware(
 );
 ```
 
+### Middleware that only reads the reply
+
+`registerAfterGenerateMiddleware` takes an optional third argument, `{ transformsOutput?: boolean }` (experimental, default `true`). Set `transformsOutput: false` for a middleware that never changes the reply text, such as one that logs or counts:
+
+```typescript
+chatConstructor.registerAfterGenerateMiddleware(
+  'count-tokens',
+  async (context, payload, chain) => {
+    metrics.add('llm.output_tokens', payload.llmResponse.usage.outputTokens);
+    chain.next();
+    return payload;
+  },
+  { transformsOutput: false }
+);
+```
+
+A strategy's own middleware takes the same option: `strategy.useMiddleware(name, middleware, { transformsOutput: false })`. The option only matters for [streaming](./streaming.md#text-policy). It does not change when or how the middleware runs.
+
+> **Output middleware and streaming.** When a `generate()` call streams the reply with `onEvent`, the text reaches the client while the model writes it, before any AfterGenerate or strategy middleware has run. So that a middleware which redacts or filters the reply is not bypassed, LOFT holds the text back until the middleware has run whenever such a middleware is registered and the caller chose no text policy, and logs a warning that names it. Register middleware that does not change the text with `transformsOutput: false` to keep the text streaming. A caller that sets `textPolicy: 'all'` gets the text before your middleware changes it, and only the final `finish` event carries the changed text.
+
 ## Middleware Registration Order
 
 Middleware executes in the order you register it. Order matters:
@@ -372,6 +392,7 @@ chatConstructor.registerAfterGenerateMiddleware(
     console.log('LLM usage:', payload.llmResponse.usage);
     chain.next();
     return payload;
-  }
+  },
+  { transformsOutput: false } // only reads the reply, so streamed text is not held back
 );
 ```

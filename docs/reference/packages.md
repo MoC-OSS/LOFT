@@ -62,7 +62,7 @@ LOFT is modular — you install only what you need:
 |---|---|
 | **Directory** | `packages/loft-openai-strategy/` |
 | **Purpose** | OpenAI and Azure OpenAI LLM integration |
-| **Key exports** | `OpenAiLoftStrategy`, `AzureOpenAiLoftStrategy`, `OpenAiCallStrategy`, `AzureOpenAiCallStrategy`, `OpenAiTypes`, `OpenAiValidatingSchemas`, `mcpToolAdapter` |
+| **Key exports** | `OpenAiLoftStrategy`, `AzureOpenAiLoftStrategy`, `OpenAiCallStrategy`, `AzureOpenAiCallStrategy`, `OpenAiStrategyOptions`, `OpenAiTypes`, `OpenAiValidatingSchemas`, `mcpToolAdapter` |
 | **External deps** | `openai`, `@azure/identity` |
 
 #### `@moc-global/loft-anthropic-strategy`
@@ -71,7 +71,7 @@ LOFT is modular — you install only what you need:
 |---|---|
 | **Directory** | `packages/loft-anthropic-strategy/` |
 | **Purpose** | Anthropic Claude LLM integration |
-| **Key exports** | `AnthropicLoftStrategy`, `AnthropicCallStrategy`, `AnthropicTypes`, `AnthropicValidatingSchemas` |
+| **Key exports** | `AnthropicLoftStrategy`, `AnthropicCallStrategy`, `AnthropicStrategyOptions`, `AnthropicTypes`, `AnthropicValidatingSchemas` |
 | **External deps** | `@anthropic-ai/sdk` |
 
 #### `@moc-global/loft-gemini-strategy`
@@ -80,7 +80,7 @@ LOFT is modular — you install only what you need:
 |---|---|
 | **Directory** | `packages/loft-gemini-strategy/` |
 | **Purpose** | Google Gemini / Vertex AI LLM integration |
-| **Key exports** | `GeminiLoftStrategy`, `GeminiCallStrategy`, `GeminiStream`, `GeminiValidatingSchema`, `VertexAiStrategyConfig`, `VertexAiTypes` |
+| **Key exports** | `GeminiLoftStrategy`, `GeminiCallStrategy`, `GeminiStrategyOptions`, `GeminiValidatingSchema`, `VertexAiStrategyConfig`, `VertexAiTypes`; `GeminiStream` is deprecated (use `chat.generate({ onEvent })`) |
 | **External deps** | `@google/genai` |
 
 ### Agent Orchestration
@@ -104,8 +104,8 @@ LOFT is modular — you install only what you need:
 | | |
 |---|---|
 | **Directory** | `packages/loft-llm-call-manager/` |
-| **Purpose** | Rate limiting, retries with a fixed delay, token counting, request prioritization |
-| **Key exports** | `GenerateCallManager`, `GenerateWithQueueManager`, `GenerateWithStreamManager`, `LlmTokenizer`, `LlmTokenRateLimiter` |
+| **Purpose** | Rate limiting with token reservation, retries with backoff, token counting, request prioritization, configurable concurrency, stream timeouts |
+| **Key exports** | `GenerateCallManager`, `GenerateWithQueueManager`, `LlmTokenizer`, `LlmTokenRateLimiter`; `GenerateWithStreamManager` is deprecated (use `chat.generate({ onEvent })`) |
 | **External deps** | `p-queue`, `@dqbd/tiktoken` |
 
 ### Database Repositories

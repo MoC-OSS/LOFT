@@ -1,0 +1,98 @@
+{
+  "chunks": [
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "The recipe"
+              }
+            ]
+          }
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 15,
+        "totalTokenCount": 15
+      },
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-safety"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": " begins with"
+              }
+            ]
+          }
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 15,
+        "totalTokenCount": 15
+      },
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-safety"
+    },
+    {
+      "candidates": [
+        {
+          "finishReason": "SAFETY",
+          "safetyRatings": [
+            {
+              "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+              "probability": "HIGH",
+              "blocked": true
+            },
+            {
+              "category": "HARM_CATEGORY_HARASSMENT",
+              "probability": "NEGLIGIBLE"
+            }
+          ]
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 15,
+        "candidatesTokenCount": 6,
+        "totalTokenCount": 21
+      },
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-safety"
+    }
+  ],
+  "response": {
+    "candidates": [
+      {
+        "finishReason": "SAFETY",
+        "safetyRatings": [
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "probability": "HIGH",
+            "blocked": true
+          },
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "probability": "NEGLIGIBLE"
+          }
+        ]
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 15,
+      "candidatesTokenCount": 6,
+      "totalTokenCount": 21
+    },
+    "modelVersion": "gemini-2.5-flash",
+    "createTime": "2026-10-22T10:00:00.000000Z",
+    "responseId": "resp-safety"
+  }
+}

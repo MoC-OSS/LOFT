@@ -48,6 +48,10 @@ export class HttpCallManagerStrategy implements Strategy.CallManager {
     throw new Error(`CallManager doesn't work`, { cause: lastError });
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   async streamCall(llmRequest: Strategy.LLM.LLMRequest<any>): Promise<AxiosResponse<any, any>> {
     let attempts = 0;
     let lastError: unknown;
@@ -91,6 +95,10 @@ export class NativeCallManagerStrategy implements Strategy.CallManager {
     return { llmBody } as Strategy.LLM.LlmResponse<any>;
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   async streamCall(llmRequest: Strategy.LLM.LLMRequest<any>) {
     const result = await this.generateCallManager.addHighPriorityTask(llmRequest);
     return result;

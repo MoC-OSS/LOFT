@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { inspect } from 'node:util';
 
 import {
   Chat,
@@ -8,7 +7,6 @@ import {
   InteractiveOutputMessage,
   Interface,
   Logger,
-  OverrideGeneratePayload,
   Schema,
   Strategy,
   Type
@@ -17,6 +15,7 @@ import { inject, injectable, optional } from 'inversify';
 
 import { ChatConfig } from '../types/config';
 import { createToolChainDiagnostic, logToolCallStack, UsedToolMessage } from '../utils/toolValidation';
+import { executeTool, unsupportedToolResult } from './toolExecution';
 
 @injectable()
 export class LlmManager implements Interface.LlmManager {
@@ -71,9 +70,12 @@ export class LlmManager implements Interface.LlmManager {
     messages: Type.Entity.CreateMessage[],
     additionalTools?: Chat.AdditionalTool[],
     priority = 30,
-    callOptions?: Strategy.LLM.CallOptions
+    callOptions?: Interface.LlmGenerateOptions
   ): Promise<Strategy.LLM.UnifiedLLMResponse> {
     this.log.info(`Generating LLM response`, { llmName, manifestName, sessionId: ctx.session.id, priority });
+    // Reports the steps, tools and text of this call to a caller that subscribed to generation events. Strategies
+    // never see it, not even as an undefined key.
+    const { events, ...strategyCallOptions } = callOptions ?? {};
 
     const llmStrategy = this.get(llmName);
     this.log.debug(`Using LLM strategy for "${llmName}"`);
@@ -226,12 +228,19 @@ export class LlmManager implements Interface.LlmManager {
         }
       });
 
+      // This LLM call's step in the caller's events; without events it is not used
+      const step = events?.stepStart() ?? 0;
+      // With events the provider gets only the signal and this step's sink, never the events object
+      const providerOptions = events
+        ? { signal: callOptions?.signal, onEvent: events.provider(step) }
+        : callOptions && strategyCallOptions;
+
       let response;
       let generateStartTime: Date;
       try {
         // Capture generation start time right before LLM call
         generateStartTime = new Date();
-        response = await llmStrategy.generate(request, callOptions);
+        response = await llmStrategy.generate(request, providerOptions);
         this.log.debug(`Received response from LLM`);
       } catch (error) {
         // End LLM generation tracing with error
@@ -251,6 +260,15 @@ export class LlmManager implements Interface.LlmManager {
         llmName,
         manifestName
       );
+      events?.stepText(step, textOf(unifiedLlmResponse.topChoice));
+      // The step's own response; the loop limit and a tool interceptor replace unifiedLlmResponse
+      const stepResponse = unifiedLlmResponse;
+      const finishStep = (hadToolCalls: boolean): void =>
+        events?.stepFinish(step, {
+          finishReason: stepResponse.usage.finishReason ?? 'unknown',
+          hadToolCalls,
+          usage: withoutStartTime(stepResponse.usage)
+        });
 
       // End LLM generation tracing with success (after creating unified response)
       generation.end({
@@ -268,7 +286,8 @@ export class LlmManager implements Interface.LlmManager {
           totalCost: unifiedLlmResponse.usage.totalCost,
           providerResponse: unifiedLlmResponse.originalResponse
         },
-        completionStartTime: generateStartTime,
+        // When the provider streamed, the first output; otherwise the request start
+        completionStartTime: events?.firstOutputAt(step) ?? generateStartTime,
         level: 'DEFAULT'
       });
 
@@ -289,6 +308,7 @@ export class LlmManager implements Interface.LlmManager {
 
       if (incomingToolsRequest.length === 0) {
         this.log.debug(`No tools requested by LLM, breaking tool execution loop`);
+        finishStep(false);
         break;
       }
 
@@ -341,7 +361,7 @@ export class LlmManager implements Interface.LlmManager {
             outputTokens: 0,
             totalTokens: 0,
             model: 'limit-exceeded',
-            finishReason: 'max_loops_exceeded'
+            finishReason: Strategy.LLM.LoftFinishReason.MAX_LOOPS_EXCEEDED
           },
           originalResponse: {
             limitExceeded: true,
@@ -350,6 +370,8 @@ export class LlmManager implements Interface.LlmManager {
           }
         };
 
+        events?.loopLimitReached();
+        finishStep(true);
         // Exit the loop
         break;
       }
@@ -403,37 +425,21 @@ export class LlmManager implements Interface.LlmManager {
       for (const toolRequest of incomingToolsRequest) {
         // If tool is not in the valid list, create an error response
         if (!validPendingTools.some((valid) => valid.callId === toolRequest.callId)) {
-          const errorContent: Type.Entity.ToolResultContent = {
-            type: 'tool_result',
-            callId: toolRequest.callId,
-            content: [
-              {
-                type: 'text' as const,
-                text: `Error: Tool "${toolRequest.params.name}" is not supported by any registered tool source`
-              }
-            ],
-            isError: true
-          };
-
-          const errorToolResult = new InteractiveOutputMessage({
-            sessionId: ctx.session.id,
-            ctx: {},
-            content: [errorContent],
-            role: Type.LLM.UnifiedMessageRole.tool,
-            author: `tool-${toolRequest.params.name}`,
-            llmName,
-            manifestName,
-            llmIgnore: false
+          const errorToolResult = unsupportedToolResult({ ctx, request: toolRequest, llmName, manifestName });
+          tmpToolsAndResultsChain.push(errorToolResult);
+          // The caller sees 'unknown', never the name or arguments the model made up
+          events?.toolCall(step, { toolCallId: toolRequest.callId, name: UNKNOWN_TOOL_NAME, args: {} });
+          events?.toolResult(step, {
+            toolCallId: toolRequest.callId,
+            name: UNKNOWN_TOOL_NAME,
+            status: 'failed',
+            durationMs: 0
           });
-
-          if (hasToolOrAssistantRole(errorToolResult)) {
-            tmpToolsAndResultsChain.push(errorToolResult);
-            this.log.info(`Added error tool result for unsupported tool "${toolRequest.params.name}"`, {
-              callId: toolRequest.callId,
-              toolName: toolRequest.params.name,
-              chainLength: tmpToolsAndResultsChain.length
-            });
-          }
+          this.log.info(`Added error tool result for unsupported tool "${toolRequest.params.name}"`, {
+            callId: toolRequest.callId,
+            toolName: toolRequest.params.name,
+            chainLength: tmpToolsAndResultsChain.length
+          });
         }
       }
 
@@ -445,340 +451,85 @@ export class LlmManager implements Interface.LlmManager {
 
       // Process multiple pending tools with detailed logging
       this.log.info(`Processing ${validPendingTools.length} pending tools`);
-      for (const mcpToolRequest of validPendingTools) {
+      for (const toolRequest of validPendingTools) {
         // A cancelled generate() runs no further tools
         callOptions?.signal?.throwIfAborted();
 
-        this.log.debug(`Executing tool: "${mcpToolRequest.params.name}" with callId: ${mcpToolRequest.callId}`, {
-          toolName: mcpToolRequest.params.name,
-          callId: mcpToolRequest.callId,
-          params: mcpToolRequest.params,
-          loopCount,
-          chainLength: tmpToolsAndResultsChain.length,
-          source: additionalToolHandlers.has(mcpToolRequest.params.name) ? 'additional' : 'mcp'
-        });
-
-        // Handle additional tools (non-MCP) with direct handler invocation
-        const additionalHandler = additionalToolHandlers.get(mcpToolRequest.params.name);
-        if (additionalHandler) {
-          const toolSpan = tracerForGeneration.withParent(generation.id).span({
-            name: `additional-tool-${mcpToolRequest.params.name}`,
-            input: mcpToolRequest.params,
-            metadata: {
-              toolName: mcpToolRequest.params.name,
-              callId: mcpToolRequest.callId,
-              loopIteration: loopCount,
-              source: 'additional'
-            }
-          });
-
-          try {
-            const result = await additionalHandler(mcpToolRequest.params.arguments ?? {});
-
-            const unifiedToolContent: Type.Entity.ToolResultContent = {
-              type: 'tool_result',
-              callId: mcpToolRequest.callId,
-              content: result.content as Type.Entity.ToolResultContent['content'],
-              isError: result.isError ?? false
-            };
-
-            const toolResult = new InteractiveOutputMessage({
-              sessionId: ctx.session.id,
-              ctx: {},
-              content: [unifiedToolContent],
-              role: Type.LLM.UnifiedMessageRole.tool,
-              author: `tool-${mcpToolRequest.params.name}`,
-              llmName,
-              manifestName,
-              llmIgnore: false
-            });
-
-            if (hasToolOrAssistantRole(toolResult)) {
-              tmpToolsAndResultsChain.push(toolResult);
-              this.log.debug(`Added additional tool result to chain`, {
-                toolName: mcpToolRequest.params.name,
-                callId: mcpToolRequest.callId,
-                chainLength: tmpToolsAndResultsChain.length,
-                isError: result.isError,
-                loopCount
-              });
-            }
-
-            toolSpan.end({
-              output: toolResult,
-              metadata: { isError: result.isError ?? false, source: 'additional' },
-              level: result.isError ? 'WARNING' : 'DEFAULT'
-            });
-          } catch (error) {
-            this.log.error(`Critical error during additional tool execution: "${mcpToolRequest.params.name}"`, {
-              toolName: mcpToolRequest.params.name,
-              callId: mcpToolRequest.callId,
-              error: error instanceof Error ? error.message : String(error),
-              loopCount
-            });
-
-            const errorToolContent: Type.Entity.ToolResultContent = {
-              type: 'tool_result',
-              callId: mcpToolRequest.callId,
-              content: [
-                {
-                  type: 'text',
-                  text: `Critical execution error: ${error instanceof Error ? error.message : String(error)}`
-                }
-              ],
-              isError: true
-            };
-
-            const errorToolResult = new InteractiveOutputMessage({
-              sessionId: ctx.session.id,
-              ctx: {},
-              content: [errorToolContent],
-              role: Type.LLM.UnifiedMessageRole.tool,
-              author: `tool-${mcpToolRequest.params.name}`,
-              llmName,
-              manifestName,
-              llmIgnore: false
-            });
-
-            if (hasToolOrAssistantRole(errorToolResult)) {
-              tmpToolsAndResultsChain.push(errorToolResult);
-            }
-
-            toolSpan.end({
-              output: errorToolResult,
-              metadata: { isError: true, source: 'additional' },
-              level: 'ERROR',
-              statusMessage: error instanceof Error ? error.message : String(error)
-            });
-          }
-
-          continue; // Skip MCP execution path
-        }
-
-        // MCP tool execution path (existing logic)
-        const toolSpan = tracerForGeneration.withParent(generation.id).span({
-          name: `mcp-tool-${mcpToolRequest.params.name}`,
-          input: mcpToolRequest.params,
-          metadata: {
-            toolName: mcpToolRequest.params.name,
-            callId: mcpToolRequest.callId,
-            loopIteration: loopCount
-          }
-        });
-
-        try {
-          // Find the specific tool being called
-          const calledTool = mcpTools.find((tool) => tool.name === mcpToolRequest.params.name);
-
-          // Get MCP clients with metadata that support this tool
-          const toolClientsMap = await this.mcpManager.getClientsInfoForTool(mcpToolRequest.params.name);
-
-          // Convert Map to Array for toolInterceptor callback
-          const toolClients = Array.from(toolClientsMap.entries()).map(([clientName, metadata]) => ({
-            clientName,
-            metadata
-          }));
-
-          // Call interceptor if available, otherwise use default behavior
-          let preventGeneration = false;
-          let overridePayload: OverrideGeneratePayload | null = null;
-
-          const toolResponse =
-            this.toolInterceptorManager && calledTool
-              ? await this.toolInterceptorManager.handle({
-                  ctx,
-                  toolRequest: mcpToolRequest,
-                  calledTool,
-                  toolChain: tmpToolsAndResultsChain,
-                  executeToolFn: ({ params, clientNames }) =>
-                    this.mcpManager.callTool(params, undefined, undefined, clientNames),
-                  callLimits: {
-                    current: loopCount,
-                    max: MAX_LOOP_COUNT
-                  },
-                  toolClients,
-                  preventGenerate: (payload: OverrideGeneratePayload) => {
-                    preventGeneration = true;
-                    overridePayload = payload;
-                  }
-                })
-              : await this.mcpManager.callTool(mcpToolRequest.params);
-
-          this.log.debug(`Tool "${mcpToolRequest.params.name}" execution completed`, {
-            toolName: mcpToolRequest.params.name,
-            callId: mcpToolRequest.callId,
-            isError: toolResponse.isError,
-            contentLength: toolResponse.content?.length || 0,
-            hasError: !!toolResponse.error
-          });
-
-          // Create tool result content
-          const unifiedToolContent: Type.Entity.ToolResultContent = {
-            type: 'tool_result',
-            callId: mcpToolRequest.callId,
-            content: toolResponse.content,
-            isError: toolResponse.isError
-          };
-
-          // If there's an error and no content provided, add a text content item explaining the error
-          if (toolResponse.isError && (!toolResponse.content || toolResponse.content.length === 0)) {
-            const errorMessage = describeToolError(toolResponse.error);
-            unifiedToolContent.content = [
-              {
-                type: 'text',
-                text: `Error: ${errorMessage}`
-              }
-            ];
-            this.log.warn(`Tool "${mcpToolRequest.params.name}" execution failed`, {
-              toolName: mcpToolRequest.params.name,
-              callId: mcpToolRequest.callId,
-              error: errorMessage,
-              loopCount
-            });
-          }
-
-          const toolResult = new InteractiveOutputMessage({
-            sessionId: ctx.session.id,
-            ctx: {},
-            content: [unifiedToolContent], // This is the correct structure according to schema
-            role: Type.LLM.UnifiedMessageRole.tool,
-            author: `tool-${mcpToolRequest.params.name}`,
+        const toolName = toolRequest.params.name;
+        const handler = additionalToolHandlers.get(toolName);
+        const toolCallId = toolRequest.callId;
+        events?.toolCall(step, { toolCallId, name: toolName, args: toolRequest.params.arguments ?? {} });
+        const toolStartedAt = Date.now();
+        const outcome = await executeTool(
+          {
+            ctx,
+            request: toolRequest,
+            source: additionalToolHandlers.has(toolName) ? 'additional' : 'mcp',
+            handler,
+            calledTool: handler ? undefined : mcpTools.find((tool) => tool.name === toolName),
+            toolChain: tmpToolsAndResultsChain,
+            loop: { current: loopCount, max: MAX_LOOP_COUNT },
+            tracer: tracerForGeneration,
+            parentGenerationId: generation.id,
             llmName,
             manifestName,
+            signal: callOptions?.signal,
+            emit: events ? (name, data) => events.data(step, { toolCallId, toolName }, name, data) : undefined
+          },
+          { mcpManager: this.mcpManager, toolInterceptorManager: this.toolInterceptorManager, log: this.log }
+        );
+        events?.toolResult(step, {
+          toolCallId,
+          name: toolName,
+          status: outcome.isError ? 'failed' : 'succeeded',
+          durationMs: Date.now() - toolStartedAt
+        });
+
+        // Check if generation was prevented by tool interceptor (after processing tool result)
+        if (outcome.kind === 'override') {
+          this.log.info('Tool interceptor prevented LLM generation, using override response');
+          events?.markSynthetic();
+
+          // Create override message
+          const {
+            content,
+            role = Type.LLM.UnifiedMessageRole.assistant,
+            llmName: payloadLlmName = llmName,
+            manifestName: payloadManifestName = manifestName
+          } = outcome.override;
+
+          const overrideMessage = new InteractiveOutputMessage({
+            content,
+            role,
+            author: 'tool_interceptor',
+            llmName: payloadLlmName,
+            manifestName: payloadManifestName,
+            sessionId: ctx.session?.id || '',
+            ctx: {},
             llmIgnore: false
           });
 
-          // Ensure the role is the correct type before pushing
-          if (hasToolOrAssistantRole(toolResult)) {
-            tmpToolsAndResultsChain.push(toolResult);
-            this.log.debug(`Added tool result to the tools chain`, {
-              toolName: mcpToolRequest.params.name,
-              callId: mcpToolRequest.callId,
-              chainLength: tmpToolsAndResultsChain.length,
-              isError: toolResponse.isError,
-              loopCount
-            });
-          } else {
-            this.log.error(`Tool result with unexpected role: ${toolResult.role}, not adding to chain`, {
-              toolName: mcpToolRequest.params.name,
-              callId: mcpToolRequest.callId,
-              actualRole: toolResult.role,
-              expectedRoles: ['assistant', 'tool'],
-              chainLength: tmpToolsAndResultsChain.length,
-              loopCount
-            });
-          }
-
-          // End tool span with success
-          toolSpan.end({
-            output: toolResult,
-            metadata: {
-              isError: toolResponse.isError,
-              contentLength: toolResponse.content?.length || 0,
-              hasContent: !!toolResponse.content
+          // Replace unifiedLlmResponse with override response
+          unifiedLlmResponse = {
+            choices: [overrideMessage],
+            topChoice: overrideMessage,
+            usedTools: tmpToolsAndResultsChain,
+            usage: {
+              inputTokens: 0,
+              outputTokens: 0,
+              totalTokens: 0,
+              model: 'tool-interceptor',
+              finishReason: Strategy.LLM.LoftFinishReason.INTERCEPTOR_OVERRIDE
             },
-            level: toolResponse.isError ? 'WARNING' : 'DEFAULT'
-          });
-
-          // Check if generation was prevented by tool interceptor (after processing tool result)
-          if (preventGeneration && overridePayload) {
-            this.log.info('Tool interceptor prevented LLM generation, using override response');
-
-            // Create override message
-            const {
-              content,
-              role = Type.LLM.UnifiedMessageRole.assistant,
-              llmName: payloadLlmName = llmName,
-              manifestName: payloadManifestName = manifestName
-            } = overridePayload;
-
-            const overrideMessage = new InteractiveOutputMessage({
-              content,
-              role,
-              author: 'tool_interceptor',
-              llmName: payloadLlmName,
-              manifestName: payloadManifestName,
-              sessionId: ctx.session?.id || '',
-              ctx: {},
-              llmIgnore: false
-            });
-
-            // Replace unifiedLlmResponse with override response
-            unifiedLlmResponse = {
-              choices: [overrideMessage],
-              topChoice: overrideMessage,
-              usedTools: tmpToolsAndResultsChain,
-              usage: {
-                inputTokens: 0,
-                outputTokens: 0,
-                totalTokens: 0,
-                model: 'tool-interceptor',
-                finishReason: 'interceptor_override' // TODO: Add to Unified finish reasons
-              },
-              originalResponse: { generatedByToolInterceptor: true }
-            };
-
-            // Exit the tool execution loop
-            shouldCallLLM = false;
-            break;
-          }
-        } catch (error) {
-          // Handle tool execution errors gracefully
-          this.log.error(`Critical error during tool execution: "${mcpToolRequest.params.name}"`, {
-            toolName: mcpToolRequest.params.name,
-            callId: mcpToolRequest.callId,
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-            loopCount,
-            chainLength: tmpToolsAndResultsChain.length
-          });
-
-          // Create error tool result to maintain tool call/response balance
-          const errorToolContent: Type.Entity.ToolResultContent = {
-            type: 'tool_result',
-            callId: mcpToolRequest.callId,
-            content: [
-              {
-                type: 'text',
-                text: `Critical execution error: ${error instanceof Error ? error.message : String(error)}`
-              }
-            ],
-            isError: true
+            originalResponse: { generatedByToolInterceptor: true }
           };
 
-          const errorToolResult = new InteractiveOutputMessage({
-            sessionId: ctx.session.id,
-            ctx: {},
-            content: [errorToolContent],
-            role: Type.LLM.UnifiedMessageRole.tool,
-            author: `tool-${mcpToolRequest.params.name}`,
-            llmName,
-            manifestName,
-            llmIgnore: false
-          });
-
-          if (hasToolOrAssistantRole(errorToolResult)) {
-            tmpToolsAndResultsChain.push(errorToolResult);
-            this.log.debug(`Added error tool result after critical failure`, {
-              toolName: mcpToolRequest.params.name,
-              callId: mcpToolRequest.callId,
-              chainLength: tmpToolsAndResultsChain.length,
-              loopCount
-            });
-          }
-
-          // End tool span with error
-          toolSpan.end({
-            output: errorToolResult,
-            metadata: {
-              isError: true,
-              errorMessage: error instanceof Error ? error.message : String(error)
-            },
-            level: 'ERROR',
-            statusMessage: error instanceof Error ? error.message : String(error)
-          });
+          // Exit the tool execution loop
+          shouldCallLLM = false;
+          break;
         }
       }
+      finishStep(true);
     }
     this.log.info(`Tool execution loop completed after ${loopCount} iterations`);
 
@@ -912,6 +663,10 @@ export class LlmManager implements Interface.LlmManager {
     });
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   async generateStream(
     ctx: ContextInterface,
     manifestName: string,
@@ -976,6 +731,22 @@ export class LlmManager implements Interface.LlmManager {
   }
 }
 
+// The tool name generation events report for a tool call no tool source supports
+const UNKNOWN_TOOL_NAME = 'unknown';
+
+// The text parts of a message, joined
+function textOf(message: Interface.FacadeEntity.InteractiveOutputMessage): string {
+  return message.content.map((part) => (part.type === 'text' ? part.text : '')).join('');
+}
+
+// The step's usage as the event sink takes it: without the start time, which is a Date
+function withoutStartTime({
+  generateStartTime: _startTime,
+  ...usage
+}: Strategy.LLM.UnifiedUsage): Strategy.LLM.StreamUsage {
+  return usage;
+}
+
 type ToolOrAssistantMessage = Interface.FacadeEntity.InteractiveOutputMessage & {
   role: Type.LLM.UnifiedMessageRole.assistant | Type.LLM.UnifiedMessageRole.tool;
 };
@@ -994,17 +765,4 @@ function isToolCallContent(content: Type.Entity.FullContentPart): content is Typ
   params: { name: string; arguments: any };
 } {
   return content.type === 'tool_call' && 'callId' in content && 'params' in content;
-}
-
-// A tool interceptor or MCP server may report the error as any value, not only a string
-function describeToolError(error: unknown): string {
-  if (typeof error === 'string' && error.length > 0) return error;
-  if (error instanceof Error) return error.message;
-  if (error === undefined || error === null || error === '') return 'Unknown error occurred while executing the tool';
-  try {
-    return JSON.stringify(error);
-  } catch {
-    // JSON.stringify fails on circular values; inspect still describes them
-    return inspect(error, { depth: 2 });
-  }
 }

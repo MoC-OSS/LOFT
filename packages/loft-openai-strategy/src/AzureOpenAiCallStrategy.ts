@@ -3,8 +3,10 @@ import { Logger, Strategy } from '@moc-global/loft-definitions';
 import { AzureClientOptions, AzureOpenAI } from 'openai';
 import { ZodObject } from 'zod';
 
+import { OpenAiStrategyOptions } from './OpenAiStrategyOptions';
 import { OpenAiRequest, OpenAiResponse, OpenAiResponseChunk, OpenAiStreamRequest } from './OpenAiTypes';
 import { OpenAiRequestBodySchema } from './OpenAiValidatingSchemas';
+import { generateStreamed, isStreamable } from './streaming/streamChatCompletion';
 
 const log = new Logger('OpenAIStrategy');
 
@@ -25,20 +27,28 @@ export type AzureOpenAiConfig = {
 
 export class AzureOpenAiCallStrategy implements Strategy.LLM.LLMApi {
   private readonly client: AzureOpenAI;
+  private readonly streaming: boolean;
+  private readonly streamUsage: boolean;
   private static readonly DEFAULT_SCOPE = 'https://cognitiveservices.azure.com/.default';
 
   constructor(
     config: AzureOpenAiConfig,
     readonly tokenRateLimiter: Strategy.LLM.LlmTokenRateLimiter,
-    readonly llmTokenizer: Strategy.LLM.LlmTokenizer
+    readonly llmTokenizer: Strategy.LLM.LlmTokenizer,
+    /** @experimental */
+    options?: OpenAiStrategyOptions
   ) {
     // need for using streaming https://github.com/openai/openai-node?tab=readme-ov-file#realtime-api
     const azureConfig: AzureClientOptions = {
       apiVersion: config.apiVersion || (config.deploymentName ? '2024-10-01-preview' : '2024-10-21'),
       // Without an endpoint the SDK reads AZURE_OPENAI_ENDPOINT, or throws if that is unset too
       endpoint: config.endpoint,
-      deployment: config.deploymentName
+      deployment: config.deploymentName,
+      timeout: options?.clientOptions?.timeout,
+      maxRetries: options?.clientOptions?.maxRetries
     };
+    this.streaming = options?.streaming ?? true;
+    this.streamUsage = options?.streamUsage ?? true;
 
     if (config.auth.type === 'api-key') {
       this.client = new AzureOpenAI({
@@ -63,8 +73,17 @@ export class AzureOpenAiCallStrategy implements Strategy.LLM.LLMApi {
     generalRequest: T_LLM_Req,
     options?: Strategy.LLM.CallOptions
   ): Promise<T_LLM_Res> {
+    const llmRequest = generalRequest as unknown as OpenAiRequest;
+    if (options?.onEvent && this.streaming && isStreamable(llmRequest)) {
+      const llmResponse = await generateStreamed(
+        (body, callOptions) => this.client.chat.completions.create(body, callOptions),
+        llmRequest,
+        { signal: options.signal, onEvent: options.onEvent, includeUsage: this.streamUsage }
+      );
+      return llmResponse as T_LLM_Res;
+    }
+
     try {
-      const llmRequest = generalRequest as unknown as OpenAiRequest;
       const llmResponse = await this.client.chat.completions.create(llmRequest, { signal: options?.signal });
       return llmResponse as T_LLM_Res;
     } catch (error) {
@@ -73,6 +92,10 @@ export class AzureOpenAiCallStrategy implements Strategy.LLM.LLMApi {
     }
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   async generateStream<T_LLM_Req, T_LLM_Res>(generalRequest: T_LLM_Req): Promise<T_LLM_Res> {
     try {
       const llmRequest = generalRequest as unknown as OpenAiStreamRequest;
@@ -84,6 +107,10 @@ export class AzureOpenAiCallStrategy implements Strategy.LLM.LLMApi {
     }
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   extractContentFromChunk<T_LLM_Res>(chunk: T_LLM_Res): string {
     const response = chunk as unknown as OpenAiResponseChunk;
     return response.choices[0]?.delta?.content || '';

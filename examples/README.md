@@ -16,6 +16,7 @@ Each example builds on the previous, showing progressively more features.
 | 5 | [serverless](./serverless/) | LOFT in an AWS Lambda handler | PGLite (auto) | OpenAI | ~2 min |
 | 6 | [express-focus-basic](./express-focus-basic/) | Focus: collect a pizza order over several turns | Docker PG | Anthropic | ~10 min |
 | 7 | [express-agents](./express-agents/) | Agent graphs, fan-out and teams (restaurant showcase) | Docker PG | Anthropic | ~10 min |
+| 8 | [express-streaming](./express-streaming/) | Stream a reply over SSE, with tool calls and tool progress events | PGLite | OpenAI | ~3 min |
 
 ### What's PGLite?
 
@@ -28,6 +29,7 @@ PGLite is an in-process PostgreSQL implementation ([`@electric-sql/pglite`](http
 - **NestJS user?** Start with `nestjs`
 - **Serverless?** Start with `serverless`
 - **Multi-agent workflows?** Start with `express-focus-basic` → then `express-agents`
+- **Streaming replies to a frontend?** Start with `express-history` → then `express-streaming`
 
 ## Quick Start (any example)
 

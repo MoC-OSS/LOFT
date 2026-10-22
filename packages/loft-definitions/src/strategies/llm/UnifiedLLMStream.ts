@@ -2,6 +2,10 @@ import { Transform } from 'stream';
 
 import { Strategy } from '../..';
 
+/**
+ * @deprecated Use chat.generate({ onEvent }) instead.
+ * Removed in the next major release.
+ */
 export abstract class UnifiedLLMStream extends Transform {
   constructor() {
     super({ objectMode: true });

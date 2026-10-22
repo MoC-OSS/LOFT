@@ -1,6 +1,8 @@
 import { InteractiveOutputMessage, Logger, Strategy, Type } from '@moc-global/loft-definitions';
 import { z } from 'zod';
 
+import { ScriptedTurnPlayer } from './scriptedTurns';
+
 /** A tool call the scripted model makes. The call id defaults to `<name>:::scripted-<n>`. */
 export interface ScriptedToolCall {
   name: string;
@@ -9,14 +11,38 @@ export interface ScriptedToolCall {
 }
 
 /**
+ * How a `text` or `toolCalls` turn streams. These fields only take effect when the call has an `onEvent` sink and
+ * the turn has `chunks`; without a sink the turn is answered with its `text` at once.
+ *
+ * @experimental
+ */
+export interface ScriptedStreaming {
+  /** The text in pieces; the pieces must join to the turn's `text`. Each piece is sent as a `text-delta` event. */
+  chunks?: string[];
+  /** The number of `activity` events sent before the first chunk. */
+  activityChunks?: number;
+  /** Milliseconds to wait between events (activity and chunks alike). */
+  chunkDelayMs?: number;
+  /** The call fails with this error after all chunks were sent. */
+  failAfterChunks?: Error;
+  /** The call hangs after the chunks until it is cancelled through its AbortSignal. */
+  waitForAbortAfterChunks?: true;
+}
+
+/**
  * One reply of the scripted model:
  * - `text`: a final answer
  * - `toolCalls`: one or more tool calls in one assistant message, with optional text beside them
  * - `error`: the provider call fails with this error
  * - `waitForAbort`: the call hangs until the generate() call is cancelled through its AbortSignal
+ *
+ * `text` and `toolCalls` replies may also carry the streaming fields of {@link ScriptedStreaming}.
  */
 export type ScriptedTurn =
-  { text: string } | { toolCalls: ScriptedToolCall[]; text?: string } | { error: Error } | { waitForAbort: true };
+  | ({ text: string } & ScriptedStreaming)
+  | ({ toolCalls: ScriptedToolCall[]; text?: string } & ScriptedStreaming)
+  | { error: Error }
+  | { waitForAbort: true };
 
 /** A reply, or a function that chooses one from what the model was sent. */
 export type ScriptedReply = ScriptedTurn | ((call: ScriptedLLMCall) => ScriptedTurn | Promise<ScriptedTurn>);
@@ -43,6 +69,9 @@ export interface ScriptedResponse {
 }
 
 type McpTools = Parameters<Strategy.LLM.LoftLLM<ScriptedLLMCall, ScriptedResponse>['formatToLLMRequest']>[4];
+
+const SCRIPT_THE_API =
+  'A ScriptedLLMStrategy with a call manager strategy has no replies of its own: script the ScriptedLLMApi instead';
 
 function textOf(parts: ReadonlyArray<{ type: string; text?: string }>): string {
   return parts
@@ -71,63 +100,47 @@ function toScriptedMessage(message: Type.Entity.Message): ScriptedMessage {
  */
 export class ScriptedLLMStrategy extends Strategy.LLM.AbstractLoftLLM<ScriptedLLMCall, ScriptedResponse> {
   readonly llmName: string;
-  readonly calls: ScriptedLLMCall[] = [];
+  readonly calls: ScriptedLLMCall[];
   protected readonly log = new Logger('LLMStrategy:Scripted');
-  private readonly replies: ScriptedReply[];
-  private toolCallCount = 0;
+  private readonly player: ScriptedTurnPlayer;
 
-  constructor(llmName: string, replies: ScriptedReply[] = []) {
-    super();
+  /**
+   * With a `callManagerStrategy`, generate() sends the request through it instead of playing `replies` itself, so the
+   * replies belong to the `ScriptedLLMApi` behind the call manager. `calls` still records what this strategy was sent.
+   *
+   * @throws when the `chunks` of a reply do not join to its `text`, or when replies are given together with a
+   * `callManagerStrategy`
+   */
+  constructor(llmName: string, replies: ScriptedReply[] = [], callManagerStrategy?: Strategy.CallManager) {
+    super(callManagerStrategy);
+    if (callManagerStrategy && replies.length > 0) throw new Error(SCRIPT_THE_API);
     this.llmName = llmName;
-    this.replies = [...replies];
+    this.player = new ScriptedTurnPlayer(`ScriptedLLMStrategy "${llmName}"`, replies);
+    this.calls = this.player.calls;
   }
 
-  /** Adds replies for later calls. */
+  /** Adds replies for later calls. Not available with a call manager strategy: script the `ScriptedLLMApi`. */
   script(...replies: ScriptedReply[]): this {
-    this.replies.push(...replies);
+    if (this.callManagerStrategy) throw new Error(SCRIPT_THE_API);
+    this.player.script(...replies);
     return this;
   }
 
-  /** Replies not used yet. */
+  /** Replies not used yet. Not available with a call manager strategy: ask the `ScriptedLLMApi`. */
   get remainingReplies(): number {
-    return this.replies.length;
+    if (this.callManagerStrategy) throw new Error(SCRIPT_THE_API);
+    return this.player.remainingReplies;
   }
 
   async generate(
     request: Strategy.LLM.LLMRequest<ScriptedLLMCall>,
     options?: Strategy.LLM.CallOptions
   ): Promise<Strategy.LLM.LlmResponse<ScriptedResponse>> {
-    options?.signal?.throwIfAborted();
-    const call = request.llmBody;
-    this.calls.push(call);
-
-    const reply = this.replies.shift();
-    if (!reply) {
-      throw new Error(`ScriptedLLMStrategy "${this.llmName}" has no reply for call ${this.calls.length}`);
+    if (this.callManagerStrategy) {
+      this.calls.push(request.llmBody);
+      return super.generate(request, options);
     }
-    const turn = typeof reply === 'function' ? await reply(call) : reply;
-
-    if ('error' in turn) throw turn.error;
-    if ('waitForAbort' in turn) {
-      const signal = options?.signal;
-      if (!signal) throw new Error('A waitForAbort reply needs a generate() call with an AbortSignal');
-      await new Promise<never>((_, reject) => {
-        signal.addEventListener('abort', () => reject(signal.reason), { once: true });
-      });
-    }
-
-    const body: ScriptedResponse =
-      'toolCalls' in turn
-        ? {
-            text: turn.text,
-            toolCalls: turn.toolCalls.map((toolCall) => ({
-              name: toolCall.name,
-              arguments: toolCall.arguments,
-              callId: toolCall.callId ?? `${toolCall.name}:::scripted-${++this.toolCallCount}`
-            }))
-          }
-        : { text: 'text' in turn ? turn.text : '', toolCalls: [] };
-
+    const body = await this.player.play(request.llmBody, options);
     return { sessionId: request.sessionId, requestType: request.requestType, llmName: this.llmName, llmBody: body };
   }
 

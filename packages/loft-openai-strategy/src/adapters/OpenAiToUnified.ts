@@ -1,4 +1,4 @@
-import { InteractiveOutputMessage, Logger, Type } from '@moc-global/loft-definitions';
+import { InteractiveOutputMessage, Logger, Strategy, Type } from '@moc-global/loft-definitions';
 import {
   ChatCompletion,
   ChatCompletionMessage,
@@ -106,4 +106,29 @@ export function openAiChoiceToUnifiedMessage(
     manifestName,
     llmIgnore: false
   });
+}
+
+/**
+ * Reads the reasoning tokens of a completion. OpenAI reports them under `completion_tokens_details`.
+ */
+export function openAiReasoningTokens(usage: ChatCompletion['usage']): number | undefined {
+  return usage?.completion_tokens_details?.reasoning_tokens;
+}
+
+/**
+ * Maps the usage of a completion to the unified usage (always provide values, use 0 if missing)
+ */
+export function openAiUsageToUnified(
+  usage: ChatCompletion['usage'],
+  model: string,
+  finishReason: string | undefined
+): Strategy.LLM.StreamUsage {
+  return {
+    inputTokens: usage?.prompt_tokens || 0,
+    outputTokens: usage?.completion_tokens || 0,
+    totalTokens: usage?.total_tokens || 0,
+    reasoningTokens: openAiReasoningTokens(usage),
+    model,
+    finishReason
+  };
 }

@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { ContextInterface, Interface, Logger, Strategy, Type } from '@moc-global/loft-definitions';
+import { ContextInterface, Interface, Logger, Middleware, Strategy, Type } from '@moc-global/loft-definitions';
 import type { ListToolsResult } from '@modelcontextprotocol/sdk/types.js';
 import { ZodSchema } from 'zod';
 
@@ -29,6 +29,10 @@ interface LoftLLMImplementation {
     llmName: string,
     manifestName: string
   ): Strategy.LLM.UnifiedLLMResponse;
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   generateStream(llmRequest: Strategy.LLM.LLMRequest<AnthropicRequest>): Promise<Strategy.LLM.UnifiedLLMStream>;
   generateModelPresetSchema(): ZodSchema<any>;
   generateResponseSchema(): ZodSchema<any>;
@@ -118,6 +122,10 @@ export class AnthropicLoftStrategy implements LoftLLMImplementation {
     );
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   async generateStream(llmRequest: Strategy.LLM.LLMRequest<AnthropicRequest>): Promise<Strategy.LLM.UnifiedLLMStream> {
     if (!this.baseStrategy.callManagerStrategy)
       throw new Error('Cannot use streamCall method when callManagerStrategy is not provided');
@@ -186,8 +194,18 @@ export class AnthropicLoftStrategy implements LoftLLMImplementation {
     this.baseStrategy.stop();
   }
 
-  useMiddleware(name: string, middleware: any): void {
-    this.baseStrategy.useMiddleware(name, middleware);
+  useMiddleware(
+    name: string,
+    middleware: Middleware<ContextInterface, Strategy.LLM.UnifiedLLMResponse>,
+    /** @experimental `transformsOutput: false` declares that the middleware does not change the reply text. Default true. */
+    options?: { transformsOutput?: boolean }
+  ): void {
+    this.baseStrategy.useMiddleware(name, middleware, options);
+  }
+
+  /** @experimental True when a middleware that may change the reply text is registered. */
+  hasOutputMiddleware(): boolean {
+    return this.baseStrategy.hasOutputMiddleware();
   }
 }
 

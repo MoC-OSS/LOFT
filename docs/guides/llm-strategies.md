@@ -245,7 +245,7 @@ The `LlmTokenRateLimiter` config controls throughput:
 |-----------|------|-------------|
 | `newTokensPerSecond` | number | Max tokens per second |
 | `newRequestsPerSecond` | number | Max requests per second |
-| `maxRequests` | number | Max concurrent requests |
+| `maxRequests` | number | Request budget per time window, refilled at `newRequestsPerSecond`. It does not limit concurrency, see `concurrency` below |
 | `maxTokens` | number | Max total token budget |
 | `maxAwaitSeconds` | number | Max wait time for a rate-limited request |
 
@@ -256,5 +256,9 @@ The `GenerateCallManager` config controls retries:
 | `highPriorityTasksLimit` | number | Max high-priority tasks in queue before rejection |
 | `retryDelay` | number | Base of the backoff between attempts (ms): doubled for each retry, with jitter, at most 60 s |
 | `retryAttemptsLimit` | number | Max attempts, the first one included |
+| `concurrency` | number | Optional. How many calls of this model run at once in this process: an integer of at least 1, otherwise the constructor throws `RangeError`. Default: `1`. The rate limiter is per process too, so divide the provider's budgets by the number of instances |
+| `reserveTokens` | boolean | Optional. Takes the predicted tokens from the rate limiter before the call and settles to the actual usage after it. Default: `true` |
 
-Only failures a new attempt can fix are retried: 408, 429 and 5xx responses and network failures, such as the SDKs' connection and timeout errors. A 400, 401 or 404 is thrown at once. A `Retry-After` (or `retry-after-ms`) header from the provider sets the wait instead, up to 60 s. The queue runs one call at a time, so the calls behind a waiting retry wait too; aborting the call's `signal` ends the wait.
+Only failures a new attempt can fix are retried: 408, 429 and 5xx responses, network failures, such as the SDKs' connection and timeout errors, and a provider error that has no status and a `type` (or `error.type`) of `overloaded_error`, `api_error` or `server_error`, which is how an error that arrives inside a stream looks. A 400, 401 or 404 is thrown at once. A `Retry-After` (or `retry-after-ms`) header from the provider sets the wait instead, up to 60 s. By default the queue runs one call at a time, so the calls behind a waiting retry wait too; with `concurrency` above 1 the other slots keep working. Aborting the call's `signal` ends the wait. The OpenAI and Anthropic SDK clients also retry on their own (2 times by default), which multiplies these attempts; when the call manager retries, pass `clientOptions: { maxRetries: 0 }` to the OpenAI strategies, or `maxRetries: 0` in the Anthropic client options. See [Streaming](./streaming.md#before-you-serve-more-than-one-user).
+
+With `reserveTokens` on, the rate limiter takes the predicted tokens and one request in a single step before the call, so calls running at the same time cannot spend the same budget. When the call ends, the tokens are settled to the provider's count, which can give some back. If the call fails before the provider sent anything, in any of its attempts, the tokens are given back and the request stays spent; if the call is aborted after it took them, the reservation stays, and a call aborted while it waits for the budget takes nothing. `reserveTokens: false` restores the older accounting: check the budget before the call and charge the provider's count only after a successful one. A custom rate limiter takes part in the reservation by implementing the optional `acquire(tokens, signal?)`, which should reject with the signal's reason when it aborts during the wait; without it LOFT checks and then charges, and calls running at the same time may pass the check together. `setUsedTokens` accepts a negative number, which is a refund.

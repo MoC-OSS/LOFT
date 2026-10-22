@@ -56,7 +56,7 @@ DI_TYPES.LlmContextWindowCropper          // Message history trimming
 DI_TYPES.LoftHealthCheck                   // Health check service
 ```
 
-The full `DI_TYPES` object also includes symbols that are internal or reserved for features that are not available yet (`BaseLoft`, `StreamLoft`, `QueuedLoft`, `OutgoingQueue`, `PromptManager`, `ManifestRepositoryConfig`, `ResultCallBack`, `ErrorHandler`). See `packages/loft-definitions/src/DITypes.ts` for the complete list.
+The full `DI_TYPES` object also includes symbols that are internal or reserved for features that are not available yet (`BaseLoft`, `QueuedLoft`, `OutgoingQueue`, `PromptManager`, `ManifestRepositoryConfig`, `ResultCallBack`, `ErrorHandler`). `StreamLoft` is reserved and unused: streaming is done with `chat.generate({ onEvent })`, with no extra binding. See `packages/loft-definitions/src/DITypes.ts` for the complete list.
 
 These symbols act as keys. When a class needs a dependency, it uses `@inject(DI_TYPES.LlmManager)` to request it from the container.
 

@@ -3,7 +3,7 @@ import type { ListToolsResult } from '@modelcontextprotocol/sdk/types.js';
 import { ZodObject } from 'zod';
 
 import { mcpToOpenAITool } from './adapters/mcpTool';
-import { openAiChoiceToUnifiedMessage } from './adapters/OpenAiToUnified';
+import { openAiChoiceToUnifiedMessage, openAiUsageToUnified } from './adapters/OpenAiToUnified';
 import { unifiedMessagesToOpenAiMessages } from './adapters/UnifiedToOpenAi';
 import { OpenAiStream } from './OpenAiStream';
 import { OpenAiRequest, OpenAiResponse } from './OpenAiTypes';
@@ -55,15 +55,11 @@ export class AzureOpenAiLoftStrategy extends Strategy.LLM.AbstractLoftLLM<OpenAi
       openAiChoiceToUnifiedMessage(aChoice, { correlatorIds, sessionId, llmName, manifestName })
     );
 
-    // Extract usage in Azure OpenAI format (same as OpenAI, always provide values, use 0 if missing)
-    const usage: Strategy.LLM.UnifiedUsage = {
-      inputTokens: originalResponse.usage?.prompt_tokens || 0,
-      outputTokens: originalResponse.usage?.completion_tokens || 0,
-      totalTokens: originalResponse.usage?.total_tokens || 0,
-      reasoningTokens: (originalResponse.usage as any)?.reasoning_tokens,
-      model: originalResponse.model,
-      finishReason: originalResponse.choices[0]?.finish_reason
-    };
+    const usage: Strategy.LLM.UnifiedUsage = openAiUsageToUnified(
+      originalResponse.usage,
+      originalResponse.model,
+      originalResponse.choices[0]?.finish_reason
+    );
 
     return {
       choices,
@@ -73,6 +69,10 @@ export class AzureOpenAiLoftStrategy extends Strategy.LLM.AbstractLoftLLM<OpenAi
     };
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   async generateStream(llmRequest: Strategy.LLM.LLMRequest<OpenAiRequest>): Promise<OpenAiStream> {
     if (!this.callManagerStrategy)
       throw new Error('Cannot use streamCall method when callManagerStrategy is not provided');

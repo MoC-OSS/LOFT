@@ -139,6 +139,41 @@ expect(llm.calls[1].messages.at(-1)?.toolResults[0].text).toBe('4'); // what the
 
 A call after the last scripted reply fails the test, so an unexpected extra model call does not go unnoticed.
 
+### Scripting a streamed reply
+
+A `text` or `toolCalls` reply can also describe how it streams. These fields (experimental) only take effect when the call has an `onEvent` sink and the reply has `chunks`. Without a sink the reply is answered with its `text` at once, as before.
+
+| Field | Effect |
+| --- | --- |
+| `chunks` | The text in pieces, sent in order as `text-delta` events. The pieces must join to `text`, otherwise creating the strategy (or producing the reply, for a reply function) throws. Text beside tool calls streams the same way. |
+| `activityChunks` | Number of `activity` events sent before the first chunk |
+| `chunkDelayMs` | Wait before every event after the first, `activity` events included; an abort ends the wait |
+| `failAfterChunks` | The call rejects with this error after all chunks were sent |
+| `waitForAbortAfterChunks` | The call hangs after the chunks until its `AbortSignal` aborts |
+
+The signal is checked between events and after the last chunk, and an aborted call rejects with the signal's reason. For "activity, then silence", use `{ text: '', chunks: [], activityChunks: 1, waitForAbortAfterChunks: true }`: the call sends the activity events and then stays silent until it is aborted.
+
+```typescript
+const llm = new ScriptedLLMStrategy('scripted', [
+  { text: 'Hello world', chunks: ['Hel', 'lo ', 'world'], activityChunks: 1 }
+]);
+await llm.generate(request, { onEvent: (event) => events.push(event) });
+```
+
+`ScriptedLLMApi` plays the same replies as a provider API, so the real `GenerateCallManager` can run in front of it (queue, retries, streaming hand-over) without a provider. It never sends `request-start`; the call manager does. Its rate limiter always allows a call, and its tokenizer and `extractUsedTokens` return fixed numbers. Give the scripted strategy a call manager strategy (`startScriptedChat` takes it as the `callManagerStrategy` option) and script the API instead of the strategy; a strategy with a call manager strategy refuses replies of its own:
+
+```typescript
+const api = new ScriptedLLMApi([{ text: 'Hi there', chunks: ['Hi ', 'there'] }]);
+const callManager = new GenerateCallManager<ScriptedLLMCall, ScriptedResponse>(
+  'scripted',
+  { highPriorityTasksLimit: 10, retryDelay: 1, retryAttemptsLimit: 1 },
+  api
+);
+const llm = new ScriptedLLMStrategy('scripted', [], new NativeCallManagerStrategy(callManager));
+```
+
+`api.calls` lists what reached the provider (retries included), while `llm.calls` lists what the strategy was sent. See `integration/src/__tests__/scripted.streaming.test.ts`.
+
 ## Package-Level Integration Tests (Docker)
 
 Some packages have their own integration tests requiring Docker:

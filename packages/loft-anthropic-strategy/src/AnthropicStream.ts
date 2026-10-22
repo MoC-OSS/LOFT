@@ -4,6 +4,10 @@ import { AnthropicResponseChunk } from './AnthropicTypes';
 
 const log = new Logger('AnthropicStrategy');
 
+/**
+ * @deprecated Use chat.generate({ onEvent }) instead.
+ * Removed in the next major release.
+ */
 export class AnthropicStream extends Strategy.LLM.UnifiedLLMStream {
   constructor() {
     super();

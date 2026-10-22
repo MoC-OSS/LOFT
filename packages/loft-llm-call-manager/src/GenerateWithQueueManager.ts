@@ -25,7 +25,11 @@ export class GenerateWithQueueManager<T_LLM_Req, T_LLM_Res> extends GenerateCall
       {
         highPriorityTasksLimit: configWithQueue.highPriorityTasksLimit,
         retryDelay: configWithQueue.retryDelay,
-        retryAttemptsLimit: configWithQueue.retryAttemptsLimit
+        retryAttemptsLimit: configWithQueue.retryAttemptsLimit,
+        concurrency: configWithQueue.concurrency,
+        reserveTokens: configWithQueue.reserveTokens,
+        streamIdleTimeoutMs: configWithQueue.streamIdleTimeoutMs,
+        streamFirstEventTimeoutMs: configWithQueue.streamFirstEventTimeoutMs
       },
       llm
     );
@@ -96,7 +100,8 @@ export class GenerateWithQueueManager<T_LLM_Req, T_LLM_Res> extends GenerateCall
       throw error;
     }
 
-    // Only enqueues the next task. Awaiting that task here would deadlock: this handler holds the queue's only slot.
+    // Only enqueues the next task. Awaiting that task here could deadlock: this handler holds a queue slot, the only
+    // one at the default concurrency of 1.
     void this.checkTaskQueue();
   }
 
@@ -110,7 +115,7 @@ export class GenerateWithQueueManager<T_LLM_Req, T_LLM_Res> extends GenerateCall
     }
 
     log.error(`Task of session ${task.sessionId} gave up after ${maxRequeueAttempts} requeues`);
-    const failure = { name: error.constructor.name, message: error.message };
+    const failure = { name: error.name, message: error.message };
     if (this.deadLetterLoftQueue) {
       await this.deadLetterLoftQueue.publish(
         JSON.stringify({ ...task, requeueAttempts: maxRequeueAttempts, error: failure })
