@@ -1,0 +1,30 @@
+{
+  "chunks": [
+    {
+      "promptFeedback": {
+        "blockReason": "PROHIBITED_CONTENT",
+        "blockReasonMessage": "The prompt was blocked."
+      },
+      "usageMetadata": {
+        "promptTokenCount": 7,
+        "totalTokenCount": 7
+      },
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-blocked"
+    }
+  ],
+  "response": {
+    "promptFeedback": {
+      "blockReason": "PROHIBITED_CONTENT",
+      "blockReasonMessage": "The prompt was blocked."
+    },
+    "usageMetadata": {
+      "promptTokenCount": 7,
+      "totalTokenCount": 7
+    },
+    "modelVersion": "gemini-2.5-flash",
+    "createTime": "2026-10-22T10:00:00.000000Z",
+    "responseId": "resp-blocked"
+  }
+}

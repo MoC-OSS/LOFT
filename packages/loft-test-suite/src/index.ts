@@ -1,11 +1,13 @@
 export { testChatHistoryRepository } from './contracts/chatHistoryRepositoryContract';
 export { testSessionRepository } from './contracts/sessionRepositoryContract';
 export { mcpTools } from './mcpToolFixtures';
+export { ScriptedLLMApi } from './ScriptedLLMApi';
 export type {
   ScriptedLLMCall,
   ScriptedMessage,
   ScriptedReply,
   ScriptedResponse,
+  ScriptedStreaming,
   ScriptedToolCall,
   ScriptedTurn
 } from './ScriptedLLMStrategy';

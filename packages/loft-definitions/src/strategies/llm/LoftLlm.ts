@@ -18,6 +18,10 @@ export interface LoftLLM<T_LLM_REQ, T_LLM_RES> {
     llmRequest: Strategy.LLM.LLMRequest<T_LLM_REQ>,
     options?: Strategy.LLM.CallOptions
   ): Promise<Strategy.LLM.LlmResponse<T_LLM_RES>>;
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   generateStream?(llmRequest: Strategy.LLM.LLMRequest<T_LLM_REQ>): Promise<Strategy.LLM.UnifiedLLMStream>;
   generateQueued(llmRequest: Strategy.LLM.LLMRequest<T_LLM_REQ>): Promise<void>;
   formatToLLMRequest: (
@@ -42,6 +46,11 @@ export interface LoftLLM<T_LLM_REQ, T_LLM_RES> {
     correlatorIds: string[]
   ) => Promise<Strategy.LLM.UnifiedLLMResponse>;
   getHealthCheckStatus: () => Promise<boolean>;
+  /**
+   * @experimental True when a middleware that may change the reply text is registered.
+   * LOFT then holds back streamed text until the middleware has run.
+   */
+  hasOutputMiddleware?(): boolean;
   /** Stops background timers of the call manager; called by LOFT.shutdown(). */
   stop?: () => void;
   prepareGenerateRequest(
@@ -92,8 +101,18 @@ export abstract class AbstractLoftLLM<T_LLM_REQ, T_LLM_RES> implements LoftLLM<T
     return result;
   }
 
-  useMiddleware(name: string, middleware: Middleware<ContextInterface, Strategy.LLM.UnifiedLLMResponse>) {
-    this.middlewares.use(name, middleware);
+  useMiddleware(
+    name: string,
+    middleware: Middleware<ContextInterface, Strategy.LLM.UnifiedLLMResponse>,
+    /** @experimental `transformsOutput: false` declares that the middleware does not change the reply text. Default true. */
+    options?: { transformsOutput?: boolean }
+  ) {
+    this.middlewares.use(name, middleware, options);
+  }
+
+  /** @experimental */
+  hasOutputMiddleware(): boolean {
+    return this.middlewares.transformingCount > 0;
   }
 
   async executeMiddlewareChain(
@@ -205,6 +224,10 @@ export interface UnifiedLLMResponse {
   usage: UnifiedUsage; // Required: all LLM providers return usage metrics
   originalResponse: any;
 }
+/**
+ * @deprecated Use chat.generate({ onEvent }) instead.
+ * Removed in the next major release.
+ */
 export interface UnifiedLLMChunkResponse {
   chunk: Type.Entity.ChunkedMessage;
   originalResponse: any;

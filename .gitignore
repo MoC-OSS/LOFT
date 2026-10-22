@@ -41,12 +41,12 @@ data
 !.env.example
 !**/.env.example
 !integration/.env.test.example
-lib
 *.code-workspace
 volume
 .history
 .claude
 
 .superpowers
+docs/superpowers/
 .claude-flow
 **/manifest/errors/

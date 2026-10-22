@@ -23,7 +23,7 @@ It creates a markdown file in `.changeset/` describing the version bump.
 - **Never** for changes to private packages (`loft-base-tsconfig`, `loft-pglite`, `loft-test-suite`, `loft-kysely-pg-migrator`, `loft-integration-tests`)
 - **Never** for documentation, CI, or tooling changes that don't affect published packages
 
-> **A peer's major release needs major changesets for its dependents.** When a package gets a major release, Changesets bumps each package that has it as a peer dependency (most packages have `@moc-global/loft-definitions` as one) by `patch` only, although their published peer range moves to the new major. Narrowing a peer range is a major change under the [versioning policy](#versioning-and-deprecation-policy), so add a `major` changeset for each of those packages by hand.
+> **A peer's major release needs major changesets for its dependents.** When a package gets a major release, Changesets bumps each package that has it as a peer dependency (most packages have `@moc-global/loft-definitions` as one) by `patch` only, although their published peer range moves to the new major. Moving a peer range to a new major is a major change under the [versioning policy](#versioning-and-deprecation-policy), so add a `major` changeset for each of those packages by hand.
 
 > **The migrator is bundled.** `@moc-global/loft-kysely-pg-migrator` is private. It is a dev dependency of `@moc-global/loft-session-pg-repository` and `@moc-global/loft-chat-history-pg-repository`, and their `tsup` builds bundle it (`noExternal`). A change to the migrator therefore does not bump either package. Add a changeset for those two packages by hand.
 
@@ -42,16 +42,16 @@ It creates a markdown file in `.changeset/` describing the version bump.
 
 ## Versioning and Deprecation Policy
 
-The published packages follow [Semantic Versioning](https://semver.org/). Their public API is what each package exports from its entry point and what the [documentation](../README.md) describes. Symbols marked `@experimental`, such as the Stream and Queued execution modes, are outside it and may change or disappear in a minor release.
+The published packages follow [Semantic Versioning](https://semver.org/). Their public API is what each package exports from its entry point and what the [documentation](../README.md) describes. Symbols marked `@experimental`, such as the Queued execution mode, the reserved `DI_TYPES` symbols and the chat streaming events (`onEvent`, `streamOptions`, `ChatStreamEvent`), are outside it and may change or disappear in a minor release.
 
 A **major** release is needed to:
 
 - remove or rename an export, or change its signature in a way that breaks existing callers or implementations;
 - change behaviour that the documentation describes;
-- narrow a peer dependency range, drop a provider SDK major, or raise the minimum Node.js version (`engines.node`);
+- drop a major version from a peer dependency range, drop a provider SDK major, or raise the minimum Node.js version (`engines.node`);
 - add a migration that existing data cannot go through without manual steps.
 
-Widening a peer range and adding an optional parameter or a new export are **minor** changes.
+Widening a peer range and adding an optional parameter or a new export are **minor** changes. Raising a peer range's minimum within the same major is not a breaking change and may ship in any release type, because publishing rewrites `workspace:^` to the current version.
 
 To deprecate part of the API:
 

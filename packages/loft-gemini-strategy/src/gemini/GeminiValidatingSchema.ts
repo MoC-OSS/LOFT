@@ -1,6 +1,6 @@
 import type { Content, GenerateContentResponse } from '@google/genai';
 import { Strategy } from '@moc-global/loft-definitions';
-import { z, ZodType } from 'zod';
+import { z, ZodType, ZodTypeAny } from 'zod';
 
 import { GeminiRequest } from '../VertexAiTypes';
 
@@ -62,7 +62,30 @@ const ModelPresetSchema = z.object({
 
   // Response config
   responseMimeType: z.string().optional(),
-  responseSchema: z.any().optional()
+  /** Gemini's schema format, a subset of OpenAPI 3.0; sent as given */
+  responseSchema: z.unknown().optional(),
+
+  // Thinking and sampling
+  thinkingConfig: z
+    .object({
+      thinkingBudget: z.number().int().optional(),
+      includeThoughts: z.boolean().optional(),
+      thinkingLevel: z.string().optional()
+    })
+    .optional(),
+  seed: z.number().int().optional(),
+
+  // snake_case spellings that older manifests use
+  /** Alias of `maxOutputTokens`; the camelCase key wins. */
+  max_output_tokens: z.number().int().positive().optional(),
+  /** Alias of `topP`; the camelCase key wins. */
+  top_p: z.number().min(0).max(1).optional(),
+  /** Alias of `topK`; the camelCase key wins. */
+  top_k: z.number().int().positive().optional(),
+  /** Alias of `stopSequences`; the camelCase key wins. */
+  stop_sequences: z.array(z.string()).optional(),
+  /** Alias of `candidateCount`; the camelCase key wins. */
+  candidate_count: z.number().int().positive().optional()
 });
 
 export type ModelPreset = z.infer<typeof ModelPresetSchema>;
@@ -75,7 +98,13 @@ const ContentSchema: ZodType<Content> = z
   })
   .passthrough();
 
-// Request schema
+type GeminiConfig = NonNullable<GeminiRequest['config']>;
+
+// A value of an SDK type whose fields are SDK enums, checked against a schema of its shape and kept as given
+const sdkValue = <T>(schema: ZodTypeAny) => z.custom<T>((value) => schema.safeParse(value).success);
+
+// Request schema. The config has the keys the strategy builds; any other key, such as the SDK's `httpOptions` (which
+// sets the URL and headers of the request), is dropped, so a queued request cannot set it
 const GeminiRequestSchema: ZodType<GeminiRequest> = z.object({
   model: z.string(),
   contents: z.array(ContentSchema),
@@ -87,7 +116,38 @@ const GeminiRequestSchema: ZodType<GeminiRequest> = z.object({
       topP: z.number().optional(),
       topK: z.number().optional(),
       stopSequences: z.array(z.string()).optional(),
-      candidateCount: z.number().optional()
+      candidateCount: z.number().optional(),
+      presencePenalty: z.number().optional(),
+      frequencyPenalty: z.number().optional(),
+      responseLogprobs: z.boolean().optional(),
+      logprobs: z.number().optional(),
+      seed: z.number().optional(),
+      safetySettings: sdkValue<GeminiConfig['safetySettings']>(
+        z.array(z.object({ category: z.string(), threshold: z.string(), method: z.string().optional() }))
+      ).optional(),
+      toolConfig: sdkValue<GeminiConfig['toolConfig']>(
+        z.object({
+          functionCallingConfig: z
+            .object({ mode: z.string().optional(), allowedFunctionNames: z.array(z.string()).optional() })
+            .optional()
+        })
+      ).optional(),
+      // Only the function declarations the strategy builds are kept. Any other tool, such as Google Search, URL
+      // context, code execution or retrieval, runs on Google's side, so a queued request cannot turn one on.
+      tools: sdkValue<NonNullable<GeminiConfig['tools']>>(
+        z.array(z.object({ functionDeclarations: z.array(z.object({ name: z.string() })) }))
+      )
+        .transform((tools) => tools.map(({ functionDeclarations }) => ({ functionDeclarations })))
+        .optional(),
+      responseMimeType: z.string().optional(),
+      responseSchema: z.unknown().optional(),
+      thinkingConfig: sdkValue<GeminiConfig['thinkingConfig']>(
+        z.object({
+          thinkingBudget: z.number().optional(),
+          includeThoughts: z.boolean().optional(),
+          thinkingLevel: z.string().optional()
+        })
+      ).optional()
     })
     .optional()
 });

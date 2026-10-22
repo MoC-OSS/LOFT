@@ -67,6 +67,21 @@ interface ChatConfig {
     toolCacheTtl?: number;           // MCP tool list cache TTL in ms. Default: 60000 (1 min)
     maxCallsPerGenerate?: number;    // Max MCP tool execution loop iterations. Default: 10
   };
+  streaming?: Chat.StreamOptions;    // Experimental. Defaults of every generate() call that passes onEvent
+}
+```
+
+`streaming` sets the defaults of [streamed](../guides/streaming.md) calls. A call's `streamOptions` are merged over them, key by key:
+
+```typescript
+// packages/loft-definitions/src/shared/components/ChatStreamEvent.ts
+interface StreamOptions {
+  enabled?: boolean;                 // false: observe-only, the providers do not stream. Default: true
+  include?: {
+    reasoning?: boolean;             // Send reasoning-delta events. Default: false
+    toolCalls?: 'none' | 'names' | 'args';  // Tool events, and whether tool-call carries the arguments. Default: 'names'
+  };
+  textPolicy?: 'all' | 'after-middleware';  // Default: 'after-middleware' when output-transforming middleware is registered, else 'all'
 }
 ```
 
@@ -157,7 +172,7 @@ interface LlmTokenRateLimiterConfig {
   newTokensPerSecond: number;       // Token throughput limit
   newRequestsPerSecond: number;     // Request throughput limit
   maxTokens: number;                // Maximum token budget
-  maxRequests: number;              // Maximum concurrent requests
+  maxRequests: number;              // Request budget per time window (refilled at newRequestsPerSecond), not a concurrency limit
   maxAwaitSeconds: number;          // Maximum wait time for rate-limited requests
 }
 ```
@@ -169,9 +184,15 @@ interface LlmTokenRateLimiterConfig {
 interface GenerateConfig {
   highPriorityTasksLimit: number;   // Max high-priority tasks in queue
   retryDelay: number;               // Base of the exponential backoff between retries (ms); Retry-After overrides it
-  retryAttemptsLimit: number;       // Attempts per call; only 408, 429, 5xx and network failures are retried
+  retryAttemptsLimit: number;       // Attempts per call; only 408, 429, 5xx, network failures and status-less `overloaded_error` / `api_error` / `server_error` errors are retried
+  concurrency?: number;             // Calls of this model that run at once in this process; an integer >= 1, otherwise RangeError (default: 1)
+  reserveTokens?: boolean;          // Reserve the predicted tokens before the call and settle to the actual usage after it (default: true)
+  streamIdleTimeoutMs?: number;     // Experimental. Streamed calls: longest silence between two provider events, in ms, once the first text, reasoning or activity arrived; 0 disables (default: 60000)
+  streamFirstEventTimeoutMs?: number; // Experimental. Streamed calls: longest wait for the first provider output (text, reasoning or activity; a usage report does not count), in ms; 0 disables (default: 600000)
 }
 ```
+
+Both stream timeouts take an integer from 0 to 2147483647, or the constructor throws a `RangeError`. They apply only to calls that pass `onEvent` and are not observe-only. A timeout aborts the attempt with `StreamIdleTimeoutError`, which is retried while nothing reached the caller. `streamFirstEventTimeoutMs` also bounds calls the provider answers without streaming (a provider that does not stream, a strategy built with `streaming: false`, an OpenAI request with a JSON schema or strict tools, or a Gemini request with a `candidateCount` above 1), which send no event until the whole answer arrives, so set it above your longest non-streamed answer. A model that thinks silently before its first output is bounded by `streamFirstEventTimeoutMs`: the SDKs' request timeout covers only the wait for the response headers, not the stream, so with it off only the call's `signal` ends such a wait. The queue and the rate limiter are per process, so divide the provider's budgets by the number of instances; see [Streaming](../guides/streaming.md#before-you-serve-more-than-one-user) and [the retry settings](../guides/streaming.md#retries-timeouts-and-concurrency).
 
 ### Usage Example
 

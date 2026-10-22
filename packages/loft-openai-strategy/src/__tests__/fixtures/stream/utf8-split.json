@@ -1,0 +1,25 @@
+{
+  "id": "chatcmpl-CUtf0001",
+  "object": "chat.completion",
+  "created": 1761130000,
+  "model": "gpt-4o-mini-2024-07-18",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Привіт, світе 👋🏽 — 日本語",
+        "refusal": null
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 9,
+    "completion_tokens": 11,
+    "total_tokens": 20
+  },
+  "service_tier": "default",
+  "system_fingerprint": "fp_560af6e559"
+}

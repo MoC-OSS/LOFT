@@ -5,6 +5,10 @@ import { GenerateConfig } from './types';
 
 const log = new Logger('LlmCallManager');
 
+/**
+ * @deprecated Use chat.generate({ onEvent }) instead.
+ * Removed in the next major release.
+ */
 export class GenerateWithStreamManager<T_LLM_Req, T_LLM_Res> extends GenerateCallManager<T_LLM_Req, T_LLM_Res> {
   constructor(name: string, config: GenerateConfig, llmStrategy: Strategy.LLM.LLMApi) {
     super(name, config, llmStrategy);

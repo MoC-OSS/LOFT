@@ -263,6 +263,17 @@ Each provider accepts different `modelPreset` fields:
 
 `max_tokens` is required. Current Claude models reject `temperature`, `top_p` and `top_k` with a 400 error, so leave them out. Unless you turn it off, current Claude models think before they answer, and the thinking counts against `max_tokens`; Claude Sonnet 5.5 turns it off with `"thinking": { "type": "between_tools" }`, and Claude Haiku 5.5 with `"thinking": { "type": "disabled" }`. With a small limit (a few hundred tokens) the model can use all of it on thinking and return an empty answer with `usage.finishReason` set to `max_tokens`; give it several thousand.
 
+**Gemini:**
+```json
+{
+  "model": "gemini-2.5-flash-lite",
+  "temperature": 0.7,
+  "maxOutputTokens": 1000
+}
+```
+
+The keys are camelCase, as in `@google/genai`. `max_output_tokens`, `top_p`, `top_k`, `stop_sequences` and `candidate_count` are accepted as aliases; when a preset has both spellings, the camelCase key wins. Other keys outside the Gemini strategy's preset schema are ignored.
+
 The exact allowed fields depend on each strategy's validation schema. Check the strategy package's `ValidatingSchemas` export for details.
 
 ## Environment-Based Configuration

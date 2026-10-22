@@ -1,0 +1,101 @@
+{
+  "chunks": [
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Let me check"
+              }
+            ]
+          }
+        }
+      ],
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-fc"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": " the weather."
+              }
+            ]
+          }
+        }
+      ],
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-fc"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "functionCall": {
+                  "name": "get_weather",
+                  "args": {
+                    "city": "Kyiv"
+                  }
+                },
+                "thoughtSignature": "c2lnLWZ1bmN0aW9uLWNhbGw="
+              }
+            ]
+          },
+          "finishReason": "STOP"
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 40,
+        "candidatesTokenCount": 18,
+        "thoughtsTokenCount": 64,
+        "totalTokenCount": 122
+      },
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-fc"
+    }
+  ],
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Let me check the weather."
+            },
+            {
+              "functionCall": {
+                "name": "get_weather",
+                "args": {
+                  "city": "Kyiv"
+                }
+              },
+              "thoughtSignature": "c2lnLWZ1bmN0aW9uLWNhbGw="
+            }
+          ]
+        },
+        "finishReason": "STOP"
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 40,
+      "candidatesTokenCount": 18,
+      "thoughtsTokenCount": 64,
+      "totalTokenCount": 122
+    },
+    "modelVersion": "gemini-3-flash-preview",
+    "createTime": "2026-10-22T10:00:00.000000Z",
+    "responseId": "resp-fc"
+  }
+}

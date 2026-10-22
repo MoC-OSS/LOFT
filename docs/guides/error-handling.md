@@ -58,6 +58,7 @@ try {
 - **Missing strategy:** No LLM strategy registered for the requested `llmName`
 - **Manifest not found:** No manifest entry for the `manifestName` + `llmName` combination
 - **Context error:** Failed to load session or chat history
+- **Stream timeout:** a call streamed with `onEvent` stayed silent longer than the call manager's `streamIdleTimeoutMs` (or waited longer than `streamFirstEventTimeoutMs` for its first output: text, reasoning or activity). The cause chain holds a `StreamIdleTimeoutError` (experimental, not a `ChatError`), which the call manager retries while nothing reached the caller.
 - **Middleware error:** A middleware threw. The chain throws `Error('Forced failure in middleware: <name>, ...')` with your error as its `cause`, and `generate()` wraps that error in a `GenerateError` as its `cause`. `addMessages()` runs only Input middleware and throws the chain's error as is, without a `GenerateError`.
 
 ## ShutdownError
@@ -167,9 +168,13 @@ app.post('/api/chat', async (req, res) => {
 });
 ```
 
+### Errors in a streamed call
+
+A `generate()` call with `onEvent` rejects with the same errors. A failure before the `start` event sends no event, so a handler can still answer it with a status code. After `start`, the caller first gets an `error` event with a fixed message per code (`provider_error`, `rate_limited`, `timeout`, `internal`), never the provider's text, or an `abort` event with `reason: 'timeout'` (the signal came from a timeout) or `'cancelled'` when the call was cancelled; a `rate_limited` error event carries `retryAfterMs` when the provider sent a `Retry-After` header; then `generate()` rejects with the full error, for your logs. A streamed call is not retried once text or reasoning reached the caller. See [Streaming](./streaming.md#errors).
+
 ### Retry with backoff
 
-LOFT's `GenerateCallManager` retries an LLM API call that failed with 408, 429, a 5xx or a network error, with exponential backoff (configurable via `retryDelay` and `retryAttemptsLimit`, see [Call manager](./llm-strategies.md)). Other errors, such as a 400 or 401, are thrown at once. For application-level retries:
+LOFT's `GenerateCallManager` retries an LLM API call that failed with 408, 429, a 5xx, a network error or a provider error of type `overloaded_error`, `api_error` or `server_error` that arrives without a status (as one does inside a stream), with exponential backoff (configurable via `retryDelay` and `retryAttemptsLimit`, see [Call manager](./llm-strategies.md)). Other errors, such as a 400 or 401, are thrown at once. For application-level retries:
 
 ```typescript
 async function generateWithRetry(options: Chat.GenerateOptions, maxRetries = 3): Promise<Chat.GenerateResult> {

@@ -1,0 +1,74 @@
+{
+  "chunks": [
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Forty-two."
+              }
+            ]
+          }
+        }
+      ],
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-usage"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": ""
+              }
+            ]
+          },
+          "finishReason": "STOP"
+        }
+      ],
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-usage"
+    },
+    {
+      "usageMetadata": {
+        "promptTokenCount": 25,
+        "candidatesTokenCount": 4,
+        "thoughtsTokenCount": 192,
+        "totalTokenCount": 221
+      },
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-usage"
+    }
+  ],
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Forty-two."
+            }
+          ]
+        },
+        "finishReason": "STOP"
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 25,
+      "candidatesTokenCount": 4,
+      "thoughtsTokenCount": 192,
+      "totalTokenCount": 221
+    },
+    "modelVersion": "gemini-2.5-flash",
+    "createTime": "2026-10-22T10:00:00.000000Z",
+    "responseId": "resp-usage"
+  }
+}

@@ -42,6 +42,29 @@ describe('AnthropicLoftStrategy', () => {
     expect(stop).toHaveBeenCalledTimes(1);
   });
 
+  describe('output middleware', () => {
+    const passThrough = async (_ctx: unknown, response: Strategy.LLM.UnifiedLLMResponse) => response;
+    const strategy = () => new AnthropicLoftStrategy({ llmName: 'claude' }, {} as Strategy.CallManager);
+
+    it('has none before a middleware is registered', () => {
+      expect(strategy().hasOutputMiddleware()).toBe(false);
+    });
+
+    it('counts a middleware as changing the reply by default', () => {
+      const anthropic = strategy();
+      anthropic.useMiddleware('redact', passThrough);
+
+      expect(anthropic.hasOutputMiddleware()).toBe(true);
+    });
+
+    it('forwards transformsOutput false to the middleware registry', () => {
+      const anthropic = strategy();
+      anthropic.useMiddleware('audit', passThrough, { transformsOutput: false });
+
+      expect(anthropic.hasOutputMiddleware()).toBe(false);
+    });
+  });
+
   it('appends the system messages of the conversation to the system prompt', async () => {
     const request = await formatRequest([
       message(Type.LLM.UnifiedMessageRole.system, 'Context from earlier agents: {"budget":100}', '1'),

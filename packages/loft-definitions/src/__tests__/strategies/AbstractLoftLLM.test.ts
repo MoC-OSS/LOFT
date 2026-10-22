@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z, ZodSchema } from 'zod';
 
-import { Logger, Strategy } from '../..';
+import { ContextInterface, Logger, Middleware, Strategy } from '../..';
 
 class TestLoftLLM extends Strategy.LLM.AbstractLoftLLM<unknown, unknown> {
   readonly llmName = 'test';
@@ -40,6 +40,42 @@ describe('AbstractLoftLLM', () => {
     await expect(llm.generate(request, { signal })).resolves.toBe(response);
 
     expect(call).toHaveBeenCalledWith(request, { signal });
+  });
+
+  it('generate forwards onEvent', async () => {
+    const onEvent = vi.fn();
+    const call = vi.fn().mockResolvedValue({ llmBody: 'response' });
+    const llm = new TestLoftLLM({ call } as unknown as Strategy.CallManager);
+    const request: Strategy.LLM.LLMRequest<unknown> = {
+      sessionId: 'session-1',
+      requestType: Strategy.LLM.LLMRequestType.GENERATE,
+      llmName: 'test',
+      llmBody: {}
+    };
+    const options: Strategy.LLM.CallOptions = { onEvent };
+
+    await llm.generate(request, options);
+
+    expect(call).toHaveBeenCalledTimes(1);
+    // The same options object arrives, so the sink is not wrapped or replaced
+    expect(call.mock.calls[0][1]).toBe(options);
+    expect(call.mock.calls[0][1].onEvent).toBe(onEvent);
+    expect(onEvent).not.toHaveBeenCalled();
+  });
+
+  it('hasOutputMiddleware reflects useMiddleware', () => {
+    const passThrough: Middleware<ContextInterface, Strategy.LLM.UnifiedLLMResponse> = async (_ctx, payload, chain) => {
+      chain.next();
+      return payload;
+    };
+    const llm = new TestLoftLLM();
+    expect(llm.hasOutputMiddleware()).toBe(false);
+
+    llm.useMiddleware('observer', passThrough, { transformsOutput: false });
+    expect(llm.hasOutputMiddleware()).toBe(false);
+
+    llm.useMiddleware('rewriter', passThrough);
+    expect(llm.hasOutputMiddleware()).toBe(true);
   });
 
   it('stops the call manager on stop()', () => {

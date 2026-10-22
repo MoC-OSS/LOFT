@@ -23,7 +23,9 @@ export interface ChatConstructor<T = any> extends Interface.ExternalComponentCon
   ): void;
   registerAfterGenerateMiddleware(
     name: string,
-    middleware: StandardMiddleware<ContextInterface, Chat.GenerateResultMessages>
+    middleware: StandardMiddleware<ContextInterface, Chat.GenerateResultMessages>,
+    /** @experimental `transformsOutput: false` declares that the middleware does not change the reply text. Default true. */
+    options?: { transformsOutput?: boolean }
   ): void;
   // registerLlmStrategy<T_LLM_Req, T_LLM_Res>(
   //   llmName: string,
@@ -41,7 +43,7 @@ export interface ChatConstructor<T = any> extends Interface.ExternalComponentCon
   registerToolInterceptor(mcpToolName: string, interceptor: Interface.ToolInterceptor): void;
 }
 
-/** @experimental Part of the Stream and Queued execution modes, which are not implemented yet. May change or be removed in any release. */
+/** @experimental Part of the Queued execution mode, which is not implemented yet. May change or be removed in any release. */
 export interface ChatConstructorWithSMG<T = any> extends Omit<ChatConstructor<T>, 'registerInputMiddleware'> {
   registerInputMiddleware(name: string, middleware: StandardMiddleware<ContextInterface, Chat.ChatInputPayload>): void;
 }

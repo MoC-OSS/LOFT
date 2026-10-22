@@ -35,6 +35,32 @@ describe('retry policy', () => {
     expect(isRetryableError(new APIConnectionError('Connection error.'))).toBe(true);
   });
 
+  describe('errors that arrive inside a stream, without a status', () => {
+    it('retries a status-less overloaded_error', () => {
+      expect(isRetryableError({ type: 'overloaded_error', message: 'Overloaded' })).toBe(true);
+    });
+
+    it('retries a nested error.type api_error', () => {
+      expect(isRetryableError({ type: 'error', error: { type: 'api_error', message: 'Internal server error' } })).toBe(
+        true
+      );
+    });
+
+    it('retries a status-less server_error, as OpenAI sends inside a stream', () => {
+      expect(isRetryableError({ error: { type: 'server_error', message: 'The server had an error' } })).toBe(true);
+      expect(isRetryableError({ type: 'server_error' })).toBe(true);
+    });
+
+    it('does not retry a status-less invalid_request_error', () => {
+      expect(isRetryableError({ type: 'error', error: { type: 'invalid_request_error' } })).toBe(false);
+      expect(isRetryableError({ type: 'invalid_request_error' })).toBe(false);
+    });
+
+    it('a status still wins over type', () => {
+      expect(isRetryableError({ status: 400, type: 'overloaded_error' })).toBe(false);
+    });
+  });
+
   it('does not retry other errors', () => {
     expect(isRetryableError(new TypeError('cannot read properties of undefined'))).toBe(false);
     expect(isRetryableError('a string')).toBe(false);

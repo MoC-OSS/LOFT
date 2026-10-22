@@ -172,6 +172,19 @@ describe('GenerateWithQueueManager', () => {
     });
   });
 
+  it('queue manager passes concurrency through', () => {
+    const manager = startManager({ config: { concurrency: 3, reserveTokens: false } });
+
+    expect(manager.config).toMatchObject({ concurrency: 3, reserveTokens: false });
+    expect(() => startManager({ config: { concurrency: 0 } })).toThrow(RangeError);
+  });
+
+  it('queue manager passes the stream timeouts through', () => {
+    const manager = startManager({ config: { streamIdleTimeoutMs: 0, streamFirstEventTimeoutMs: 30_000 } });
+
+    expect(manager.config).toMatchObject({ streamIdleTimeoutMs: 0, streamFirstEventTimeoutMs: 30_000 });
+  });
+
   it('stops polling the queue and the rate limiter on stop()', async () => {
     consume.mockReset().mockResolvedValue(undefined);
     const manager = startManager();

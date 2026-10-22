@@ -1,27 +1,50 @@
 import Anthropic, { ClientOptions } from '@anthropic-ai/sdk';
-import { Logger, Strategy } from '@moc-global/loft-definitions';
+import { Logger, providerErrorSummary, Strategy } from '@moc-global/loft-definitions';
 import { ZodSchema } from 'zod';
 import { z } from 'zod';
+
+import { AnthropicStrategyOptions } from './AnthropicStrategyOptions';
+import { generateStreamed } from './streaming/streamMessage';
 
 const log = new Logger('AnthropicStrategy');
 
 export class AnthropicCallStrategy implements Strategy.LLM.LLMApi {
   private readonly client: Anthropic;
+  private readonly streaming: boolean;
 
   constructor(
     config: ClientOptions,
     readonly tokenRateLimiter: Strategy.LLM.LlmTokenRateLimiter,
-    readonly llmTokenizer: Strategy.LLM.LlmTokenizer
+    readonly llmTokenizer: Strategy.LLM.LlmTokenizer,
+    /** @experimental */
+    options?: AnthropicStrategyOptions
   ) {
     this.client = new Anthropic({
       ...config
     });
+    this.streaming = options?.streaming ?? true;
   }
 
   async generate<T_LLM_Req, T_LLM_Res>(
     generalRequest: T_LLM_Req,
     options?: Strategy.LLM.CallOptions
   ): Promise<T_LLM_Res> {
+    if (options?.onEvent && this.streaming) {
+      // The SDK sends the request with `stream: true` itself
+      let body: Anthropic.MessageCreateParamsNonStreaming;
+      try {
+        body = { ...this.transformToAnthropicRequest(generalRequest), stream: false };
+      } catch (error) {
+        log.error('streamed generate failed', providerErrorSummary(error));
+        throw error;
+      }
+      const response = await generateStreamed(this.client, body, {
+        signal: options.signal,
+        onEvent: options.onEvent
+      });
+      return response as unknown as T_LLM_Res;
+    }
+
     try {
       const anthropicRequest = this.transformToAnthropicRequest(generalRequest);
       const response = await this.client.messages.create(anthropicRequest, { signal: options?.signal });
@@ -32,6 +55,10 @@ export class AnthropicCallStrategy implements Strategy.LLM.LLMApi {
     }
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   async generateStream<T_LLM_Req, T_LLM_Res>(generalRequest: T_LLM_Req): Promise<T_LLM_Res> {
     try {
       const anthropicRequest = this.transformToAnthropicRequest({ ...generalRequest, stream: true });
@@ -43,6 +70,10 @@ export class AnthropicCallStrategy implements Strategy.LLM.LLMApi {
     }
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   extractContentFromChunk<T_LLM_Res>(chunk: T_LLM_Res): string {
     const event = chunk as unknown as Anthropic.MessageStreamEvent;
 

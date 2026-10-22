@@ -26,6 +26,10 @@ const NETWORK_ERROR_CODES = new Set([
 // 'Error', so these are matched against the class names along the prototype chain.
 const NETWORK_ERROR_CLASSES = new Set(['APIConnectionError', 'APIConnectionTimeoutError']);
 
+// The `type` of provider errors that are sent inside a stream, where there is no HTTP status to read: the provider is
+// overloaded or failed on its side (Anthropic's `overloaded_error` and `api_error`, OpenAI's `server_error`)
+const RETRYABLE_STREAM_ERROR_TYPES = new Set(['overloaded_error', 'api_error', 'server_error']);
+
 const DEFAULT_MAX_DELAY_MS = 60_000;
 
 type ErrorLike = {
@@ -34,6 +38,8 @@ type ErrorLike = {
   code?: unknown;
   name?: unknown;
   message?: unknown;
+  type?: unknown;
+  error?: { type?: unknown };
   headers?: unknown;
   response?: { status?: unknown; headers?: unknown };
   cause?: unknown;
@@ -81,11 +87,21 @@ function isNetworkError(error: unknown): boolean {
   );
 }
 
-/** Whether a new attempt can succeed: 408, 429, 5xx and network failures. A 400, 401 or 404 cannot. */
+// Whether the error, or one of its causes, is a provider error event with a retryable `type` (`type` or `error.type`)
+function isRetryableStreamError(error: unknown): boolean {
+  return errorChain(error).some((item) =>
+    [item.type, item.error?.type].some((type) => typeof type === 'string' && RETRYABLE_STREAM_ERROR_TYPES.has(type))
+  );
+}
+
+/**
+ * Whether a new attempt can succeed: 408, 429, 5xx, network failures and, without a status, provider errors sent inside
+ * a stream (`overloaded_error`, `api_error`, `server_error`). A 400, 401 or 404 cannot.
+ */
 export function isRetryableError(error: unknown): boolean {
   const status = errorStatus(error);
   if (status !== undefined) return status === 408 || status === 429 || status >= 500;
-  return isNetworkError(error);
+  return isNetworkError(error) || isRetryableStreamError(error);
 }
 
 function headerText(value: unknown): string | undefined {

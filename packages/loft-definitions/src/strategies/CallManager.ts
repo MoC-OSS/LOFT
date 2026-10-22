@@ -17,6 +17,10 @@ export interface CallManager {
     llmRequest: Strategy.LLM.LLMRequest<any>,
     options?: Strategy.LLM.CallOptions
   ): Promise<Strategy.LLM.LlmResponse<any>>;
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   streamCall(llmRequest: Strategy.LLM.LLMRequest<any>): Promise<any>;
   getHealthCheckStatus(): Promise<boolean>;
   /** Stops background timers; called on shutdown. */

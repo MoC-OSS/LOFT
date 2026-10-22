@@ -1,0 +1,128 @@
+{
+  "chunks": [
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "**Planning**\nThe user",
+                "thought": true
+              }
+            ]
+          }
+        }
+      ],
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-think"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": " wants a haiku.",
+                "thought": true
+              }
+            ]
+          }
+        }
+      ],
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-think"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Autumn moon"
+              }
+            ]
+          }
+        }
+      ],
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-think"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": " rises."
+              }
+            ]
+          }
+        }
+      ],
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-think"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "",
+                "thoughtSignature": "c2lnLXRoaW5raW5n"
+              }
+            ]
+          },
+          "finishReason": "STOP"
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 12,
+        "candidatesTokenCount": 9,
+        "thoughtsTokenCount": 120,
+        "totalTokenCount": 141
+      },
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-think"
+    }
+  ],
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "**Planning**\nThe user wants a haiku.",
+              "thought": true
+            },
+            {
+              "text": "Autumn moon rises.",
+              "thoughtSignature": "c2lnLXRoaW5raW5n"
+            }
+          ]
+        },
+        "finishReason": "STOP"
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 12,
+      "candidatesTokenCount": 9,
+      "thoughtsTokenCount": 120,
+      "totalTokenCount": 141
+    },
+    "modelVersion": "gemini-3-flash-preview",
+    "createTime": "2026-10-22T10:00:00.000000Z",
+    "responseId": "resp-think"
+  }
+}

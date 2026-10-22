@@ -1,11 +1,11 @@
 export const DI_TYPES = {
   BaseLoft: Symbol.for('BaseLoft'),
-  /** @experimental Part of the Stream and Queued execution modes, which are not implemented yet. May change or be removed in any release. */
+  /** @experimental Reserved and unused. Nothing is bound to this symbol; streaming a reply is done with `chat.generate({ onEvent })`. */
   StreamLoft: Symbol.for('StreamLoft'),
-  /** @experimental Part of the Stream and Queued execution modes, which are not implemented yet. May change or be removed in any release. */
+  /** @experimental Part of the Queued execution mode, which is not implemented yet. May change or be removed in any release. */
   QueuedLoft: Symbol.for('QueuedLoft'),
 
-  /** @experimental Part of the Stream and Queued execution modes, which are not implemented yet. May change or be removed in any release. */
+  /** @experimental Part of the Queued execution mode, which is not implemented yet. May change or be removed in any release. */
   OutgoingQueue: Symbol.for('OutgoingQueue'),
 
   ManifestManager: Symbol.for('ManifestManager'),

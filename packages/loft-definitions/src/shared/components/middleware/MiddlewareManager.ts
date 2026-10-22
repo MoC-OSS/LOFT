@@ -12,6 +12,8 @@ export class MiddlewareManager<
   TChainStrategy extends BaseChainStrategy<TContext, TPayload, TResult>
 > {
   private middlewareChain: Map<string, BaseMiddleware<TContext, TPayload, TResult, TChainStrategy>> = new Map();
+  // Names of the middleware that may change the payload; the others only observe it
+  private transformingMiddleware: Set<string> = new Set();
   private readonly log: Logger;
   private createChain: (ctx: TContext) => TChainStrategy;
   private middlewareType: string;
@@ -22,12 +24,28 @@ export class MiddlewareManager<
     this.log = new Logger(`MiddlewareManager:${middlewareType}`);
   }
 
-  use(name: string, middleware: BaseMiddleware<TContext, TPayload, TResult, TChainStrategy>) {
+  use(
+    name: string,
+    middleware: BaseMiddleware<TContext, TPayload, TResult, TChainStrategy>,
+    /** @experimental `transformsOutput: false` declares that the middleware does not change the payload. Default true. */
+    options?: { transformsOutput?: boolean }
+  ) {
     if (this.middlewareChain.has(name)) {
       throw new Error(`A middleware with the name "${name}" already exists.`);
     }
     this.middlewareChain.set(name, middleware);
+    if (options?.transformsOutput ?? true) this.transformingMiddleware.add(name);
     return;
+  }
+
+  /** @experimental The number of registered middleware that may change the payload. */
+  get transformingCount(): number {
+    return this.transformingMiddleware.size;
+  }
+
+  /** @experimental The names of the registered middleware that may change the payload, in registration order. */
+  get transformingNames(): string[] {
+    return [...this.middlewareChain.keys()].filter((name) => this.transformingMiddleware.has(name));
   }
 
   async executeChain(context: TContext, payload: TPayload, correlatorIds: string[]): Promise<TResult> {

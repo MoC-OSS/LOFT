@@ -134,6 +134,204 @@
         "systemMessage": "You are the assistant of a pizza shop. Follow the Focus instructions to take the order.",
         "modelPreset": { "model": "gemini-3.1-flash-lite", "max_output_tokens": 1000 }
       },
+      "gpt-4o-mini-streaming": {
+        "systemMessage": "You are a helpful assistant. Answer in plain text. Use a tool only when the user asks for information it provides.",
+        "modelPreset": { "model": "gpt-4o-mini", "temperature": 0, "max_tokens": 400 }
+      },
+      "gpt-4o-mini-streaming-json-schema": {
+        "systemMessage": "You are a helpful assistant. Reply with a JSON object that answers the user's question in its answer field.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0,
+          "max_tokens": 200,
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": { "answer": { "type": "string" } },
+                "required": ["answer"],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "scenario-gpt-4o-mini": {
+        "systemMessage": "You are a helpful assistant. Answer in plain text. Use a tool only when the user asks for information it provides. When the user asks for several facts, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": { "model": "gpt-4o-mini", "temperature": 0, "max_tokens": 800 }
+      },
+      "scenario-claude-haiku": {
+        "systemMessage": "You are a helpful assistant. Answer in plain text. Use a tool only when the user asks for information it provides. When the user asks for several facts, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": { "model": "claude-haiku-5-5", "max_tokens": 900, "thinking": { "type": "disabled" } }
+      },
+      "scenario-claude-haiku-json-schema": {
+        "systemMessage": "You are a helpful assistant. Reply with a JSON object that answers the user's question in its answer field.",
+        "modelPreset": {
+          "model": "claude-haiku-5-5",
+          "max_tokens": 200,
+          "thinking": { "type": "disabled" },
+          "output_config": {
+            "format": {
+              "type": "json_schema",
+              "schema": {
+                "type": "object",
+                "properties": { "answer": { "type": "string" } },
+                "required": ["answer"],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "scenario-gemini-flash-lite": {
+        "systemMessage": "You are a helpful assistant. Answer in plain text. Use a tool only when the user asks for information it provides. When the user asks for several facts, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": { "model": "gemini-3.1-flash-lite", "temperature": 0, "max_output_tokens": 1500 }
+      },
+      "content-gpt-4o-mini": {
+        "systemMessage": "You are a helpful assistant. Follow the requested format exactly. Use a tool only when the user asks for it or for information it provides. When the user asks for several things, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": { "model": "gpt-4o-mini", "temperature": 0, "max_tokens": 1600 }
+      },
+      "content-claude-haiku": {
+        "systemMessage": "You are a helpful assistant. Follow the requested format exactly. Use a tool only when the user asks for it or for information it provides. When the user asks for several things, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": { "model": "claude-haiku-5-5", "max_tokens": 1600, "thinking": { "type": "disabled" } }
+      },
+      "content-gemini-flash-lite": {
+        "systemMessage": "You are a helpful assistant. Follow the requested format exactly. Use a tool only when the user asks for it or for information it provides. When the user asks for several things, call all the tools you need at once, in parallel, in one step.",
+        "modelPreset": { "model": "gemini-3.1-flash-lite", "temperature": 0, "max_output_tokens": 1600 }
+      },
+      "content-gpt-4o-mini-capped": {
+        "systemMessage": "You are a helpful assistant.",
+        "modelPreset": { "model": "gpt-4o-mini", "temperature": 0, "max_tokens": 64 }
+      },
+      "content-claude-haiku-capped": {
+        "systemMessage": "You are a helpful assistant.",
+        "modelPreset": { "model": "claude-haiku-5-5", "max_tokens": 64, "thinking": { "type": "disabled" } }
+      },
+      "content-gemini-flash-lite-capped": {
+        "systemMessage": "You are a helpful assistant.",
+        "modelPreset": { "model": "gemini-3.1-flash-lite", "temperature": 0, "max_output_tokens": 64 }
+      },
+      "gemini-3-1-flash-lite-json-schema": {
+        "systemMessage": "You are a geography assistant. Reply with a JSON object.",
+        "modelPreset": {
+          "model": "gemini-3.1-flash-lite",
+          "temperature": 0,
+          "maxOutputTokens": 300,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "type": "OBJECT",
+            "properties": {
+              "city": { "type": "STRING" },
+              "country": { "type": "STRING" },
+              "population": { "type": "INTEGER" }
+            },
+            "required": ["city", "country", "population"]
+          }
+        }
+      },
+      "content-gpt-4o-mini-json-schema": {
+        "systemMessage": "You are a helpful assistant. Reply with a JSON object that describes the process the user asks about as a graph.",
+        "modelPreset": {
+          "model": "gpt-4o-mini",
+          "temperature": 0,
+          "max_tokens": 800,
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "process_graph",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "directed": { "type": "boolean" },
+                  "nodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "kind": { "type": "string", "enum": ["start", "step", "decision", "end"] },
+                        "weight": { "type": "number" },
+                        "tags": { "type": "array", "items": { "type": "string" } }
+                      },
+                      "required": ["id", "kind", "weight", "tags"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "edges": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "from": { "type": "string" },
+                        "to": { "type": "string" },
+                        "label": { "anyOf": [{ "type": "string" }, { "type": "null" }] }
+                      },
+                      "required": ["from", "to", "label"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["title", "directed", "nodes", "edges"],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "content-claude-haiku-json-schema": {
+        "systemMessage": "You are a helpful assistant. Reply with a JSON object that describes the process the user asks about as a graph.",
+        "modelPreset": {
+          "model": "claude-haiku-5-5",
+          "max_tokens": 800,
+          "thinking": { "type": "disabled" },
+          "output_config": {
+            "format": {
+              "type": "json_schema",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "directed": { "type": "boolean" },
+                  "nodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "kind": { "type": "string", "enum": ["start", "step", "decision", "end"] },
+                        "weight": { "type": "number" },
+                        "tags": { "type": "array", "items": { "type": "string" } }
+                      },
+                      "required": ["id", "kind", "weight", "tags"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "edges": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "from": { "type": "string" },
+                        "to": { "type": "string" },
+                        "label": { "anyOf": [{ "type": "string" }, { "type": "null" }] }
+                      },
+                      "required": ["from", "to", "label"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["title", "directed", "nodes", "edges"],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
       "scripted": {
         "systemMessage": "You are a test assistant. For any input, respond with exactly:\n'{{valueToReturn}}'\n\nDo not add any other text or modifications.",
         "modelPreset": {

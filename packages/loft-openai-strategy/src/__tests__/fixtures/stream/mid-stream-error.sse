@@ -1,0 +1,6 @@
+data: {"id":"chatcmpl-CErr0001","object":"chat.completion.chunk","created":1761130000,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":"fp_560af6e559","choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":null,"finish_reason":null}],"usage":null}
+
+data: {"id":"chatcmpl-CErr0001","object":"chat.completion.chunk","created":1761130000,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":"fp_560af6e559","choices":[{"index":0,"delta":{"content":"Partial"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+data: {"error":{"message":"The server had an error while processing your request. Sorry about that!","type":"server_error","param":null,"code":null}}
+

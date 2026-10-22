@@ -1,7 +1,9 @@
 import { Interface, Logger, Strategy } from '@moc-global/loft-definitions';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { LlmCallManagerLongAwaitError, TooManyHighPriorityTasksError } from '../../errors';
 import { GenerateCallManager } from '../../GenerateManager';
+import { LlmTokenRateLimiter } from '../../LlmTokenRateLimiter';
 import { GenerateConfig } from '../../types';
 
 type Body = { messages: string[] };
@@ -246,6 +248,237 @@ describe('GenerateCallManager', () => {
       await expect(first).resolves.toBe('first');
       expect(generate).toHaveBeenCalledTimes(1);
     });
+  });
+
+  describe('concurrency', () => {
+    const llmApiWith = (tokenRateLimiter: Strategy.LLM.LlmTokenRateLimiter, tokens = 1) =>
+      ({
+        generate,
+        reduceMessages: () => 'hello',
+        extractUsedTokens: () => tokens,
+        tokenRateLimiter,
+        llmTokenizer: { calculateTokensFromString: () => tokens }
+      }) as unknown as Strategy.LLM.LLMApi;
+
+    it('uses the configured concurrency', async () => {
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => (release = resolve));
+      generate.mockImplementation(async (body) => {
+        await held;
+        return body.messages[0];
+      });
+      const limiter = { awaitBeforeCall, setUsedTokens: vi.fn(), setUsedRequest: vi.fn() };
+      const parallel = new GenerateCallManager<Body, unknown>(
+        'test',
+        { ...CONFIG, concurrency: 2 },
+        llmApiWith(limiter)
+      );
+
+      const calls = [parallel.addHighPriorityTask(REQUEST), parallel.addHighPriorityTask(REQUEST)];
+
+      // Both calls run before either ends
+      await vi.waitFor(() => expect(generate).toHaveBeenCalledTimes(2));
+      release();
+      await expect(Promise.all(calls)).resolves.toEqual(['hello', 'hello']);
+    });
+
+    it('rejects concurrency 0 and 1.5', () => {
+      const limiter = { awaitBeforeCall, setUsedTokens: vi.fn(), setUsedRequest: vi.fn() };
+
+      for (const concurrency of [0, 1.5]) {
+        expect(() => new GenerateCallManager('test', { ...CONFIG, concurrency }, llmApiWith(limiter))).toThrow(
+          RangeError
+        );
+      }
+    });
+
+    it('acquire is race-free', async () => {
+      vi.useFakeTimers();
+      const limiter = new LlmTokenRateLimiter({
+        newTokensPerSecond: 1000,
+        newRequestsPerSecond: 10,
+        maxTokens: 1000,
+        maxRequests: 10,
+        maxAwaitSeconds: 5
+      });
+      try {
+        generate.mockReturnValue(new Promise(() => {}));
+        // The budget covers one call of 600 tokens, so the second call waits for 200 tokens to refill
+        const parallel = new GenerateCallManager<Body, unknown>(
+          'test',
+          { ...CONFIG, concurrency: 2 },
+          llmApiWith(limiter, 600)
+        );
+
+        void parallel.addHighPriorityTask(REQUEST);
+        void parallel.addHighPriorityTask(REQUEST);
+        await vi.advanceTimersByTimeAsync(199);
+        expect(generate).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(1);
+
+        expect(generate).toHaveBeenCalledTimes(2);
+      } finally {
+        limiter.stop();
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  describe('token reservation', () => {
+    const PREDICTED = 7;
+    const ACTUAL = 10;
+    const setUsedTokens = vi.fn<(usedTokens: number) => void>();
+    const setUsedRequest = vi.fn<() => void>();
+    const acquire = vi.fn<(tokens: number, signal?: AbortSignal) => Promise<void>>();
+
+    function managerWith(tokenRateLimiter: Strategy.LLM.LlmTokenRateLimiter, config: Partial<GenerateConfig> = {}) {
+      const llmApi = {
+        generate,
+        reduceMessages: () => 'hello',
+        extractUsedTokens: () => ACTUAL,
+        tokenRateLimiter,
+        llmTokenizer: { calculateTokensFromString: () => PREDICTED }
+      } as unknown as Strategy.LLM.LLMApi;
+      return new GenerateCallManager<Body, unknown>('test', { ...CONFIG, ...config }, llmApi);
+    }
+    // A rate limiter without acquire(), like one written before it existed
+    const checkOnlyLimiter = () => ({ awaitBeforeCall, setUsedTokens, setUsedRequest });
+
+    beforeEach(() => {
+      setUsedTokens.mockReset();
+      setUsedRequest.mockReset();
+      acquire.mockReset().mockResolvedValue(undefined);
+    });
+
+    it('reserves before the provider call', async () => {
+      generate.mockResolvedValue('response');
+      const reserving = managerWith({ acquire, awaitBeforeCall, setUsedTokens, setUsedRequest });
+
+      await expect(reserving.addHighPriorityTask(REQUEST)).resolves.toBe('response');
+
+      expect(acquire).toHaveBeenCalledWith(PREDICTED, undefined);
+      expect(acquire.mock.invocationCallOrder[0]).toBeLessThan(generate.mock.invocationCallOrder[0]);
+      expect(awaitBeforeCall).not.toHaveBeenCalled();
+      // acquire() takes the request too
+      expect(setUsedRequest).not.toHaveBeenCalled();
+    });
+
+    it('reserves with awaitBeforeCall when the rate limiter has no acquire', async () => {
+      generate.mockResolvedValue('response');
+
+      await expect(managerWith(checkOnlyLimiter()).addHighPriorityTask(REQUEST)).resolves.toBe('response');
+
+      expect(awaitBeforeCall).toHaveBeenCalledWith(PREDICTED);
+      expect(setUsedTokens.mock.invocationCallOrder[0]).toBeLessThan(generate.mock.invocationCallOrder[0]);
+      expect(setUsedRequest.mock.invocationCallOrder[0]).toBeLessThan(generate.mock.invocationCallOrder[0]);
+      expect(setUsedRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it('settles to actual usage', async () => {
+      generate.mockResolvedValue('response');
+
+      await managerWith(checkOnlyLimiter()).addHighPriorityTask(REQUEST);
+
+      expect(setUsedTokens.mock.calls).toEqual([[PREDICTED], [ACTUAL - PREDICTED]]);
+      expect(setUsedRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it('refunds tokens when the call fails before any event', async () => {
+      generate.mockRejectedValue(new TypeError('cannot read the response'));
+
+      await expect(managerWith(checkOnlyLimiter()).addHighPriorityTask(REQUEST)).rejects.toThrow(
+        'cannot read the response'
+      );
+
+      expect(setUsedTokens.mock.calls).toEqual([[PREDICTED], [-PREDICTED]]);
+      // The request stays spent
+      expect(setUsedRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it('refunds once after the last retry', async () => {
+      generate.mockRejectedValue(Object.assign(new Error('unavailable'), { status: 503, headers: {} }));
+
+      await expect(managerWith(checkOnlyLimiter()).addHighPriorityTask(REQUEST)).rejects.toThrow('unavailable');
+
+      expect(generate).toHaveBeenCalledTimes(CONFIG.retryAttemptsLimit);
+      expect(setUsedTokens.mock.calls).toEqual([[PREDICTED], [-PREDICTED]]);
+    });
+
+    it('abort keeps the reservation', async () => {
+      const controller = new AbortController();
+      generate.mockImplementation(async () => {
+        controller.abort();
+        throw new Error('request aborted');
+      });
+
+      await expect(
+        managerWith(checkOnlyLimiter()).addHighPriorityTask(REQUEST, { signal: controller.signal })
+      ).rejects.toThrow('request aborted');
+
+      expect(setUsedTokens.mock.calls).toEqual([[PREDICTED]]);
+      expect(setUsedRequest).toHaveBeenCalledTimes(1);
+    });
+
+    it('reserveTokens false keeps charge-on-success', async () => {
+      generate.mockResolvedValue('response');
+      const charging = managerWith(
+        { acquire, awaitBeforeCall, setUsedTokens, setUsedRequest },
+        { reserveTokens: false }
+      );
+
+      await expect(charging.addHighPriorityTask(REQUEST)).resolves.toBe('response');
+
+      expect(acquire).not.toHaveBeenCalled();
+      expect(awaitBeforeCall).toHaveBeenCalledWith(PREDICTED);
+      expect(setUsedTokens.mock.calls).toEqual([[ACTUAL]]);
+      expect(setUsedRequest).toHaveBeenCalledTimes(1);
+      expect(setUsedTokens.mock.invocationCallOrder[0]).toBeGreaterThan(generate.mock.invocationCallOrder[0]);
+    });
+
+    it('reserveTokens false charges nothing for a failed call', async () => {
+      generate.mockRejectedValue(new TypeError('cannot read the response'));
+      const charging = managerWith(checkOnlyLimiter(), { reserveTokens: false });
+
+      await expect(charging.addHighPriorityTask(REQUEST)).rejects.toThrow('cannot read the response');
+
+      expect(setUsedTokens).not.toHaveBeenCalled();
+      expect(setUsedRequest).not.toHaveBeenCalled();
+    });
+
+    it('subclass override of makeGenerateRequest is still called', async () => {
+      const overridden = vi.fn();
+      class TracingManager extends GenerateCallManager<Body, unknown> {
+        async makeGenerateRequest(
+          llmRequest: Body,
+          options?: Strategy.LLM.CallOptions,
+          reservation?: { tokens: number }
+        ): Promise<unknown> {
+          overridden(llmRequest, options, reservation);
+          return super.makeGenerateRequest(llmRequest, options, reservation);
+        }
+      }
+      generate.mockResolvedValue('response');
+      const llmApi = {
+        generate,
+        reduceMessages: () => 'hello',
+        extractUsedTokens: () => ACTUAL,
+        tokenRateLimiter: { acquire, awaitBeforeCall, setUsedTokens, setUsedRequest },
+        llmTokenizer: { calculateTokensFromString: () => PREDICTED }
+      } as unknown as Strategy.LLM.LLMApi;
+
+      await expect(new TracingManager('test', CONFIG, llmApi).addHighPriorityTask(REQUEST)).resolves.toBe('response');
+
+      expect(overridden).toHaveBeenCalledWith(BODY, undefined, { tokens: PREDICTED });
+      expect(setUsedTokens.mock.calls).toEqual([[ACTUAL - PREDICTED]]);
+    });
+  });
+
+  it('errors have literal names', () => {
+    expect(new TooManyHighPriorityTasksError('full')).toHaveProperty('name', 'TooManyHighPriorityTasksError');
+    expect(new LlmCallManagerLongAwaitError('slow')).toHaveProperty('name', 'LlmCallManagerLongAwaitError');
+    // Set on the instance, so a minifier that renames the classes does not change them
+    expect(Object.hasOwn(new TooManyHighPriorityTasksError('full'), 'name')).toBe(true);
+    expect(Object.hasOwn(new LlmCallManagerLongAwaitError('slow'), 'name')).toBe(true);
   });
 
   describe('stop', () => {

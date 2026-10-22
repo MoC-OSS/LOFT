@@ -3,7 +3,10 @@ import type {
   FunctionCallingConfigMode,
   FunctionDeclaration,
   GenerateContentResponse,
-  Part
+  Part,
+  SafetySetting,
+  SchemaUnion,
+  ThinkingConfig
 } from '@google/genai';
 
 export { Content, FunctionDeclaration, GenerateContentResponse, Part };
@@ -22,6 +25,15 @@ export type GeminiRequest = {
     topK?: number;
     stopSequences?: string[];
     candidateCount?: number;
+    presencePenalty?: number;
+    frequencyPenalty?: number;
+    responseLogprobs?: boolean;
+    logprobs?: number;
+    safetySettings?: SafetySetting[];
+    responseMimeType?: string;
+    responseSchema?: SchemaUnion;
+    thinkingConfig?: ThinkingConfig;
+    seed?: number;
     tools?: Array<{ functionDeclarations: FunctionDeclaration[] }>;
     toolConfig?: {
       functionCallingConfig?: {

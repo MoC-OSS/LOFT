@@ -1,0 +1,76 @@
+{
+  "events": [
+    {
+      "type": "message_start",
+      "message": {
+        "id": "msg_parallel",
+        "type": "message",
+        "role": "assistant",
+        "model": "claude-haiku-5-5",
+        "content": [],
+        "stop_reason": null,
+        "stop_sequence": null,
+        "usage": {
+          "input_tokens": 520,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 3,
+          "service_tier": "standard"
+        }
+      }
+    },
+    {
+      "type": "content_block_start",
+      "index": 0,
+      "content_block": { "type": "tool_use", "id": "toolu_01A", "name": "get_weather", "input": {} }
+    },
+    { "type": "content_block_delta", "index": 0, "delta": { "type": "input_json_delta", "partial_json": "" } },
+    {
+      "type": "content_block_delta",
+      "index": 0,
+      "delta": { "type": "input_json_delta", "partial_json": "{\"city\": \"Kyiv\"}" }
+    },
+    { "type": "content_block_stop", "index": 0 },
+    {
+      "type": "content_block_start",
+      "index": 1,
+      "content_block": { "type": "tool_use", "id": "toolu_01B", "name": "get_time", "input": {} }
+    },
+    {
+      "type": "content_block_delta",
+      "index": 1,
+      "delta": { "type": "input_json_delta", "partial_json": "{\"zone\": " }
+    },
+    {
+      "type": "content_block_delta",
+      "index": 1,
+      "delta": { "type": "input_json_delta", "partial_json": "\"Europe/Kyiv\"}" }
+    },
+    { "type": "content_block_stop", "index": 1 },
+    {
+      "type": "message_delta",
+      "delta": { "stop_reason": "tool_use", "stop_sequence": null },
+      "usage": { "output_tokens": 91 }
+    },
+    { "type": "message_stop" }
+  ],
+  "message": {
+    "id": "msg_parallel",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-haiku-5-5",
+    "content": [
+      { "type": "tool_use", "id": "toolu_01A", "name": "get_weather", "input": { "city": "Kyiv" } },
+      { "type": "tool_use", "id": "toolu_01B", "name": "get_time", "input": { "zone": "Europe/Kyiv" } }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+      "input_tokens": 520,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 91,
+      "service_tier": "standard"
+    }
+  }
+}

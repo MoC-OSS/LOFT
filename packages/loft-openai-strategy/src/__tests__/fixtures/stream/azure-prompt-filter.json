@@ -1,0 +1,69 @@
+{
+  "id": "chatcmpl-AzPf0001",
+  "object": "chat.completion",
+  "created": 1761130000,
+  "model": "gpt-4o-2024-11-20",
+  "prompt_filter_results": [
+    {
+      "prompt_index": 0,
+      "content_filter_results": {
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        }
+      }
+    }
+  ],
+  "choices": [
+    {
+      "index": 0,
+      "content_filter_results": {
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        }
+      },
+      "message": {
+        "role": "assistant",
+        "content": "Hi there.",
+        "refusal": null
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "completion_tokens": 3,
+    "prompt_tokens": 14,
+    "total_tokens": 17
+  },
+  "system_fingerprint": "fp_ee1d74bde0"
+}

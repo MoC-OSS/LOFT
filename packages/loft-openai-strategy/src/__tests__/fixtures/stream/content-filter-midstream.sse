@@ -1,0 +1,10 @@
+data: {"choices":[],"created":0,"id":"","model":"","object":"","prompt_filter_results":[{"prompt_index":0,"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"self_harm":{"filtered":false,"severity":"safe"},"sexual":{"filtered":false,"severity":"safe"},"violence":{"filtered":false,"severity":"safe"}}}]}
+
+data: {"choices":[{"content_filter_results":{},"delta":{"content":"","refusal":null,"role":"assistant"},"finish_reason":null,"index":0,"logprobs":null}],"created":1761130000,"id":"chatcmpl-AzCf0001","model":"gpt-4o-2024-11-20","object":"chat.completion.chunk","system_fingerprint":"fp_ee1d74bde0"}
+
+data: {"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"self_harm":{"filtered":false,"severity":"safe"},"sexual":{"filtered":false,"severity":"safe"},"violence":{"filtered":false,"severity":"safe"}},"delta":{"content":"The battle began"},"finish_reason":null,"index":0,"logprobs":null}],"created":1761130000,"id":"chatcmpl-AzCf0001","model":"gpt-4o-2024-11-20","object":"chat.completion.chunk","system_fingerprint":"fp_ee1d74bde0"}
+
+data: {"choices":[{"content_filter_results":{"hate":{"filtered":false,"severity":"safe"},"self_harm":{"filtered":false,"severity":"safe"},"sexual":{"filtered":false,"severity":"safe"},"violence":{"filtered":true,"severity":"medium"}},"delta":{},"finish_reason":"content_filter","index":0,"logprobs":null}],"created":1761130000,"id":"chatcmpl-AzCf0001","model":"gpt-4o-2024-11-20","object":"chat.completion.chunk","system_fingerprint":"fp_ee1d74bde0"}
+
+data: [DONE]
+

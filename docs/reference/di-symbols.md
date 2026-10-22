@@ -66,7 +66,7 @@ These symbols exist in `DI_TYPES` but are not actively bound in the standard ini
 | Symbol | Purpose | Status |
 |--------|---------|--------|
 | `DI_TYPES.BaseLoft` | Alternative LOFT binding | Legacy |
-| `DI_TYPES.StreamLoft` | Reserved for a streaming mode | Not available yet |
+| `DI_TYPES.StreamLoft` | Reserved; nothing is bound to it | Unused: stream with `chat.generate({ onEvent })` |
 | `DI_TYPES.QueuedLoft` | Reserved for a queued mode | Not available yet |
 | `DI_TYPES.OutgoingQueue` | Queue for outgoing messages | Legacy |
 | `DI_TYPES.PromptManager` | Prompt management | Present in DI_TYPES but not actively bound |

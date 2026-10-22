@@ -177,12 +177,14 @@ export class ChatConstructor<T = BaseLoftChat>
 
   public registerAfterGenerateMiddleware(
     name: string,
-    middleware: StandardMiddleware<ContextInterface, Chat.GenerateResultMessages>
+    middleware: StandardMiddleware<ContextInterface, Chat.GenerateResultMessages>,
+    /** @experimental `transformsOutput: false` declares that the middleware does not change the reply text. Default true. */
+    options?: { transformsOutput?: boolean }
   ) {
     const afterGenerateMiddlewareManager = this.chatContainer.get<
       StandardMiddlewareManager<ContextInterface, Chat.GenerateResultMessages>
     >(DI_TYPES.AfterGenerateMiddlewareManager);
-    afterGenerateMiddlewareManager.use(name, middleware);
+    afterGenerateMiddlewareManager.use(name, middleware, options);
   }
 
   public async useMcpClient(mcpName: string, mcpClient: Client, metadata?: Partial<Interface.MCP.MCPClientMetadata>) {
