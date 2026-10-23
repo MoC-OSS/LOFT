@@ -1,6 +1,6 @@
 # Packages Reference
 
-The LOFT monorepo contains 17 packages (in `packages/`) plus an integration test suite (in `integration/`). This page lists every package with its npm name, directory, version, purpose, and key exports.
+The LOFT monorepo contains 18 packages (in `packages/`) plus an integration test suite (in `integration/`). This page lists every package with its npm name, directory, version, purpose, and key exports.
 
 ## Choosing Packages
 
@@ -62,7 +62,7 @@ LOFT is modular — you install only what you need:
 |---|---|
 | **Directory** | `packages/loft-openai-strategy/` |
 | **Purpose** | OpenAI and Azure OpenAI LLM integration |
-| **Key exports** | `OpenAiLoftStrategy`, `AzureOpenAiLoftStrategy`, `OpenAiCallStrategy`, `AzureOpenAiCallStrategy`, `OpenAiStrategyOptions`, `OpenAiTypes`, `OpenAiValidatingSchemas`, `mcpToolAdapter` |
+| **Key exports** | `OpenAiLoftStrategy`, `AzureOpenAiLoftStrategy`, `OpenAiCallStrategy`, `AzureOpenAiCallStrategy`, `AzureOpenAiConfig`, `OpenAiStrategyOptions`, `OpenAiRequest`, `OpenAiResponse`, `OpenAiLlm` (the `openai` module), `OpenAiValidatingSchemas`, `OpenAiRequestBodySchema`, `mcpToOpenAITool` |
 | **External deps** | `openai`, `@azure/identity` |
 
 #### `@moc-global/loft-anthropic-strategy`
@@ -71,7 +71,7 @@ LOFT is modular — you install only what you need:
 |---|---|
 | **Directory** | `packages/loft-anthropic-strategy/` |
 | **Purpose** | Anthropic Claude LLM integration |
-| **Key exports** | `AnthropicLoftStrategy`, `AnthropicCallStrategy`, `AnthropicStrategyOptions`, `AnthropicTypes`, `AnthropicValidatingSchemas` |
+| **Key exports** | `AnthropicLoftStrategy`, `AnthropicCallStrategy`, `AnthropicStrategyOptions`, `AnthropicRequest`, `AnthropicResponse`, `MessageCreateParamsSchema` |
 | **External deps** | `@anthropic-ai/sdk` |
 
 #### `@moc-global/loft-gemini-strategy`
@@ -80,7 +80,7 @@ LOFT is modular — you install only what you need:
 |---|---|
 | **Directory** | `packages/loft-gemini-strategy/` |
 | **Purpose** | Google Gemini / Vertex AI LLM integration |
-| **Key exports** | `GeminiLoftStrategy`, `GeminiCallStrategy`, `GeminiStrategyOptions`, `GeminiValidatingSchema`, `VertexAiStrategyConfig`, `VertexAiTypes`; `GeminiStream` is deprecated (use `chat.generate({ onEvent })`) |
+| **Key exports** | `GeminiLoftStrategy`, `GeminiCallStrategy`, `GeminiStrategyOptions`, `GeminiStrategyConfig` (`VertexAiCallStrategyConfig` is its deprecated alias), `GeminiRequest`, `GeminiResponse`, `GeminiValidatingSchema`, `GeminiRequestBodySchema`; `GeminiStream` is deprecated (use `chat.generate({ onEvent })`) |
 | **External deps** | `@google/genai` |
 
 ### Agent Orchestration
@@ -176,7 +176,7 @@ LOFT is modular — you install only what you need:
 
 ## Private Packages (not published to npm)
 
-These packages are used internally for development and testing.
+These packages are not published: most are used for development and testing, and `@moc-global/loft-middleware` stays private until an application adopts it.
 
 #### `@moc-global/loft-base-tsconfig`
 
@@ -199,8 +199,17 @@ These packages are used internally for development and testing.
 | | |
 |---|---|
 | **Directory** | `packages/loft-test-suite/` |
-| **Purpose** | Test utilities: mock and spy logger strategies |
-| **Key exports** | `configureMockLoggerStrategy`, `configureSpyLoggerStrategy` |
+| **Purpose** | Test utilities: mock and spy logger strategies, the scripted LLM, repository contract suites and tool-call fixtures |
+| **Key exports** | `configureMockLoggerStrategy`, `configureSpyLoggerStrategy`, `ScriptedLLMStrategy`, `ScriptedLLMApi`, `testSessionRepository`, `testChatHistoryRepository`, `toolChainFixtures`, `mcpTools` |
+
+#### `@moc-global/loft-middleware`
+
+| | |
+|---|---|
+| **Directory** | `packages/loft-middleware/` |
+| **Purpose** | Guard middleware: PII redaction and prompt-injection detection across requests, tool outputs and traces (experimental, not yet published) |
+| **Key exports** | `applyMiddleware`, `maskTracerFactory`, `maskTracer`, `guardMcpClient`, `guardTool`, `guardTools`; `/pii`: `piiRedaction` and detectors; `/injection`: `injectionGuard`, `heuristicDetector`, `findInjectionDetected` |
+| **Guide** | [Guard middleware](../guides/guard-middleware.md) |
 
 #### `@moc-global/loft-kysely-pg-migrator`
 
@@ -244,6 +253,7 @@ The `examples/` directory contains runnable reference applications. Each is a pr
 | `@moc-global/example-express-agents` | `examples/express-agents/` | Multi-agent orchestration: Focus, FAN_OUT, Teams, Anthropic, Docker PG |
 | `@moc-global/example-nestjs` | `examples/nestjs/` | NestJS module integration (OpenAI, PGLite) |
 | `@moc-global/example-serverless` | `examples/serverless/` | AWS Lambda handler with cold-start caching |
+| `@moc-global/example-middleware` | `examples/middleware/` | Middleware recipes, and the guard middleware in an offline demo |
 
 See [examples/README](../../examples/README.md) for setup instructions.
 

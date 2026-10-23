@@ -49,7 +49,8 @@ LOFT is organized in layers where each tier depends only on tiers below it.
 │  │ (p-queue, tiktoken)        │  │ (private, shared migrator) │        │
 │  └────────────────────────────┘  └────────────────────────────┘        │
 │                                                                         │
-│  All Tier 2 packages depend on: loft-definitions                        │
+│  The repositories and the call manager depend on loft-definitions;      │
+│  the migrator does not                                                  │
 └───────────────────────────────────┬─────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼─────────────────────────────────────┐
@@ -69,7 +70,7 @@ LOFT is organized in layers where each tier depends only on tiers below it.
 │  loft-base-tsconfig    Shared TypeScript config (ES2022, strict,        │
 │                        decorators for Inversify)                        │
 │  loft-pglite           In-process PostgreSQL for unit tests             │
-│  loft-test-suite       Mock/spy logger utilities                        │
+│  loft-test-suite       Logger mocks, scripted LLM, contract suites      │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -101,8 +102,9 @@ Some packages have npm names that differ from their directory names. This table 
 |-------------|-----------|---------|
 | `@moc-global/loft-base-tsconfig` | `packages/loft-base-tsconfig/` | Shared TypeScript configuration |
 | `@moc-global/loft-pglite` | `packages/loft-pglite/` | In-process PostgreSQL for unit tests (no Docker) |
-| `@moc-global/loft-test-suite` | `packages/loft-test-suite/` | Test utilities: mock/spy logger strategies |
+| `@moc-global/loft-test-suite` | `packages/loft-test-suite/` | Test utilities: mock and spy logger strategies, the scripted LLM (`ScriptedLLMStrategy`, `ScriptedLLMApi`), repository contract suites and tool-call fixtures |
 | `@moc-global/loft-kysely-pg-migrator` | `packages/loft-kysely-pg-migrator/` | Shared Kysely migration infrastructure |
+| `@moc-global/loft-middleware` | `packages/loft-middleware/` | Guard middleware: PII redaction and prompt-injection detection (experimental) |
 | `loft-integration-tests` | `integration/` | End-to-end integration tests |
 
 ## Dependency Graph

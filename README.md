@@ -182,6 +182,7 @@ Each example is a small application in [`examples/`](./examples/) that you can r
 | [express-focus-basic](./examples/express-focus-basic/) | Focus: collect an order over several turns | Anthropic | PostgreSQL in Docker |
 | [express-agents](./examples/express-agents/) | Agent graphs, fan-out and teams | Anthropic | PostgreSQL in Docker |
 | [express-streaming](./examples/express-streaming/) | A reply streamed over SSE, with tool progress events | OpenAI | PGlite |
+| [middleware](./examples/middleware/) | One-file middleware recipes and the guard middleware, offline | Scripted, no provider | PGlite in its tests |
 
 The [examples guide](./examples/README.md) has the setup steps.
 

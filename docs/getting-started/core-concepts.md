@@ -123,7 +123,7 @@ Manifest files (system prompts, model presets, AI task definitions) can be store
 The call manager controls how LLM API calls are executed — rate limiting, retry logic, and prioritization:
 
 - **`NativeCallManagerStrategy`** — Wraps a `GenerateCallManager` for in-process rate limiting. This is what most applications use.
-- **`HttpCallManagerStrategy`** — Delegates to an external HTTP-based call manager service (for distributed architectures).
+- **`HttpCallManagerStrategy`** — Delegates to an external HTTP-based call manager service (for distributed architectures). Not usable yet: the service it calls is not part of this repository (see [Strategy Pattern](../concepts/strategy-pattern.md)).
 
 ## 3. Middleware Pipeline
 
@@ -263,8 +263,8 @@ Here's how the concepts connect in a typical request flow:
 6. **ManifestManager** loads the manifest and applies any registered prompt computers
 7. The **LLM strategy** formats the request, calls the provider API (through the call manager), and returns a unified response
 8. **AfterGenerate Middleware** post-processes the response
-9. Messages are persisted to `ChatHistoryRepository`
-10. The response is returned to your app
+9. The result is returned to your app. Nothing is stored yet
+10. Your app calls `result.messages.save()`, which stores the user messages, the tool calls and the reply in the `ChatHistoryRepository`
 
 ## What's Next
 

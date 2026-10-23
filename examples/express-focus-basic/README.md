@@ -45,7 +45,7 @@ docker compose -f examples/docker-compose.yml up -d
 pnpm install
 
 # 3. Build the example and all its LOFT dependencies (from repo root)
-turbo build --filter=@moc-global/example-express-focus-basic...
+pnpm turbo build --filter=@moc-global/example-express-focus-basic...
 
 # 4. Configure environment
 cd examples/express-focus-basic

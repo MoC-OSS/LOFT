@@ -36,7 +36,7 @@ Configuration in `.eslintrc`:
 `simple-import-sort` enforces a consistent import order. Let it auto-fix:
 
 ```bash
-turbo lint    # Runs eslint --fix across all packages
+pnpm turbo lint    # Runs eslint --fix across all packages
 ```
 
 Typical import order:

@@ -86,7 +86,8 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
       });
 
       try {
-        this.log.trace('addMessages() called for session: ', { sessionId, messages });
+        // The count only: message text can hold personal data, and middleware has not run yet
+        this.log.trace('addMessages() called for session: ', { sessionId, messagesCount: messages.length });
 
         // Process messages through middleware
         const { payload: processedPayload } = await this.inputMiddlewareManager.executeChain(
@@ -320,10 +321,11 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
             messageIds: ctx.request.messageIds
           },
           metadata: {
+            // Counts only: `input` holds the request after the Input middleware, which may have redacted it
             requestOptions: {
               sessionId,
-              directMessages,
-              augmentedContext,
+              directMessagesCount: directMessages.length,
+              augmentedContextCount: augmentedContext.length,
               temporaryLlmName,
               temporaryManifestName,
               llmContextWindow

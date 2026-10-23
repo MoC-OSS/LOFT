@@ -69,7 +69,7 @@ LOFT automatically creates traces at multiple levels:
 | **Span** | `mcp-tool-{toolName}` | Each MCP tool execution |
 | **Span** | `additional-tool-{toolName}` | Each call of a tool passed to `generate()` as an additional tool |
 
-Traces record message content as it arrived, before any middleware ran, so redacting personal data in middleware does not keep it out of Langfuse.
+Traces record message content: each middleware span records the payload it received, so the first one holds the request as it arrived, and generations hold what the model was sent and returned. Redacting personal data in middleware therefore does not keep it out of Langfuse. To keep it out, mask what the tracer sends: wrap your tracer factory with `maskTracerFactory` from the [guard middleware](./guard-middleware.md) package, or mask in your own `TracerFactory`.
 
 Generations include:
 - Model name and parameters

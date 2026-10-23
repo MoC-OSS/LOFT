@@ -271,7 +271,7 @@ await result.messages.save();
 
 > **Concurrency:** LOFT does not serialise requests for the same session. Two `generate()` calls on one session at the same time both run, and each sees the history as it was when it started. If your users can send messages faster than the LLM answers, queue requests per session in your application.
 
-> **Warning:** `directMessages` passed to `generate()` are **transient** — they are used for that single LLM call only and are **not stored** in chat history. If you need the LLM to remember messages across turns, use `addMessages()` to persist them first. The `directMessages` approach is only appropriate for single-turn/ephemeral patterns.
+> **Warning:** `generate()` itself stores nothing, but `result.messages.save()` stores the `directMessages` too, with the augmented context, the tool calls and the reply. If you already stored the user message with `addMessages()`, call `generate({ sessionId })` without `directMessages`, as above, or the message is stored twice. To store only the model's side, call `result.messages.save({ saveToolMessages: true, saveAssistantMessage: true })`.
 
 ### ChatInterface union type
 

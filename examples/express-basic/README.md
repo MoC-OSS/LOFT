@@ -25,7 +25,7 @@ Minimal stateless Express + LOFT + OpenAI example. Send a message, get a respons
 pnpm install
 
 # Build the example and all its LOFT dependencies
-turbo build --filter=@moc-global/example-express-basic...
+pnpm turbo build --filter=@moc-global/example-express-basic...
 
 # Set up environment
 cp examples/express-basic/.env.example examples/express-basic/.env
@@ -133,7 +133,7 @@ examples/express-basic/
 To use this example outside the monorepo:
 
 1. Copy the `examples/express-basic/` directory to a new project
-2. In `package.json`, replace `workspace:*` with published version numbers (e.g., `"@moc-global/loft": "^2.7.0"`)
+2. In `package.json`, replace `workspace:*` with published version numbers (e.g., `"@moc-global/loft": "^2.10.0"`)
 3. Run `pnpm install` and follow the `.env.example`
 
 ## Next steps

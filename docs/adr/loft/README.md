@@ -7,6 +7,7 @@ Decisions about the core packages: `@moc-global/loft`, `@moc-global/loft-definit
 | ADR | Decision | Status |
 |-----|----------|--------|
 | [001](001-chat-streaming.md) | Chat Streaming — Per-call events on `generate()`, providers stream inside their existing call | Proposed |
+| [002](002-middleware-package.md) | Guard Middleware — A package that wraps what LOFT is given (PII, prompt injection) | Proposed |
 
 ## Key Source Files
 

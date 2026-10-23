@@ -26,6 +26,7 @@ Each `LoftAgentNode` wraps a LOFT chat instance. It needs a name, an LLM name, a
 
 ```typescript
 import { LoftAgentNode } from '@moc-global/loft-agents';
+import { Agent } from '@moc-global/loft-definitions';
 
 const classifier = new LoftAgentNode({
   name: 'classifier',
@@ -123,6 +124,8 @@ const orderFocus: Agent.Focus = {
 loft.registerFocus('intake', orderFocus);
 ```
 
+`onComplete` is required by the `Agent.Focus` type, but LOFT does not act on it: graph routing on completion comes from `onFocusComplete` on the `LoftAgentNode` (see below).
+
 ### Using Focus with generate()
 
 Pass `focusAgent` in generate options, or bind it to a session at creation time.
@@ -197,7 +200,7 @@ const pinnedIntake = new LoftAgentNode({
 4. Tools validate and store values in the focus state store
 5. LLM asks for missing fields naturally
 6. When all required fields are filled → Focus auto-deactivates on session, `onFocusComplete` transition fires
-7. Collected data is written to `SharedContext` as `focus:intake` for downstream agents
+7. When the node has `onFocusComplete`, the collected data is written to `SharedContext` as `focus:intake` for downstream agents
 
 **Field types:** `STRING`, `NUMBER`, `BOOLEAN`, `ENUM` (with `values`), `DATE` (ISO 8601)
 
@@ -344,7 +347,7 @@ Run the demo from the repository root:
 ```bash
 docker compose -f examples/docker-compose.yml up -d    # PostgreSQL
 pnpm install
-turbo build --filter=@moc-global/example-express-agents...
+pnpm turbo build --filter=@moc-global/example-express-agents...
 cd examples/express-agents
 cp .env.example .env    # set ANTHROPIC_API_KEY
 pnpm migrate
@@ -367,7 +370,7 @@ const results = sharedContext.get('search-results');
 SharedContext is automatically serialized as a JSON system message for each LLM call, so agents can "read" data from other agents.
 
 **Reserved keys:**
-- `focus:<agentName>` — auto-written when Focus completes
+- `focus:<agentName>` — written when Focus completes on a `LoftAgentNode` that has `onFocusComplete`
 - `__fanout.rejected` — auto-written when ErrorStrategy.CONTINUE handles failures
 - `__team.systemPrompt` — internal team prompt
 

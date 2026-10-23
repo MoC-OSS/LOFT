@@ -10,7 +10,8 @@ Defined in `turbo.json`:
 |------|-------------|---------|-------------|
 | `build` | `prebuild`, `^build` | `lib/**`, `dist/**` | Build package (runs after dependencies) |
 | `prebuild` | none | none | Pre-build step (if needed) |
-| `lint` | none | none | ESLint across all packages |
+| `lint` | none | none | ESLint across all packages, with `--fix` |
+| `lint:check` | none | none | ESLint without fixes, failing on warnings (used in CI) |
 | `check-types` | `^build` | none | TypeScript type checking (requires deps built) |
 
 The `^build` notation means "this package's workspace dependencies must be built first." Turbo resolves the dependency graph automatically.
@@ -20,14 +21,16 @@ The `^build` notation means "this package's workspace dependencies must be built
 Turbo builds packages in dependency order:
 
 ```
-Phase 0: loft-base-tsconfig (no deps)
-Phase 1: loft-definitions
-Phase 2: loft-pglite, loft-kysely-pg-migrator
-Phase 3: loft, loft-llm-call-manager
-Phase 4: All strategies + repositories (depend on loft-definitions)
-Phase 5: loft-test-suite (depends on loft-definitions + loft-pglite)
-Phase 6: loft-integration-tests (depends on everything)
+Phase 0: loft-definitions, loft-pglite (no workspace dependencies; loft-base-tsconfig has no build step)
+Phase 1: loft-test-suite (loft-definitions, loft-pglite), loft-kysely-pg-migrator (loft-pglite),
+         loft-llm-call-manager and the storage and queue packages (loft-definitions)
+Phase 2: loft and the LLM strategies (loft-definitions, loft-test-suite);
+         the PostgreSQL repositories (also loft-kysely-pg-migrator, loft-pglite)
+Phase 3: loft-agents (loft), loft-middleware (loft, loft-test-suite)
+Phase 4: loft-integration-tests (depends on everything)
 ```
+
+Turbo counts devDependencies too, so a package that tests with `loft-test-suite` builds after it.
 
 Within each phase, packages build in parallel.
 
@@ -108,14 +111,9 @@ Each package has:
 | Step | Command | Purpose |
 |------|---------|---------|
 | 1 | `npx lint-staged` | ESLint `--fix` on staged `.ts/.tsx/.js/.jsx` files |
-| 2 | `pnpm run versions:check` | Validate cross-package version consistency |
-| 3 | `pnpm run versions:align` | Auto-fix version mismatches |
-| 4 | `find packages -name lib -exec rm -rf {} +` | Clean all `lib/` folders |
-| 5 | `turbo build` | Full rebuild |
-| 6 | `turbo check-types` | Type checking |
-| 7 | `pnpm test:unit` | Unit tests |
+| 2 | `pnpm run versions:check` | Validate cross-package version consistency; fix with `pnpm versions:align` |
 
-> **Warning:** Commits are slow due to full clean, rebuild, type-check, and test. This is intentional — it prevents broken code from being committed. To skip temporarily: `git commit --no-verify`.
+The build, type check, tests and package checks run in CI (`.github/workflows/ci.yml`); run them before you push (see [CONTRIBUTING.md](../../CONTRIBUTING.md)).
 
 ## Package Exports Pattern
 

@@ -237,7 +237,7 @@ The child container resolves from its parent when a binding isn't found locally.
 | `.inSingletonScope()` | One instance per container | `LlmManager`, `MCPManager`, `ContextProvider` |
 | `.toConstantValue(x)` | Pre-created instance | Config objects, repository instances |
 | `.to(Class)` (default) | New instance per resolution | `ChatHistoryManager`, `GenerateResultMessagesProvider` |
-| `.toDynamicValue(() => ...)` | Factory function per resolution | `ComputerManager` instances |
+| `.toDynamicValue(() => ...)` | Factory function; with `.inSingletonScope()`, as here, it runs once | `ComputerManager` instances |
 
 ## What's Next
 

@@ -17,6 +17,7 @@ Each example builds on the previous, showing progressively more features.
 | 6 | [express-focus-basic](./express-focus-basic/) | Focus: collect a pizza order over several turns | Docker PG | Anthropic | ~10 min |
 | 7 | [express-agents](./express-agents/) | Agent graphs, fan-out and teams (restaurant showcase) | Docker PG | Anthropic | ~10 min |
 | 8 | [express-streaming](./express-streaming/) | Stream a reply over SSE, with tool calls and tool progress events | PGLite | OpenAI | ~3 min |
+| 9 | [middleware](./middleware/) | Middleware recipes, and guards that redact personal data and block prompt injection | In memory | Scripted (offline) | ~1 min |
 
 ### What's PGLite?
 
@@ -38,7 +39,7 @@ PGLite is an in-process PostgreSQL implementation ([`@electric-sql/pglite`](http
 pnpm install
 
 # Build the example and its LOFT dependencies
-turbo build --filter=@moc-global/example-express-basic...
+pnpm turbo build --filter=@moc-global/example-express-basic...
 
 # Copy env template and set your API key
 cp examples/.env.example examples/express-basic/.env
@@ -58,7 +59,7 @@ docker compose up -d
 cd ..
 
 # Build express-full and all its LOFT dependencies (includes migration CLIs)
-turbo build --filter=@moc-global/example-express-full...
+pnpm turbo build --filter=@moc-global/example-express-full...
 
 # Run database migrations
 DATABASE_URL=postgresql://loft_example:loft_example_pass@localhost:5433/loft_examples \
@@ -75,5 +76,5 @@ pnpm --filter=@moc-global/example-express-full exec loft-chat-history-pg-migrate
 Each example can be copied out of the monorepo:
 
 1. Copy the example directory to a new project
-2. In `package.json`, replace `workspace:*` with version numbers (e.g., `"@moc-global/loft": "^2.7.0"`)
+2. In `package.json`, replace `workspace:*` with version numbers (e.g., `"@moc-global/loft": "^2.10.0"`)
 3. Run `pnpm install` and follow the example's `.env.example`

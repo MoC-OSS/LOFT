@@ -68,4 +68,4 @@ node app.js | npx log-format
 
 ## License
 
-[MIT](./LICENSE). `src/MCP_SDK_Types.ts` is copied from the MCP TypeScript SDK under its MIT license; see [NOTICE](./NOTICE).
+[MIT](./LICENSE). `src/schemas/entities/MCP_SDK_Types.ts` is copied from the MCP TypeScript SDK under its MIT license; see [NOTICE](./NOTICE).

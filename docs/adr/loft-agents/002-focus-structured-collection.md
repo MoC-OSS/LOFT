@@ -4,6 +4,8 @@
 
 Accepted
 
+> **Moved:** the Focus code now lives in `packages/loft/src/focus/` (`ToolGenerator.ts`, `StatusComputer.ts`, `TypeCoercion.ts`, `PromptGenerator.ts`, `InMemoryStateStore.ts`, `UpdateTool.ts`, `ConfirmTool.ts`, `ClassifyTool.ts`), and `@moc-global/loft-agents` re-exports it. The paths in this record are as they were when it was written.
+
 ## Context
 
 Agents often need structured input before they can act — a travel planner needs destination, dates, budget, and group size. Users provide this conversationally across multiple turns, not as a single form submission. The system needs to:

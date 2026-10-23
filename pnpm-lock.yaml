@@ -522,6 +522,61 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  examples/middleware:
+    dependencies:
+      '@moc-global/loft':
+        specifier: workspace:*
+        version: link:../../packages/loft
+      '@moc-global/loft-definitions':
+        specifier: workspace:*
+        version: link:../../packages/loft-definitions
+      '@moc-global/loft-middleware':
+        specifier: workspace:*
+        version: link:../../packages/loft-middleware
+      '@moc-global/loft-test-suite':
+        specifier: workspace:*
+        version: link:../../packages/loft-test-suite
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.32.1
+        version: 1.32.1(zod@3.25.67)
+      inversify:
+        specifier: ^6.2.2
+        version: 6.2.2(reflect-metadata@0.2.2)
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      zod:
+        specifier: 3.25.67
+        version: 3.25.67
+    devDependencies:
+      '@electric-sql/pglite':
+        specifier: 0.5.9
+        version: 0.5.9
+      '@electric-sql/pglite-socket':
+        specifier: 0.2.12
+        version: 0.2.12(@electric-sql/pglite-age@0.0.9(@electric-sql/pglite@0.5.9))(@electric-sql/pglite-pg_hashids@0.0.9(@electric-sql/pglite@0.5.9))(@electric-sql/pglite-pg_ivm@0.0.9(@electric-sql/pglite@0.5.9))(@electric-sql/pglite-pg_textsearch@0.0.10(@electric-sql/pglite@0.5.9))(@electric-sql/pglite-pg_uuidv7@0.0.9(@electric-sql/pglite@0.5.9))(@electric-sql/pglite-pgtap@0.0.9(@electric-sql/pglite@0.5.9))(@electric-sql/pglite-pgvector@0.0.9(@electric-sql/pglite@0.5.9))(@electric-sql/pglite@0.5.9)
+      '@moc-global/loft-chat-history-pg-repository':
+        specifier: workspace:*
+        version: link:../../packages/loft-chat-history-pg-repository
+      '@moc-global/loft-session-pg-repository':
+        specifier: workspace:*
+        version: link:../../packages/loft-session-pg-repository
+      '@types/node':
+        specifier: ^20.14.2
+        version: 20.19.27
+      '@types/pg':
+        specifier: ^8.23.1
+        version: 8.23.1
+      pg:
+        specifier: ^8.11.4
+        version: 8.23.1
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
   examples/nestjs:
     dependencies:
       '@electric-sql/pglite':
@@ -1022,6 +1077,30 @@ importers:
       aws-sdk-client-mock:
         specifier: ^4.0.1
         version: 4.1.0
+      inversify:
+        specifier: ^6.2.2
+        version: 6.2.2(reflect-metadata@0.2.2)
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      zod:
+        specifier: 3.25.67
+        version: 3.25.67
+
+  packages/loft-middleware:
+    devDependencies:
+      '@moc-global/loft':
+        specifier: workspace:*
+        version: link:../loft
+      '@moc-global/loft-definitions':
+        specifier: workspace:*
+        version: link:../loft-definitions
+      '@moc-global/loft-test-suite':
+        specifier: workspace:*
+        version: link:../loft-test-suite
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.32.1
+        version: 1.32.1(zod@3.25.67)
       inversify:
         specifier: ^6.2.2
         version: 6.2.2(reflect-metadata@0.2.2)

@@ -159,10 +159,38 @@ npm install @moc-global/loft-gemini-strategy @google/genai
 ```typescript
 import { NativeCallManagerStrategy } from '@moc-global/loft-definitions';
 import { GenerateCallManager, LlmTokenizer, LlmTokenRateLimiter } from '@moc-global/loft-llm-call-manager';
-import { GeminiCallStrategy, GeminiLoftStrategy } from '@moc-global/loft-gemini-strategy';
+import {
+  GeminiCallStrategy,
+  GeminiLoftStrategy,
+  GeminiRequest,
+  GeminiResponse
+} from '@moc-global/loft-gemini-strategy';
 
-// Gemini follows the same three-layer pattern
-// GeminiCallStrategy constructor accepts Google GenAI configuration
+function createGeminiStrategy(modelName: string) {
+  // 1. Call strategy — Vertex AI with Application Default Credentials,
+  //    or { mode: 'apikey', apiKey } for Google AI Studio
+  const callStrategy = new GeminiCallStrategy(
+    { mode: 'vertexai', project: 'my-gcp-project', location: 'us-central1' },
+    new LlmTokenRateLimiter({
+      newTokensPerSecond: 50000,
+      newRequestsPerSecond: 50,
+      maxRequests: 500,
+      maxTokens: 2000000,
+      maxAwaitSeconds: 300
+    }),
+    new LlmTokenizer()
+  );
+
+  // 2. Call manager
+  const callManager = new GenerateCallManager<GeminiRequest, GeminiResponse>(
+    modelName,
+    { highPriorityTasksLimit: 10, retryDelay: 1000, retryAttemptsLimit: 3 },
+    callStrategy
+  );
+
+  // 3. LOFT strategy
+  return new GeminiLoftStrategy({ llmName: modelName }, new NativeCallManagerStrategy(callManager));
+}
 ```
 
 ## Multiple Providers

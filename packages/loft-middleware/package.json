@@ -1,0 +1,101 @@
+{
+  "name": "@moc-global/loft-middleware",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Guard middleware for the LOFT framework: PII redaction and prompt-injection detection across input, tools, traces and output",
+  "keywords": [
+    "loft",
+    "llm",
+    "middleware",
+    "pii",
+    "redaction",
+    "prompt-injection",
+    "guardrails"
+  ],
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-middleware#readme",
+  "bugs": {
+    "url": "https://github.com/MoC-OSS/LOFT/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoC-OSS/LOFT.git",
+    "directory": "packages/loft-middleware"
+  },
+  "license": "MIT",
+  "author": "Master of Code Global",
+  "type": "commonjs",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./pii": {
+      "import": {
+        "types": "./lib/pii/index.d.mts",
+        "default": "./lib/pii/index.mjs"
+      },
+      "require": {
+        "types": "./lib/pii/index.d.ts",
+        "default": "./lib/pii/index.js"
+      }
+    },
+    "./injection": {
+      "import": {
+        "types": "./lib/injection/index.d.mts",
+        "default": "./lib/injection/index.mjs"
+      },
+      "require": {
+        "types": "./lib/injection/index.d.ts",
+        "default": "./lib/injection/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "pii": [
+        "./lib/pii/index.d.ts"
+      ],
+      "injection": [
+        "./lib/injection/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "build": "tsup && tsc -p tsconfig.declarations.json && node ../../scripts/emit-esm-types.mjs",
+    "check-types": "tsc --noEmit --skipLibCheck -p tsconfig.json",
+    "lint": "npx eslint ./src --fix",
+    "lint:check": "npx eslint ./src --max-warnings=0"
+  },
+  "peerDependencies": {
+    "@moc-global/loft": "workspace:^",
+    "@moc-global/loft-definitions": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.31.0"
+  },
+  "devDependencies": {
+    "@moc-global/loft": "workspace:*",
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-test-suite": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "inversify": "^6.2.2",
+    "reflect-metadata": "^0.2.2",
+    "zod": "3.25.67"
+  }
+}

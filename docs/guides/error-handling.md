@@ -17,7 +17,7 @@ Error
         └── ProcessSessionActionsError   — @experimental, queued mode only
 ```
 
-All error classes are exported from `@moc-global/loft-definitions`. With `LoftConstructor`, `generate()` throws `GenerateError`, `addMessages()` rethrows the original error, both throw `ShutdownError` during shutdown, and every method that loads a session throws `SessionNotFoundError` when it does not exist. The three experimental classes belong to execution modes that are not available yet.
+All error classes are exported from `@moc-global/loft-definitions`. With `LoftConstructor`, `generate()` throws `GenerateError` for failures from validation onwards (BeforeGenerate middleware, the LLM call, tools, AfterGenerate middleware); an error from loading the session or its history, or from Input middleware, is thrown as it is. `addMessages()` rethrows the original error, both throw `ShutdownError` during shutdown, and every method that loads a session throws `SessionNotFoundError` when it does not exist. The three experimental classes belong to execution modes that are not available yet.
 
 Every `ChatError` has `sessionId`, `correlatorIds`, `messageIds`, `status` (a `Chat.Status`), `cause` (the original error, whose stack is appended to the error's stack after `Caused by:`) and an optional `details` object. `shouldRetry()` returns `false` for the errors LOFT throws today, so decide on retries yourself (see [Retry with backoff](#retry-with-backoff)).
 
@@ -59,7 +59,7 @@ try {
 - **Manifest not found:** No manifest entry for the `manifestName` + `llmName` combination
 - **Context error:** Failed to load session or chat history
 - **Stream timeout:** a call streamed with `onEvent` stayed silent longer than the call manager's `streamIdleTimeoutMs` (or waited longer than `streamFirstEventTimeoutMs` for its first output: text, reasoning or activity). The cause chain holds a `StreamIdleTimeoutError` (experimental, not a `ChatError`), which the call manager retries while nothing reached the caller.
-- **Middleware error:** A middleware threw. The chain throws `Error('Forced failure in middleware: <name>, ...')` with your error as its `cause`, and `generate()` wraps that error in a `GenerateError` as its `cause`. `addMessages()` runs only Input middleware and throws the chain's error as is, without a `GenerateError`.
+- **Middleware error:** A middleware threw. The chain throws `Error('Forced failure in middleware: <name>, ...')` with your error as its `cause`. For BeforeGenerate and AfterGenerate middleware, `generate()` wraps that error in a `GenerateError` as its `cause`; for Input middleware, `generate()` and `addMessages()` throw the chain's error as it is, without a `GenerateError`.
 
 ## ShutdownError
 

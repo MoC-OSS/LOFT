@@ -255,7 +255,7 @@ const loftConstructor = new LoftConstructor(
   config,
   manifestManagerConstructor,
   chatConstructor,
-  new LangfuseTracer({ secretKey: '...', publicKey: '...', host: '...' })
+  new LangfuseTracer({ secretKey: '...', publicKey: '...', baseUrl: 'https://langfuse.example.com' })
 );
 ```
 

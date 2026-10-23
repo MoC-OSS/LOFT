@@ -219,7 +219,10 @@ class AvailabilityCheckNode implements Agent.Node {
     const focusData = sharedContext.get<Record<string, unknown>>('focus:reservation-intake');
     const scoped = sharedContext.for('availability-check'); // namespaced writes
 
-    const available = this.checkAvailability(focusData);
+    // Simulated: a large party wanting outdoor seating at the weekend gets no table
+    const partySize = Number(focusData?.party_size ?? 0);
+    const outdoor = focusData?.outdoor_seating === true;
+    const available = !(this.isWeekendDate(String(focusData?.date ?? '')) && partySize > 8 && outdoor);
     scoped.set('available', available);
 
     return {
@@ -344,7 +347,7 @@ docker compose -f examples/docker-compose.yml up -d
 pnpm install
 
 # 3. Build the example and all its LOFT dependencies
-turbo build --filter=@moc-global/example-express-agents...
+pnpm turbo build --filter=@moc-global/example-express-agents...
 
 # 4. Configure
 cd examples/express-agents

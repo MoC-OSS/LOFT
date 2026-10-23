@@ -20,7 +20,7 @@ intake (Focus) → dispatcher (FAN_OUT) → [flights, hotels, activities] → pl
 ## Key Source Files
 
 - `packages/loft-agents/src/core/` — Orchestrator, OrchestratorBuilder, LoftAgentNode, SharedContext
-- `packages/loft-agents/src/focus/` — Focus tools, status, coercion, prompt generation
+- `packages/loft/src/focus/` — Focus tools, status, coercion, prompt generation (re-exported by `@moc-global/loft-agents`)
 - `packages/loft-agents/src/team/` — TeamBuilder, TeamNode
 - `packages/loft-agents/src/policies/` — RetryPolicy, TimeoutPolicy
 - `packages/loft-agents/src/observability/` — Metrics, TracingIntegration

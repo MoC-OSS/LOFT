@@ -27,7 +27,7 @@ NestJS + LOFT + OpenAI example with PGLite. Demonstrates how to integrate LOFT i
 pnpm install
 
 # Build the example and all its LOFT dependencies
-turbo build --filter=@moc-global/example-nestjs...
+pnpm turbo build --filter=@moc-global/example-nestjs...
 
 # Set up environment
 cp examples/nestjs/.env.example examples/nestjs/.env
@@ -205,9 +205,9 @@ This example uses `tsc` for builds and `nest start --watch` for development, unl
 To use this example outside the monorepo:
 
 1. Copy the `examples/nestjs/` directory to a new project
-2. In `package.json`, replace `workspace:*` with published version numbers (e.g., `"@moc-global/loft": "^2.7.0"`)
+2. In `package.json`, replace `workspace:*` with published version numbers (e.g., `"@moc-global/loft": "^2.10.0"`)
 3. Run `pnpm install` and follow the `.env.example`
 
 ## Next steps
 
-- **serverless** (coming soon) — LOFT in an AWS Lambda handler with cold-start optimization
+- [serverless](../serverless/) — LOFT in an AWS Lambda handler with cold-start optimization
