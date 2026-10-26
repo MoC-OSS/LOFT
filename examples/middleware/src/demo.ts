@@ -24,7 +24,7 @@ const MANIFEST = 'assistant';
 // A CRM over MCP whose answers contain personal data
 async function crmClient(): Promise<Client> {
   const server = new McpServer({ name: 'crm', version: '1.0.0' });
-  server.tool('crm_lookup', 'Looks up a customer by id', { id: z.string() }, async ({ id }) => ({
+  server.tool('crm_lookup', 'Looks up a customer by id', { id: z.string() }, ({ id }) => ({
     content: [{ type: 'text', text: `Customer ${id}: jane.doe@example.com, card 4111 1111 1111 1111` }]
   }));
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -95,7 +95,7 @@ export async function runDemo(): Promise<DemoResult> {
     { text: 'I found your account and updated it.' }
   ]);
   await loftConstructor.registerLlmStrategy(LLM, llm);
-  loftConstructor.registerGMComputer(MANIFEST, LLM, async (_ctx, prompt) => prompt.content);
+  loftConstructor.registerGMComputer(MANIFEST, LLM, (_ctx, prompt) => Promise.resolve(prompt.content));
   const loft = loftConstructor.getInstance();
   const session = await loft.chat.createSession({ currentLlmName: LLM, currentManifestName: MANIFEST, ctx: {} });
 
@@ -131,14 +131,19 @@ export async function runDemo(): Promise<DemoResult> {
 }
 
 if (require.main === module) {
-  runDemo().then((result) => {
-    result.modelSaw.forEach((messages, call) => {
-      console.log(`\nThe model saw on call ${call + 1}:`);
-      for (const line of messages) console.log(`  ${line}`);
+  runDemo()
+    .then((result) => {
+      result.modelSaw.forEach((messages, call) => {
+        console.log(`\nThe model saw on call ${call + 1}:`);
+        for (const line of messages) console.log(`  ${line}`);
+      });
+      console.log('\nThe history stores:');
+      for (const line of result.stored) console.log(`  ${line}`);
+      console.log(`\nThe reply to the injection attempt: ${result.blockedReply}`);
+      console.log(`The traces contain the raw e-mail address: ${result.traces.includes('jane.doe@example.com')}`);
+    })
+    .catch((error) => {
+      console.error('The demo failed:', error);
+      process.exitCode = 1;
     });
-    console.log('\nThe history stores:');
-    for (const line of result.stored) console.log(`  ${line}`);
-    console.log(`\nThe reply to the injection attempt: ${result.blockedReply}`);
-    console.log(`The traces contain the raw e-mail address: ${result.traces.includes('jane.doe@example.com')}`);
-  });
 }

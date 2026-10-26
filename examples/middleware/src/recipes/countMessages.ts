@@ -7,7 +7,7 @@ const log = new Logger('count-messages');
  *
  *   chatConstructor.registerInputMiddleware('count-messages', countMessages);
  */
-export const countMessages: StandardMiddleware<ContextInterface, GenerateRequestParameters> = async (
+export const countMessages: StandardMiddleware<ContextInterface, GenerateRequestParameters> = (
   context,
   payload,
   chain
@@ -18,5 +18,5 @@ export const countMessages: StandardMiddleware<ContextInterface, GenerateRequest
     augmentedContext: payload.augmentedContext.length
   });
   chain.next();
-  return payload;
+  return Promise.resolve(payload);
 };

@@ -26,16 +26,16 @@ export function blockTopics(
   reply: string
 ): BeforeGenerateMiddleware<ContextInterface, GenerateRequestParameters> {
   const words = topics.map((topic) => topic.toLowerCase());
-  return async (context, payload, chain) => {
+  return (context, payload, chain) => {
     const text = newestUserText(context, payload).toLowerCase();
     if (words.some((word) => text.includes(word))) {
       chain.preventGeneration({
         content: [{ type: 'text', text: reply }],
         role: Type.LLM.UnifiedMessageRole.assistant
       });
-      return payload;
+    } else {
+      chain.next();
     }
-    chain.next();
-    return payload;
+    return Promise.resolve(payload);
   };
 }

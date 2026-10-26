@@ -32,9 +32,18 @@ function masked<T extends object>(params: T | undefined, mask: TextMap): T | und
   if (!params) return params;
   const copy = { ...params } as Record<string, unknown>;
   for (const field of MASKED_FIELDS) {
-    if (copy[field] !== undefined) copy[field] = mapStrings(copy[field], mask);
+    if (copy[field] !== undefined) copy[field] = maskedField(copy[field], mask);
   }
   return copy as T;
+}
+
+// A value that throws while it is read, such as a getter or a toJSON that throws, costs the field, not the chat
+function maskedField(value: unknown, mask: TextMap): unknown {
+  try {
+    return mapStrings(value, mask);
+  } catch {
+    return MASK_FAILED_TEXT;
+  }
 }
 
 function maskGeneration(generation: Generation, mask: TextMap): Generation {
@@ -84,7 +93,8 @@ function maskWith(tracer: Tracer, mask: TextMap, middleware: readonly LoftMiddle
  * A tracer that applies the middleware's `maskTrace` to every string it sends: the input, output, metadata, status
  * message, comment, user id and tags of every trace, span, generation, event and score, including those of child
  * tracers. Names, model names and model parameters are not masked. A mask that throws turns the string into
- * `[mask failed]`. The values LOFT passes are copied, never changed. Use it for a tracer that does not come from a
+ * `[mask failed]`, and a value that throws while it is read, such as a getter or a `toJSON` that throws, turns the
+ * whole field into it. The values LOFT passes are copied, never changed. Use it for a tracer that does not come from a
  * factory, such as the one given to the agents' `OrchestratorBuilder.setTracer`.
  */
 export function maskTracer(tracer: Tracer, middleware: readonly LoftMiddleware[]): Tracer {

@@ -26,14 +26,17 @@ export interface MapStringsOptions {
   keys?: boolean;
 }
 
-function mapValue(value: unknown, map: TextMap, seen: WeakMap<object, unknown>, depth: number, keys: boolean): unknown {
+// A string, or a number or a bigint as text; other values that are not objects are kept as they are
+function mapPrimitive(value: unknown, map: TextMap): unknown {
   if (typeof value === 'string') return map(value);
-  if (typeof value === 'number' || typeof value === 'bigint') {
-    const text = String(value);
-    const mapped = map(text);
-    return mapped === text ? value : mapped;
-  }
-  if (typeof value !== 'object' || value === null) return value;
+  if (typeof value !== 'number' && typeof value !== 'bigint') return value;
+  const text = String(value);
+  const mapped = map(text);
+  return mapped === text ? value : mapped;
+}
+
+function mapValue(value: unknown, map: TextMap, seen: WeakMap<object, unknown>, depth: number, keys: boolean): unknown {
+  if (typeof value !== 'object' || value === null) return mapPrimitive(value, map);
   if (value instanceof Date || ArrayBuffer.isView(value) || value instanceof ArrayBuffer) return value;
   if (depth > MAX_DEPTH) return TRUNCATED_TEXT;
   const known = seen.get(value);
@@ -53,6 +56,10 @@ function mapValue(value: unknown, map: TextMap, seen: WeakMap<object, unknown>, 
     for (const item of value) copy.push(mapValue(item, map, seen, depth + 1, keys));
     return copy;
   }
+  return mapFields(value, map, seen, depth, keys);
+}
+
+function mapFields(value: object, map: TextMap, seen: WeakMap<object, unknown>, depth: number, keys: boolean): unknown {
   const copy: Record<string, unknown> = {};
   seen.set(value, copy);
   for (const [key, field] of Object.entries(value)) {
@@ -72,6 +79,12 @@ function resourceText(resource: object): string | undefined {
   return 'text' in resource && typeof resource.text === 'string' ? resource.text : undefined;
 }
 
+// The text of a resource link: its uri, name, title and description, one per line
+function linkText(link: object): string {
+  const fields = ['uri', 'name', 'title', 'description'].map((field) => (link as Record<string, unknown>)[field]);
+  return fields.filter((field): field is string => typeof field === 'string').join('\n');
+}
+
 /** Rewrites the text of text parts and text resources; other parts, such as images, are kept as they are. */
 export function mapToolContent(parts: readonly ToolOutputPart[], map: TextMap): ToolOutputPart[] {
   return parts.map((part): ToolOutputPart => {
@@ -85,7 +98,10 @@ export function mapToolContent(parts: readonly ToolOutputPart[], map: TextMap): 
   });
 }
 
-/** Rewrites the text a message sends to the model: text parts, text resources, tool results and tool arguments. */
+/**
+ * Rewrites the text a message sends to the model: text parts, text resources, resource links, tool results and tool
+ * arguments.
+ */
 export function mapContent(parts: readonly Type.Entity.FullContentPart[], map: TextMap): Type.Entity.FullContentPart[] {
   return parts.map((part): Type.Entity.FullContentPart => {
     switch (part.type) {
@@ -101,6 +117,9 @@ export function mapContent(parts: readonly Type.Entity.FullContentPart[], map: T
         const args = part.params.arguments;
         return args ? { ...part, params: { ...part.params, arguments: mapRecord(args, map) } } : part;
       }
+      // A link's uri, name and description are stored with the message and sent to the model
+      case 'resource_link':
+        return mapStrings(part, map, { keys: false }) as Type.Entity.FullContentPart;
       default:
         return part;
     }
@@ -111,12 +130,13 @@ function mapRecord(record: Record<string, unknown>, map: TextMap): Record<string
   return mapStrings(record, map) as Record<string, unknown>;
 }
 
-/** The text of the parts that carry text, one part per line. */
+/** The text of the parts that carry text, one part per line; a resource link gives its uri, name, title and description. */
 export function textOfParts(parts: readonly (Type.Entity.FullContentPart | ToolOutputPart)[]): string {
   const texts: string[] = [];
   for (const part of parts) {
     if (part.type === 'text') texts.push(part.text);
     else if (part.type === 'resource') texts.push(resourceText(part.resource) ?? '');
+    else if (part.type === 'resource_link') texts.push(linkText(part));
     else if (part.type === 'tool_result') texts.push(textOfParts(part.content));
   }
   return texts.join('\n');

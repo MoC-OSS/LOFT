@@ -5,7 +5,8 @@ import type { PiiDetector } from './detectors';
  * How a finding is replaced:
  * - `redact`: by a placeholder with its type, such as `[REDACTED:EMAIL]`;
  * - `mask`: by the same text with its letters and digits starred, except the last quarter of them, at most 4, such
- *   as `**** **** **** 1111`. Nothing before an `@` is kept, so a masked e-mail address is not one any more.
+ *   as `**** **** **** 1111`. Nothing before an `@` is kept, not even symbols, so a masked e-mail address is not one
+ *   any more.
  */
 export type PiiStrategy = 'redact' | 'mask';
 
@@ -24,11 +25,15 @@ export function replacement(value: string, type: string, strategy: PiiStrategy):
   const total = value.match(/[\p{L}\p{N}]/gu)?.length ?? 0;
   let keep = Math.min(4, Math.floor(total / 4));
   let starred = '';
+  let beforeAt = false;
   for (let index = value.length - 1; index >= 0; index--) {
     const character = value[index];
-    if (character === '@') keep = 0;
-    if (/[\p{L}\p{N}]/u.test(character) && keep-- <= 0) starred = '*' + starred;
-    else starred = character + starred;
+    const star = beforeAt || (/[\p{L}\p{N}]/u.test(character) && keep-- <= 0);
+    starred = (star ? '*' : character) + starred;
+    if (character === '@') {
+      beforeAt = true;
+      keep = 0;
+    }
   }
   return starred;
 }

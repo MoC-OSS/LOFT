@@ -46,9 +46,12 @@ export function regexDetector(
   };
 }
 
-// Letters and digits of any script, so addresses such as josé@exämple.de are found
-const EMAIL = /[\p{L}\p{N}._%+-]{1,64}@(?:[\p{L}\p{N}-]{1,63}\.)+\p{L}{2,63}/uy;
-const EMAIL_LOCAL_CHARACTER = /^[\p{L}\p{N}._%+-]$/u;
+// The characters of a local part: letters and digits of any script, so addresses such as josé@exämple.de are found,
+// and the symbols RFC 5322 allows, so o'brien@example.com is found whole (\x60 is the backtick). Not `*`, which the
+// mask strategy writes, so a masked address is not found again
+const LOCAL_CHARACTER = String.raw`[\p{L}\p{N}.!#$%&'+/=?^_\x60{|}~-]`;
+const EMAIL = new RegExp(String.raw`${LOCAL_CHARACTER}{1,64}@(?:[\p{L}\p{N}-]{1,63}\.)+\p{L}{2,63}`, 'uy');
+const EMAIL_LOCAL_CHARACTER = new RegExp(`^${LOCAL_CHARACTER}$`, 'u');
 const MAX_LOCAL_PART = 64;
 
 // Where the local part before the @ at `at` starts: up to 64 characters back, not before `floor`
@@ -129,27 +132,38 @@ function digitGroups(run: string): DigitGroup[] {
 
 const doubled = (digit: number): number => (digit > 4 ? digit * 2 - 9 : digit * 2);
 
+// The digits read so far, with the Luhn sum when the digits at even positions from the left are doubled, and when those
+// at odd positions are
+interface LuhnSums {
+  length: number;
+  evenDoubled: number;
+  oddDoubled: number;
+}
+
+function addDigits(sums: LuhnSums, digits: string): void {
+  for (const character of digits) {
+    const digit = Number(character);
+    sums.evenDoubled += sums.length % 2 === 0 ? doubled(digit) : digit;
+    sums.oddDoubled += sums.length % 2 === 1 ? doubled(digit) : digit;
+    sums.length++;
+  }
+}
+
+// The last digit is never doubled, nor is any digit an even distance from it
+const luhnPasses = (sums: LuhnSums): boolean =>
+  ((sums.length - 1) % 2 === 0 ? sums.oddDoubled : sums.evenDoubled) % 10 === 0;
+
 // The last group of the longest card number that starts with the given group, or -1. The Luhn sums are kept for both
 // parities as digits are added, so each start costs at most 19 digits
 function cardEnd(groups: readonly DigitGroup[], first: number): number {
   if (!ISSUER.test(groups[first].digits)) return -1;
   let end = -1;
-  let length = 0;
-  // The Luhn sum when the digits at even positions from the left are doubled, and when those at odd positions are
-  let evenDoubled = 0;
-  let oddDoubled = 0;
+  const sums: LuhnSums = { length: 0, evenDoubled: 0, oddDoubled: 0 };
   for (let last = first; last < groups.length; last++) {
     const { digits } = groups[last];
-    if (length + digits.length > MAX_CARD_DIGITS) break;
-    for (const character of digits) {
-      const digit = character.charCodeAt(0) - 48;
-      evenDoubled += length % 2 === 0 ? doubled(digit) : digit;
-      oddDoubled += length % 2 === 1 ? doubled(digit) : digit;
-      length++;
-    }
-    // The last digit is never doubled, nor is any digit an even distance from it
-    const sum = (length - 1) % 2 === 0 ? oddDoubled : evenDoubled;
-    if (length >= MIN_CARD_DIGITS && sum % 10 === 0) end = last;
+    if (sums.length + digits.length > MAX_CARD_DIGITS) break;
+    addDigits(sums, digits);
+    if (sums.length >= MIN_CARD_DIGITS && luhnPasses(sums)) end = last;
   }
   return end;
 }
@@ -169,11 +183,12 @@ export function creditCardDetector(): PiiDetector {
         // Most runs, such as those in encoded data, are too short to hold a card number
         if (run[0].length < MIN_CARD_DIGITS) continue;
         const groups = digitGroups(run[0]);
-        for (let first = 0; first < groups.length; first++) {
+        let first = 0;
+        while (first < groups.length) {
           const last = cardEnd(groups, first);
-          if (last < 0) continue;
-          matches.push({ start: run.index + groups[first].start, end: run.index + groups[last].end });
-          first = last;
+          if (last >= 0) matches.push({ start: run.index + groups[first].start, end: run.index + groups[last].end });
+          // A card number's groups are not searched again
+          first = Math.max(first, last) + 1;
         }
       }
       return matches;

@@ -129,3 +129,31 @@ describe('mapStrings on keys and numbers (second review)', () => {
     expect(Object.getOwnPropertyDescriptor(mapped, '__proto__')?.value).toEqual({ polluted: '[mail]' });
   });
 });
+
+describe('resource links in messages (PR review)', () => {
+  const link = {
+    type: 'resource_link' as const,
+    uri: 'mailto:jane@example.com',
+    name: 'jane@example.com',
+    title: 'Jane',
+    description: 'Contact card'
+  };
+
+  it('mapContent rewrites the fields of a resource link, but not its keys', () => {
+    expect(mapContent([link], upper)).toEqual([
+      {
+        type: 'RESOURCE_LINK',
+        uri: 'MAILTO:JANE@EXAMPLE.COM',
+        name: 'JANE@EXAMPLE.COM',
+        title: 'JANE',
+        description: 'CONTACT CARD'
+      }
+    ]);
+  });
+
+  it('textOfParts gives the uri, name, title and description of a resource link', () => {
+    expect(textOfParts([{ type: 'text', text: 'see' }, link])).toBe(
+      'see\nmailto:jane@example.com\njane@example.com\nJane\nContact card'
+    );
+  });
+});

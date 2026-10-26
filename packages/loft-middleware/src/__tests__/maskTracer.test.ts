@@ -106,3 +106,33 @@ describe('maskTracerFactory edge cases (review findings)', () => {
     expect(recording.calls.at(-1)?.params).toEqual({ name: 'e', input: '[mask failed]' });
   });
 });
+
+describe('maskTracerFactory on values that throw (PR review)', () => {
+  it('turns a field into [mask failed] when a toJSON or a getter in it throws, and the call goes on', () => {
+    const recording = new RecordingTracerFactory();
+    const tracer = maskTracerFactory(recording, [hideSecret]).createTracer({ traceId: 't', name: 'c' });
+    const throwingJson = {
+      toJSON() {
+        throw new Error('boom');
+      }
+    };
+    const throwingGetter = {
+      get value(): string {
+        throw new Error('boom');
+      }
+    };
+
+    expect(() =>
+      tracer.span({ name: 's', input: throwingJson, metadata: throwingGetter, output: 'secret' })
+    ).not.toThrow();
+    expect(() => tracer.update({ input: throwingJson })).not.toThrow();
+
+    expect(recording.calls.at(-2)?.params).toEqual({
+      name: 's',
+      input: '[mask failed]',
+      metadata: '[mask failed]',
+      output: '[hidden]'
+    });
+    expect(recording.calls.at(-1)?.params).toEqual({ input: '[mask failed]' });
+  });
+});

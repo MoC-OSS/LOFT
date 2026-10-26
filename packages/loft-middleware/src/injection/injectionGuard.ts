@@ -253,7 +253,7 @@ export function injectionGuard(options: InjectionGuardOptions = {}): LoftMiddlew
       }
     }),
     ...(checksUser && {
-      beforeGenerate: async (context, payload, chain) => {
+      beforeGenerate: (context, payload, chain) => {
         // The newest user message: in this request, or else the last message of the history when it waits for a reply
         const direct = payload.directMessages.filter((message) => message.role === Type.LLM.UnifiedMessageRole.user);
         const history = context.chatHistory.messages;
@@ -262,14 +262,14 @@ export function injectionGuard(options: InjectionGuardOptions = {}): LoftMiddlew
         const flag = newest && injectionFlagOf(newest);
         if (!flag) {
           chain.next();
-          return payload;
+          return Promise.resolve(payload);
         }
-        if (options.onUserFlag === 'throw') throw new InjectionDetectedError(flag.categories);
+        if (options.onUserFlag === 'throw') return Promise.reject(new InjectionDetectedError(flag.categories));
         chain.preventGeneration({
           content: [{ type: 'text', text: options.blockMessage ?? DEFAULT_BLOCK_MESSAGE }],
           role: Type.LLM.UnifiedMessageRole.assistant
         });
-        return payload;
+        return Promise.resolve(payload);
       }
     }),
     ...((options.toolResults ?? true) && {

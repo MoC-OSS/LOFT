@@ -7,7 +7,7 @@ import { Interface, Repository, Strategy, Type } from '@moc-global/loft-definiti
 export class MemorySessions implements Repository.Session {
   private readonly sessions = new Map<string, Type.Entity.Session>();
 
-  async create(newSession: Type.Entity.CreateSession): Promise<Type.Entity.Session> {
+  create(newSession: Type.Entity.CreateSession): Promise<Type.Entity.Session> {
     const now = new Date();
     const session = {
       ...newSession,
@@ -18,34 +18,37 @@ export class MemorySessions implements Repository.Session {
       updatedAt: now
     } as Type.Entity.Session;
     this.sessions.set(session.id, session);
-    return session;
+    return Promise.resolve(session);
   }
-  async getById(id: string) {
+  getById(id: string): Promise<Type.Entity.Session> {
     const session = this.sessions.get(id);
-    if (!session) throw new Error(`Session with id ${id} not found`);
-    return session;
+    return session ? Promise.resolve(session) : Promise.reject(new Error(`Session with id ${id} not found`));
   }
-  async getByExternalKey(): Promise<Type.Entity.Session> {
-    throw new Error('not used');
+  getByExternalKey(): Promise<Type.Entity.Session> {
+    return Promise.reject(new Error('not used'));
   }
   async updateById(id: string, update: Partial<Type.Entity.Session>) {
     const session = { ...(await this.getById(id)), ...update };
     this.sessions.set(id, session);
     return session;
   }
-  async deleteById(id: string) {
+  deleteById(id: string): Promise<void> {
     this.sessions.delete(id);
+    return Promise.resolve();
   }
-  async checkHealth() {
-    return true;
+  checkHealth(): Promise<boolean> {
+    return Promise.resolve(true);
   }
-  async end() {}
+  // Nothing to close
+  end(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 export class MemoryChatHistory implements Repository.ChatHistory {
   readonly messages: Type.Entity.Message[] = [];
 
-  async addMessages(_sessionId: string, messages: Type.Entity.CreateMessage[]) {
+  addMessages(_sessionId: string, messages: Type.Entity.CreateMessage[]): Promise<Type.Entity.Message[]> {
     const stored = messages.map(
       (message) =>
         ({
@@ -57,15 +60,18 @@ export class MemoryChatHistory implements Repository.ChatHistory {
         }) as Type.Entity.Message
     );
     this.messages.push(...stored);
-    return stored;
+    return Promise.resolve(stored);
   }
-  async getMessages(sessionId: string) {
-    return this.messages.filter((message) => message.sessionId === sessionId);
+  getMessages(sessionId: string): Promise<Type.Entity.Message[]> {
+    return Promise.resolve(this.messages.filter((message) => message.sessionId === sessionId));
   }
-  async checkHealth() {
-    return true;
+  checkHealth(): Promise<boolean> {
+    return Promise.resolve(true);
   }
-  async end() {}
+  // Nothing to close
+  end(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 export function constructorOf<T>(instance: T): Interface.BaseComponentConstructor<T> {
@@ -74,10 +80,10 @@ export function constructorOf<T>(instance: T): Interface.BaseComponentConstructo
 
 export function manifestStorage(manifests: unknown) {
   return constructorOf({
-    get: async () => manifests,
-    upload: async () => undefined,
-    remove: async () => undefined,
-    checkHealth: async () => true
+    get: () => Promise.resolve(manifests),
+    upload: () => Promise.resolve(),
+    remove: () => Promise.resolve(),
+    checkHealth: () => Promise.resolve(true)
   } as unknown as Repository.ObjectStorage);
 }
 
@@ -90,7 +96,10 @@ export class CollectingTracerFactory implements Strategy.Tracer.TracerFactory {
     return this.tracer();
   }
 
-  async shutdownAsync(): Promise<void> {}
+  // Nothing is buffered, so there is nothing to send
+  shutdownAsync(): Promise<void> {
+    return Promise.resolve();
+  }
 
   private keep(params: unknown): void {
     if (params !== undefined) this.sent.push(JSON.stringify(params));
@@ -109,7 +118,7 @@ export class CollectingTracerFactory implements Strategy.Tracer.TracerFactory {
       event: (params) => this.keep(params),
       score: (params) => this.keep(params),
       update: (params) => this.keep(params),
-      flushAsync: async () => undefined,
+      flushAsync: () => Promise.resolve(),
       withParent: () => this.tracer()
     };
   }

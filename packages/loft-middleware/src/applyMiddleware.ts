@@ -24,7 +24,7 @@ const NO_OP_TRACER = 'NoOpTracer';
 // the mask, which happens when the tracer factory was not wrapped with maskTracerFactory
 function checkingTraceMask(item: LoftMiddleware): StandardMiddleware<ContextInterface, GenerateRequestParameters> {
   let checked = false;
-  return async (context, payload, chain) => {
+  return (context, payload, chain) => {
     if (!checked) {
       checked = true;
       const { tracer } = context;
@@ -38,7 +38,7 @@ function checkingTraceMask(item: LoftMiddleware): StandardMiddleware<ContextInte
     }
     if (item.input) return item.input(context, payload, chain);
     chain.next();
-    return payload;
+    return Promise.resolve(payload);
   };
 }
 

@@ -80,13 +80,13 @@ export function piiRedaction(options: PiiRedactionOptions = {}): LoftMiddleware 
     name: options.name ?? 'pii-redaction',
     ...((options.traces ?? true) && { maskTrace: createRedactor(detectors, strategy) }),
     ...(options.input && {
-      input: async (_context, payload, chain) => {
+      input: (_context, payload, chain) => {
         redactIn('input', (redact) => {
           payload.directMessages = redactMessages(payload.directMessages, redact);
           payload.augmentedContext = redactMessages(payload.augmentedContext, redact);
         });
         chain.next();
-        return payload;
+        return Promise.resolve(payload);
       }
     }),
     ...(options.toolResults && {
@@ -94,7 +94,7 @@ export function piiRedaction(options: PiiRedactionOptions = {}): LoftMiddleware 
         redactIn('toolResult', (redact) => ({ ...output, content: mapToolContent(output.content, redact) }))
     }),
     ...(options.output && {
-      afterGenerate: async (_context, payload, chain) => {
+      afterGenerate: (_context, payload, chain) => {
         const { llmResponse } = payload;
         redactIn('output', (redact) => {
           // The payload is LOFT's copy: the messages are changed in place, so they keep their methods
@@ -102,7 +102,7 @@ export function piiRedaction(options: PiiRedactionOptions = {}): LoftMiddleware 
           for (const message of messages) message.content = mapContent(message.content, redact);
         });
         chain.next();
-        return payload;
+        return Promise.resolve(payload);
       }
     })
   };

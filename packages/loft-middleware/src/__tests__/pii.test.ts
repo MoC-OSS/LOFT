@@ -323,3 +323,52 @@ describe('detectors and options (second review)', () => {
     expect(JSON.stringify(vi.mocked(logger.warn).mock.calls)).toContain('onDetect');
   });
 });
+
+describe('e-mail addresses and resource links (PR review)', () => {
+  it('finds an address whose local part has symbols RFC 5322 allows, whole', () => {
+    expect(found(emailDetector(), "write to o'brien@example.com or first&last@corp.com")).toEqual([
+      "o'brien@example.com",
+      'first&last@corp.com'
+    ]);
+    expect(found(emailDetector(), 'a!#$%/=?^_`{|}~-z@example.com')).toEqual(['a!#$%/=?^_`{|}~-z@example.com']);
+    // Characters RFC 5322 does not allow unquoted end the local part
+    expect(found(emailDetector(), '<jane@example.com>, (bob@example.com) "eve"@example.com')).toEqual([
+      'jane@example.com',
+      'bob@example.com'
+    ]);
+  });
+
+  it('masks such an address so it is not found again', () => {
+    const redact = createRedactor([emailDetector()], 'mask');
+    const masked = redact("o'brien@example.com");
+    expect(masked).not.toContain('brien');
+    expect(redact(masked)).toBe(masked);
+    expect(emailDetector().detect(masked)).toEqual([]);
+    // A symbol before the @ is starred too, even when the domain is kept, so the masked text holds no address
+    expect(redact('abcdefghi-@x.yz')).toBe('**********@x.yz');
+    expect(redact('**********@x.yz')).toBe('**********@x.yz');
+  });
+
+  it('with input on, redacts the uri and name of a resource link in a message', async () => {
+    const guard = piiRedaction({ input: true });
+    const payload = {
+      directMessages: [
+        {
+          role: Type.LLM.UnifiedMessageRole.user,
+          author: 'u',
+          content: [{ type: 'resource_link' as const, uri: 'mailto:jane@example.com', name: 'jane@example.com' }]
+        }
+      ],
+      augmentedContext: []
+    };
+
+    const result = await guard.input!({} as never, payload as never, { next: () => undefined } as never);
+
+    expect(JSON.stringify(result.directMessages)).not.toContain('jane@example.com');
+    expect(result.directMessages[0].content[0]).toEqual({
+      type: 'resource_link',
+      uri: 'mailto:[REDACTED:EMAIL]',
+      name: '[REDACTED:EMAIL]'
+    });
+  });
+});

@@ -62,6 +62,7 @@ Install every part:
 ## PII redaction
 
 `piiRedaction()` finds e-mail addresses, payment card numbers and IBANs:
+- e-mail addresses, with letters of any script and the symbols RFC 5322 allows before the `@`, such as `o'brien@example.com`, except `*`, which `strategy: 'mask'` writes. A symbol written right before an address, as in `user=jane@example.com`, is redacted with it;
 - payment card numbers: 13 to 19 digits that start with 2 to 6, as the major networks do, checked with Luhn. A card number is found next to other numbers too, such as a security code or an expiry date. About one in ten other numbers of a card's length passes these checks, so long numeric ids can be redacted;
 - IBANs: in capitals or not, grouped by spaces or hyphens, checked by country length and mod-97.
 
