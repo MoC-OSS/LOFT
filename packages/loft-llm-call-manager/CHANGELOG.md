@@ -1,5 +1,16 @@
 # @moc-global/loft-llm-call-manager
 
+## 3.0.0
+
+### Major Changes
+
+- bc747ee: The `@moc-global/loft-definitions` peer dependency moves to its next major version, which needs zod 4 (`^4.6.6`) instead of zod 3. Upgrade `@moc-global/loft-definitions` and install zod 4 together with this release; this package's own API is unchanged.
+
+### Patch Changes
+
+- Updated dependencies [bc747ee]
+  - @moc-global/loft-definitions@2.0.0
+
 ## 2.1.0
 
 ### Minor Changes
