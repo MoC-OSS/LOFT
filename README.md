@@ -19,15 +19,16 @@ LOFT (LLM-Orchestrator Framework for TypeScript) runs the LLM side of a chat bac
 - **LLM providers:** OpenAI, Azure OpenAI (API key or Microsoft Entra ID), Anthropic, and Google Gemini through Vertex AI or Google AI Studio.
 - **Sessions and chat history** in PostgreSQL, with migration CLIs, or in your own store through the repository interfaces.
 - **Middleware** at three stages: on incoming messages, before the LLM call (it can change or stop the call) and after it.
+- **Streaming** (experimental): pass `onEvent` to `generate()` to receive the reply text, tool calls and tool progress while the model writes, from OpenAI, Azure OpenAI, Anthropic and Gemini. By default, text is held back until the output middleware has run whenever such middleware is registered.
 - **MCP tools:** connect Model Context Protocol servers, and wrap any tool call in an interceptor to add context, check access or change the result.
 - **AI tasks:** one-off LLM calls for classification, extraction or summaries, outside any chat.
-- **Rate limits and retries** per model, with token counting.
+- **Rate limits and retries** per model, with token reservation and configurable concurrency.
 - **Context window cropping** to keep long histories within the model's limit.
 - **Tracing** with Langfuse or your own tracer.
 - **Multi-agent workflows** (`@moc-global/loft-agents`): agent graphs, parallel fan-out, teams, and Focus for collecting structured data over several turns.
 - **Graceful shutdown** that waits for running requests.
 
-Not available yet: streaming and queued generation. Their types are exported and marked `@experimental`, but the public API has no way to run them. `HttpCallManagerStrategy` and the SQS queue strategy depend on them and are not usable on their own.
+Not available yet: queued generation. The public API has no way to run it, and its symbols are marked `@experimental`. The SQS queue strategy depends on it, and `HttpCallManagerStrategy` needs a call manager service that is not part of this repository, so neither is usable on its own.
 
 ## Install
 
@@ -180,6 +181,7 @@ Each example is a small application in [`examples/`](./examples/) that you can r
 | [express-full](./examples/express-full/) | Middleware, dynamic prompts, session CRUD | Anthropic | PostgreSQL in Docker |
 | [express-focus-basic](./examples/express-focus-basic/) | Focus: collect an order over several turns | Anthropic | PostgreSQL in Docker |
 | [express-agents](./examples/express-agents/) | Agent graphs, fan-out and teams | Anthropic | PostgreSQL in Docker |
+| [express-streaming](./examples/express-streaming/) | A reply streamed over SSE, with tool progress events | OpenAI | PGlite |
 
 The [examples guide](./examples/README.md) has the setup steps.
 
@@ -207,7 +209,7 @@ The [packages reference](./docs/reference/packages.md) lists the key exports and
 
 - [Introduction](./docs/getting-started/introduction.md) and [core concepts](./docs/getting-started/core-concepts.md)
 - [Architecture](./docs/concepts/architecture.md) and the [processing pipeline](./docs/concepts/processing-pipeline.md)
-- Guides: [LLM strategies](./docs/guides/llm-strategies.md), [middleware](./docs/guides/middleware.md), [manifests](./docs/guides/manifests.md), [chat persistence](./docs/guides/chat-persistence.md), [MCP](./docs/guides/mcp-integration.md), [agents](./docs/guides/agents.md), [tracing](./docs/guides/tracing.md), [error handling](./docs/guides/error-handling.md)
+- Guides: [LLM strategies](./docs/guides/llm-strategies.md), [middleware](./docs/guides/middleware.md), [manifests](./docs/guides/manifests.md), [chat persistence](./docs/guides/chat-persistence.md), [MCP](./docs/guides/mcp-integration.md), [additional tools](./docs/guides/tools.md), [streaming](./docs/guides/streaming.md), [agents](./docs/guides/agents.md), [tracing](./docs/guides/tracing.md), [error handling](./docs/guides/error-handling.md)
 - Reference: [configuration](./docs/reference/configuration.md), [environment variables](./docs/reference/environment-variables.md), [DI symbols](./docs/reference/di-symbols.md)
 
 The [documentation index](./docs/README.md) lists every page.

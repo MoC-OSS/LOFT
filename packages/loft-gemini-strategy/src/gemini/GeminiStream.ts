@@ -4,6 +4,10 @@ import { GeminiStreamChunk } from '../VertexAiTypes';
 
 const log = new Logger('GeminiStrategy');
 
+/**
+ * @deprecated Use chat.generate({ onEvent }) instead.
+ * Removed in the next major release.
+ */
 export class GeminiStream extends Strategy.LLM.UnifiedLLMStream {
   constructor() {
     super();

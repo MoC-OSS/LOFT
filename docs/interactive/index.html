@@ -2501,7 +2501,7 @@ new OrchestratorBuilder()
             </div>
           </div>
         </div>
-        <p class="inside__note"><code>DI_TYPES</code> has 33 symbols and 21 are drawn. Four more are internal bindings: <code>ManifestManagerConfig</code>, <code>ChatHistoryManager</code>, <code>GenerateResultMessagesProvider</code> and <code>LoftHealthCheck</code>. The other eight are declared but not used by the framework's own source: the three experimental ones (<code>StreamLoft</code>, <code>QueuedLoft</code>, <code>OutgoingQueue</code>) plus <code>BaseLoft</code>, <code>PromptManager</code>, <code>ManifestRepositoryConfig</code>, <code>ResultCallBack</code> and <code>ErrorHandler</code>.</p>
+        <p class="inside__note"><code>DI_TYPES</code> has 33 symbols and 21 are drawn. Four more are internal bindings: <code>ManifestManagerConfig</code>, <code>ChatHistoryManager</code>, <code>GenerateResultMessagesProvider</code> and <code>LoftHealthCheck</code>. The other eight are declared but not used by the framework's own source: the three experimental ones (<code>StreamLoft</code>, reserved because streaming needs no binding, <code>QueuedLoft</code> and <code>OutgoingQueue</code>) plus <code>BaseLoft</code>, <code>PromptManager</code>, <code>ManifestRepositoryConfig</code>, <code>ResultCallBack</code> and <code>ErrorHandler</code>.</p>
       </div>
 
       <div class="inside-panel card" id="inside-panel" role="region" aria-label="Symbol details">
@@ -2527,14 +2527,14 @@ new OrchestratorBuilder()
         <div class="inside-status__cols">
           <div class="inside-status__col">
             <span class="tag tag--ok">Available now</span>
-            <p>Synchronous generation: <code>loft.chat.generate()</code> returns the complete response.</p>
+            <p>Generation: <code>loft.chat.generate()</code> returns the complete response. With <code>onEvent</code> (experimental) it also streams the reply text, tool calls and tool progress while the model writes, from OpenAI, Azure OpenAI, Anthropic and Gemini.</p>
           </div>
           <div class="inside-status__col">
             <span class="tag tag--warn">Not available yet</span>
-            <p>Streaming and queued generation. Their symbols are marked <code>@experimental</code>.</p>
+            <p>Queued generation. Its symbols are marked <code>@experimental</code>.</p>
           </div>
         </div>
-        <p class="inside-status__foot"><code>HttpCallManagerStrategy</code> and the SQS queue package depend on those modes and are not usable on their own. <a href="https://github.com/MoC-OSS/LOFT/blob/main/docs/guides/streaming.md" target="_blank" rel="noopener">Read the streaming status</a>.</p>
+        <p class="inside-status__foot">The SQS queue package depends on the queued mode, and <code>HttpCallManagerStrategy</code> needs a call manager service that is not part of the repository, so neither is usable on its own. <a href="https://github.com/MoC-OSS/LOFT/blob/main/docs/guides/streaming.md" target="_blank" rel="noopener">Read the streaming guide</a>.</p>
       </div>
 
       <div class="inside-ext card reveal" id="inside-ext">

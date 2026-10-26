@@ -1,4 +1,4 @@
-import { Interface } from '@moc-global/loft-definitions';
+import { Chat, Interface } from '@moc-global/loft-definitions';
 
 interface RetryConfig {
   maxRetries: number;
@@ -21,6 +21,12 @@ export interface ChatConfig {
     toolCacheTtl?: number;
     maxCallsPerGenerate?: number;
   };
+  /**
+   * @experimental
+   * The streaming defaults of every `generate()` call that passes `onEvent`. A call's `streamOptions` are merged over
+   * them, key by key.
+   */
+  streaming?: Chat.StreamOptions;
 }
 
 export interface ChatConfigWithSMG extends ChatConfig {

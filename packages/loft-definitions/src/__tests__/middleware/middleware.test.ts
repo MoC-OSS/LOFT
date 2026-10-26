@@ -288,3 +288,54 @@ describe('MiddlewareManager', () => {
     expect(overrideGenerateResponse).not.toBeNull();
   });
 });
+
+describe('MiddlewareManager output transformation flags', () => {
+  type Payload = Record<string, unknown>;
+  const createManager = () =>
+    new MiddlewareManager<Payload, Payload, ChainResult<Payload>, StandardChainStrategy<Payload, Payload>>(
+      (ctx) => new StandardChain(ctx),
+      'standard'
+    );
+  const passThrough: Middleware<Payload, Payload> = async (_ctx, payload, chain) => {
+    chain.next();
+    return payload;
+  };
+
+  test('transformingCount counts default and explicit true only', () => {
+    const manager = createManager();
+    expect(manager.transformingCount).toBe(0);
+
+    manager.use('default', passThrough);
+    manager.use('explicit', passThrough, { transformsOutput: true });
+    manager.use('observer', passThrough, { transformsOutput: false });
+    manager.use('empty-options', passThrough, {});
+
+    expect(manager.transformingCount).toBe(3);
+    expect(manager.transformingNames).toEqual(['default', 'explicit', 'empty-options']);
+  });
+
+  test('an observing middleware still runs in the chain', async () => {
+    const manager = createManager();
+    manager.use(
+      'observer',
+      async (_ctx, payload, chain) => {
+        chain.next();
+        return { ...payload, observed: true };
+      },
+      { transformsOutput: false }
+    );
+
+    const { payload } = await manager.executeChain({}, {}, ['correlatorId']);
+
+    expect(payload).toEqual({ observed: true });
+    expect(manager.transformingCount).toBe(0);
+  });
+
+  test('a duplicate name leaves the counts unchanged', () => {
+    const manager = createManager();
+    manager.use('first', passThrough);
+
+    expect(() => manager.use('first', passThrough, { transformsOutput: false })).toThrow();
+    expect(manager.transformingNames).toEqual(['first']);
+  });
+});

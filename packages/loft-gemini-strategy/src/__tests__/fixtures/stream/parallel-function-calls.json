@@ -1,0 +1,110 @@
+{
+  "chunks": [
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "functionCall": {
+                  "name": "get_weather",
+                  "args": {
+                    "city": "Kyiv"
+                  }
+                },
+                "thoughtSignature": "c2lnLXBhcmFsbGVs"
+              }
+            ]
+          }
+        }
+      ],
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-par"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "functionCall": {
+                  "name": "get_weather",
+                  "args": {
+                    "city": "Lviv"
+                  }
+                }
+              },
+              {
+                "functionCall": {
+                  "name": "get_time",
+                  "args": {
+                    "timezone": "Europe/Kyiv"
+                  }
+                }
+              }
+            ]
+          },
+          "finishReason": "STOP"
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 52,
+        "candidatesTokenCount": 30,
+        "thoughtsTokenCount": 80,
+        "totalTokenCount": 162
+      },
+      "modelVersion": "gemini-3-flash-preview",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-par"
+    }
+  ],
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "functionCall": {
+                "name": "get_weather",
+                "args": {
+                  "city": "Kyiv"
+                }
+              },
+              "thoughtSignature": "c2lnLXBhcmFsbGVs"
+            },
+            {
+              "functionCall": {
+                "name": "get_weather",
+                "args": {
+                  "city": "Lviv"
+                }
+              }
+            },
+            {
+              "functionCall": {
+                "name": "get_time",
+                "args": {
+                  "timezone": "Europe/Kyiv"
+                }
+              }
+            }
+          ]
+        },
+        "finishReason": "STOP"
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 52,
+      "candidatesTokenCount": 30,
+      "thoughtsTokenCount": 80,
+      "totalTokenCount": 162
+    },
+    "modelVersion": "gemini-3-flash-preview",
+    "createTime": "2026-10-22T10:00:00.000000Z",
+    "responseId": "resp-par"
+  }
+}

@@ -21,5 +21,16 @@ export interface UnifiedUsage {
 
   // Metadata
   model?: string; // Model name/version
-  finishReason?: string; // Stop reason
+  /** Stop reason: the provider's own value, or a `LoftFinishReason` when LOFT made the response itself. */
+  finishReason?: string;
+}
+
+/** The finish reasons LOFT sets on a response that no provider call produced. */
+export enum LoftFinishReason {
+  /** A tool interceptor replaced the reply. */
+  INTERCEPTOR_OVERRIDE = 'interceptor_override',
+  /** BeforeGenerate middleware prevented the generation and supplied the reply. */
+  MIDDLEWARE_OVERRIDE = 'middleware_override',
+  /** The tool loop reached its limit before the model gave a final answer. */
+  MAX_LOOPS_EXCEEDED = 'max_loops_exceeded'
 }

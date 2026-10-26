@@ -4,6 +4,10 @@ import { OpenAiResponseChunk } from './OpenAiTypes';
 
 const log = new Logger('OpenAIStrategy');
 
+/**
+ * @deprecated Use chat.generate({ onEvent }) instead.
+ * Removed in the next major release.
+ */
 export class OpenAiStream extends Strategy.LLM.UnifiedLLMStream {
   constructor() {
     super();

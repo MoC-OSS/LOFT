@@ -1,0 +1,42 @@
+{
+  "name": "@moc-global/example-express-streaming",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Express + LOFT + OpenAI chat streamed over Server-Sent Events, with tool calls (PGLite, zero Docker)",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsup src/index.ts --format cjs,esm --dts --outDir dist",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ./src --fix",
+    "test": "node --test --test-timeout=20000 --import tsx src/*.test.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.9",
+    "@electric-sql/pglite-socket": "0.2.12",
+    "@moc-global/loft": "workspace:*",
+    "@moc-global/loft-chat-history-pg-repository": "workspace:*",
+    "@moc-global/loft-definitions": "workspace:*",
+    "@moc-global/loft-llm-call-manager": "workspace:*",
+    "@moc-global/loft-openai-strategy": "workspace:*",
+    "@moc-global/loft-session-pg-repository": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dotenv": "^16.4.5",
+    "express": "^5.3.0",
+    "inversify": "^6.2.2",
+    "openai": "^7.34.0",
+    "pg": "^8.11.4",
+    "reflect-metadata": "^0.2.2",
+    "zod": "3.25.67"
+  },
+  "devDependencies": {
+    "@moc-global/loft-test-suite": "workspace:*",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.14.2",
+    "@types/pg": "^8.23.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3"
+  }
+}

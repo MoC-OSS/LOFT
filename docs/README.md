@@ -35,7 +35,8 @@ Task-oriented how-to guides for specific goals.
 - [Chat Persistence](./guides/chat-persistence.md) — Set up PostgreSQL session and chat history storage
 - [Database Migrations](./guides/database-migrations.md) — Run schema migrations via CLI
 - [MCP Integration](./guides/mcp-integration.md) — Connect MCP servers and tool interceptors
-- [Streaming](./guides/streaming.md) — Status: not available through the public API yet
+- [Additional Tools](./guides/tools.md) — Give one `generate()` call its own tools, with the abort signal
+- [Streaming](./guides/streaming.md) — Stream the reply, tool calls and tool progress with `onEvent` (experimental)
 - [Tracing](./guides/tracing.md) — Integrate Langfuse or custom tracers
 - [Error Handling](./guides/error-handling.md) — Error types, retry behavior, graceful shutdown
 - [Context Window Management](./guides/context-window.md) — Control message history size
@@ -71,6 +72,7 @@ Runnable reference applications — copy, configure, and run:
 | [express-full](../examples/express-full/)               | Middleware, Anthropic, Docker PG                  | Docker + API key |
 | [express-focus-basic](../examples/express-focus-basic/) | Focus: collect a pizza order over several turns   | Docker + API key |
 | [express-agents](../examples/express-agents/)           | Multi-agent orchestration (Focus, FAN_OUT, Teams) | Docker + API key |
+| [express-streaming](../examples/express-streaming/)     | Streamed replies over SSE, with tool progress     | API key only     |
 | [nestjs](../examples/nestjs/)                           | NestJS module integration                         | API key only     |
 | [serverless](../examples/serverless/)                   | AWS Lambda handler                                | API key only     |
 
@@ -94,4 +96,5 @@ See [Packages Reference](./reference/packages.md) for the full list including st
 
 ## Architecture Decision Records
 
+- [LOFT core ADRs](./adr/loft/README.md) — Chat streaming
 - [loft-agents ADRs](./adr/loft-agents/README.md) — Orchestration, Focus, Teams, SharedContext, production hardening

@@ -27,6 +27,11 @@ import { HealthCheckComponent, LoftHealthCheckInterface } from '../../LoftHealth
 import { GenerateResultMessagesProviderInterface } from '../../providers/GenerateResultMessagesProvider';
 import { ChatConfig } from '../../types';
 import { AbstractLoftChat } from './AbstractLoftChat';
+import { ChatEventEmitter } from './streaming/ChatEventEmitter';
+import { resolveStreamOptions } from './streaming/resolveStreamOptions';
+
+// The name a strategy's output middleware is reported under when the strategy cannot tell whether it has any
+const UNKNOWN_STRATEGY_MIDDLEWARE = '<strategy:unknown>';
 
 @injectable()
 export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface {
@@ -128,6 +133,10 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
    * 2. Are available to middleware managers for processing
    * 3. Are NOT persisted to storage with the session
    * 4. Affect only the current generate call
+   *
+   * With `options.onEvent` (experimental), the call also reports its progress as events: start, the steps with their
+   * text and tool calls, and one final finish, error or abort. A failure up to and including the BeforeGenerate
+   * middleware, or an unknown LLM name, emits nothing. The result and what `save()` stores are the same as without it.
    */
   async generate({
     sessionId,
@@ -140,7 +149,9 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
     llmContextWindow = 0,
     additionalTools,
     focusAgent,
-    signal
+    signal,
+    onEvent,
+    streamOptions
   }: Chat.GenerateOptions): Promise<Chat.GenerateResult> {
     const operationId = `generate-${sessionId}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
@@ -292,8 +303,12 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
         );
       }
 
+      // The caller's events; without onEvent there are none, and streamOptions are ignored. A failure up to and
+      // including the BeforeGenerate middleware emits nothing.
+      const events = onEvent ? new ChatEventEmitter(onEvent, this.log, { streamOptions }) : undefined;
+
       try {
-        const outputMessages = await this.callAndHandle(ctx, additionalTools, signal);
+        const outputMessages = await this.callAndHandle(ctx, additionalTools, signal, events);
 
         // Update tracer with comprehensive metadata and output
         ctx.tracer.update({
@@ -354,10 +369,7 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
           }
         }
 
-        // Always flush tracer before returning response
-        await ctx.tracer.flushAsync();
-
-        return {
+        const result: Chat.GenerateResult = {
           ctx: ctx,
           sessionId,
           correlatorIds: ctx.request.correlatorIds,
@@ -366,7 +378,25 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
           messages: outputMessages,
           focusStatus
         };
+        // The reply is final here, so the finish event does not wait for the tracer flush below; a failed flush no
+        // longer fails the call
+        events?.finish({
+          finishReason: outputMessages.llmResponse?.usage?.finishReason ?? 'unknown',
+          text: replyText(outputMessages.llmResponse)
+        });
+
+        // Always flush tracer before returning response. A failed flush does not fail a reply that was generated: it
+        // is logged, without the error's text, which may quote the trace
+        try {
+          await ctx.tracer.flushAsync();
+        } catch (flushError) {
+          this.log.warn('Failed to flush tracer after generate', errorSummary(flushError));
+        }
+        return result;
       } catch (error) {
+        // Ends the caller's events with abort or error; the error itself is rethrown below as before
+        if (events?.started) events.fail(error, signal);
+
         generateSpan.end({
           level: 'ERROR',
           statusMessage: error instanceof Error ? error.message : String(error)
@@ -399,7 +429,8 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
   protected async callAndHandle(
     ctx: ContextInterface,
     additionalTools?: Chat.AdditionalTool[],
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    events?: ChatEventEmitter
   ): Promise<Chat.GenerateResultMessages> {
     const operationId = `callAndHandle-${ctx.session.id}-${randomUUID()}-${Date.now()}`;
     return this.withOperation(operationId, async () => {
@@ -424,14 +455,17 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
 
         ctx = await this.contextProvider.update(ctx, generateRequestParameters);
 
+        // Get request-specific LLM config if available
+        const temporaryRequestConfig = ctx.request.messages.temporaryRequestConfig || {};
+
+        // Use request-specific values if provided, otherwise fallback to session values
+        const effectiveLlmName = temporaryRequestConfig.llmName || ctx.session.currentLlmName;
+
+        if (events) this.startEvents(sessionId, events, isGenerationPrevented, effectiveLlmName);
+
         let llmResponse: Strategy.LLM.UnifiedLLMResponse;
 
         if (!isGenerationPrevented) {
-          // Get request-specific LLM config if available
-          const temporaryRequestConfig = ctx.request.messages.temporaryRequestConfig || {};
-
-          // Use request-specific values if provided, otherwise fallback to session values
-          const effectiveLlmName = temporaryRequestConfig.llmName || ctx.session.currentLlmName;
           const effectiveManifestName = temporaryRequestConfig.manifestName || ctx.session.currentManifestName;
 
           // Create LLM operation span to nest generations under
@@ -490,7 +524,7 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
               [...activeHistory, ...ctx.request.messages.augmentedContext, ...ctx.request.messages.directMessages],
               additionalTools,
               undefined,
-              { signal }
+              events ? { signal, events } : { signal }
             );
 
             // End span with success
@@ -544,6 +578,34 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
         );
       }
     });
+  }
+
+  /**
+   * Chooses this call's streaming options (the caller's, merged over the chat config's) and emits start. An unknown
+   * LLM name throws here, before start, so it emits nothing. Text is held back by default when middleware may still
+   * change it: a transforming AfterGenerate middleware, or, when the LLM runs, the strategy's own output middleware.
+   * A strategy that cannot tell whether it has any counts as having some.
+   */
+  private startEvents(
+    sessionId: string,
+    events: ChatEventEmitter,
+    isGenerationPrevented: boolean,
+    llmName: string
+  ): void {
+    const outputMiddleware = this.afterGenerateMiddlewareManager.transformingNames;
+    if (!isGenerationPrevented) {
+      const llm = this.llmManager.get(llmName);
+      if (!llm.hasOutputMiddleware) outputMiddleware.push(UNKNOWN_STRATEGY_MIDDLEWARE);
+      else if (llm.hasOutputMiddleware()) outputMiddleware.push(`<strategy:${llmName}>`);
+    }
+
+    events.configure(
+      resolveStreamOptions(this.chatConfig?.streaming, events.streamOptions, outputMiddleware),
+      outputMiddleware
+    );
+    events.start(sessionId);
+    // The reply comes from the middleware, so its text is sent once, after the AfterGenerate middleware
+    if (isGenerationPrevented) events.markSynthetic();
   }
 
   public async checkHealth(): Promise<boolean> {
@@ -666,4 +728,16 @@ export class BaseLoftChat extends AbstractLoftChat implements Chat.ChatInterface
 
     return computeFocusStatus({ ...focusContext.config, fields: effectiveFields }, stored);
   }
+}
+
+// The text parts of the reply, joined
+function replyText(response: Strategy.LLM.UnifiedLLMResponse | undefined): string {
+  return (response?.topChoice?.content ?? []).map((part) => (part.type === 'text' ? part.text : '')).join('');
+}
+
+// What the log may say about an error: its name and code, not its message
+function errorSummary(error: unknown): Record<string, unknown> {
+  if (!(error instanceof Error)) return { name: typeof error };
+  const { code } = error as { code?: unknown };
+  return { name: error.name, ...(typeof code === 'string' && { code }) };
 }

@@ -202,6 +202,8 @@ interface GenerateResult {
 }
 ```
 
+With `onEvent`, the same call also reports its progress as events while it runs: `start` after the BeforeGenerate middleware, a step for each LLM call with its text and tool calls, and a final `finish` after the AfterGenerate middleware, or `error` or `abort`. The result is the same. See [Streaming](../guides/streaming.md).
+
 ## Middleware Execution Details
 
 ### Chain Behavior

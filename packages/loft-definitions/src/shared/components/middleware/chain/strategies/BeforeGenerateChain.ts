@@ -60,7 +60,7 @@ export class BeforeGenerateChain<TContext, TPayload>
           outputTokens: 0,
           totalTokens: 0,
           model: 'override',
-          finishReason: 'middleware_override' //TODO: Add to Unified finish reasons
+          finishReason: Strategy.LLM.LoftFinishReason.MIDDLEWARE_OVERRIDE
         },
         originalResponse: undefined
       };

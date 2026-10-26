@@ -1,0 +1,92 @@
+{
+  "chunks": [
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Hello"
+              }
+            ]
+          }
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 8,
+        "totalTokenCount": 8
+      },
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-text"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": ", world"
+              }
+            ]
+          }
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 8,
+        "totalTokenCount": 8
+      },
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-text"
+    },
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "!"
+              }
+            ]
+          },
+          "finishReason": "STOP"
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 8,
+        "candidatesTokenCount": 4,
+        "totalTokenCount": 12
+      },
+      "modelVersion": "gemini-2.5-flash",
+      "createTime": "2026-10-22T10:00:00.000000Z",
+      "responseId": "resp-text"
+    }
+  ],
+  "response": {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [
+            {
+              "text": "Hello, world!"
+            }
+          ]
+        },
+        "finishReason": "STOP"
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 8,
+      "candidatesTokenCount": 4,
+      "totalTokenCount": 12
+    },
+    "modelVersion": "gemini-2.5-flash",
+    "createTime": "2026-10-22T10:00:00.000000Z",
+    "responseId": "resp-text"
+  }
+}

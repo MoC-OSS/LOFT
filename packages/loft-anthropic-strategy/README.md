@@ -78,6 +78,24 @@ Unless you turn it off, current Claude models think before they answer, and the 
 
 The first argument of `AnthropicCallStrategy` is passed to the Anthropic client unchanged, so it takes the SDK's `ClientOptions`: `apiKey` (default: the `ANTHROPIC_API_KEY` variable), `baseURL`, `timeout`, `maxRetries` and the rest. Both strategies take an `LlmTokenRateLimiter` and an `LlmTokenizer`; the [call manager README](https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-llm-call-manager#configuration) describes their settings.
 
+`AnthropicCallStrategy` takes an optional, experimental last argument, `AnthropicStrategyOptions`:
+
+| Option | Type | Default | Effect |
+| --- | --- | --- | --- |
+| `streaming` | `boolean` | `true` | `false` never streams; LOFT then sends the reply text once the call returns |
+
+## Streaming
+
+When a chat is generated with `onEvent`, LOFT passes an event sink to the call, and `AnthropicCallStrategy` streams the request with `messages.stream` (experimental):
+
+- The text of the answer's text blocks reaches the sink as it arrives, and the thinking as reasoning. The chat decides whether reasoning reaches its clients, and by default it does not. Thinking signatures, redacted thinking, tool calls and their input, citations and server tool blocks are never sent; they only report activity, so LOFT knows the stream is alive.
+- The usage is sent twice: the input tokens when the message starts (with the first output tokens and the cache reads), and the output tokens when it ends, with the stop reason. Each count is a total for the whole message so far, so a later value replaces an earlier one; never add them up. `totalTokens` is the input and output tokens known at that point.
+- `generate()` resolves with the same `Message` the request returns without streaming, so tool calls, thinking blocks with their signatures, the usage and the stop reason work unchanged. A stop on `max_tokens` is returned as it is, as without streaming.
+- An error in the middle of the stream (such as an `overloaded_error` event) rejects with the SDK's error, which the call manager may retry while nothing was delivered. A stream that ends before `message_stop`, between events or inside one, rejects with the SDK's `APIConnectionError`, with the SDK's own error as its `cause`, which the call manager may retry while nothing was delivered; once `message_stop` has arrived, a connection that fails after it resolves with the message. Aborting the call's signal rejects with the SDK's `APIUserAbortError`, as without streaming, even when the last event had already arrived. The provider logs a failed streamed call with the error's class, status, `type` and `code` only: the provider's own failure log never includes the error message. The call manager and the chat still log the error as before.
+- `new AnthropicCallStrategy(config, rateLimiter, tokenizer, { streaming: false })` never streams.
+
+`generateStream` and `extractContentFromChunk` of `AnthropicCallStrategy`, and the `generateStream` method of `AnthropicLoftStrategy`, are deprecated and are removed in the next major release. Use `chat.generate({ onEvent })` instead; the [streaming guide](https://github.com/MoC-OSS/LOFT/blob/main/docs/guides/streaming.md) explains the events.
+
 ## Documentation
 
 - [LLM strategies](https://github.com/MoC-OSS/LOFT/blob/main/docs/guides/llm-strategies.md)

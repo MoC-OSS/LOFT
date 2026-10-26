@@ -35,6 +35,18 @@ describe('HttpCallManagerStrategy', () => {
     expect(post).toHaveBeenCalledWith(URL, REQUEST, { signal });
   });
 
+  it('http call does not send onEvent', async () => {
+    const { signal } = new AbortController();
+    const onEvent = vi.fn();
+    post.mockResolvedValue({ data: { llmBody: 'response' } });
+
+    await strategy.call(REQUEST, { signal, onEvent });
+
+    // Only the signal goes to axios; a function cannot be sent over HTTP
+    expect(post).toHaveBeenCalledWith(URL, REQUEST, { signal });
+    expect(onEvent).not.toHaveBeenCalled();
+  });
+
   it('does not retry a call that failed because it was aborted', async () => {
     const controller = new AbortController();
     post.mockImplementation(async () => {

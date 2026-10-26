@@ -68,6 +68,106 @@ Call `await loft.shutdown()` before the process exits: it waits for running requ
 
 The [quickstart](https://github.com/MoC-OSS/LOFT/blob/main/docs/getting-started/quickstart.md) builds the whole setup, with PostgreSQL storage and an OpenAI or Anthropic strategy.
 
+## Streaming
+
+Pass `onEvent` to `generate()` to receive the reply while the model writes it (experimental). The call reports `start`, the text as `text-delta` events, the tool calls, and ends with exactly one `finish`, `error` or `abort`; `generate()` still returns the same result. This server takes a POST with a JSON body (`{ "sessionId": "…", "message": "…" }`) and sends each event as a Server-Sent Events frame:
+
+```typescript
+import { createServer, type IncomingMessage } from 'node:http';
+
+import { Chat, Type } from '@moc-global/loft-definitions';
+
+async function readJson(req: IncomingMessage, maxBytes = 32_768): Promise<unknown> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += (chunk as Buffer).length;
+    if (size > maxBytes) throw new Error('The body is too large');
+    chunks.push(chunk as Buffer);
+  }
+  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+}
+
+export function createChatServer(chat: Chat.ChatInterface) {
+  return createServer(async (req, res) => {
+    if (req.method !== 'POST') {
+      res.writeHead(405, { Allow: 'POST' }).end();
+      return;
+    }
+    let body: { sessionId?: unknown; message?: unknown };
+    try {
+      body = (await readJson(req)) as { sessionId?: unknown; message?: unknown };
+    } catch {
+      res.writeHead(400).end();
+      return;
+    }
+    const { sessionId, message } = body;
+    if (typeof sessionId !== 'string' || typeof message !== 'string' || !message.trim()) {
+      res.writeHead(400).end();
+      return;
+    }
+    // SECURITY: authenticate the caller and check that the session belongs to them
+
+    // A client that goes away cancels the generation
+    const controller = new AbortController();
+    // A comment frame every 15 seconds keeps proxies from closing a quiet connection
+    const heartbeat = setInterval(() => {
+      if (res.headersSent) res.write(': ping\n\n');
+    }, 15_000);
+    res.on('close', () => {
+      clearInterval(heartbeat);
+      controller.abort();
+    });
+
+    try {
+      const result = await chat.generate({
+        sessionId,
+        directMessages: [
+          {
+            sessionId,
+            role: Type.LLM.UnifiedMessageRole.user,
+            author: 'user',
+            content: [{ type: 'text', text: message }],
+            llmName: 'gpt-4o-mini',
+            manifestName: 'assistant',
+            ctx: {},
+            llmIgnore: false
+          }
+        ],
+        signal: controller.signal,
+        onEvent: (event) => {
+          // The headers go out with the first event, `start`; a failure before it sends no event
+          if (!res.headersSent) {
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream; charset=utf-8',
+              'Cache-Control': 'no-store, no-transform',
+              'X-Accel-Buffering': 'no'
+            });
+          }
+          // Token usage stays on the server
+          const frame: Record<string, unknown> = { ...event };
+          delete frame.usage;
+          res.write(`event: ${event.type}\ndata: ${JSON.stringify(frame)}\n\n`);
+        }
+      });
+      // `finish` does not save anything: store the turn, then end the stream
+      await result.messages.save();
+      res.end();
+    } catch {
+      // Before `start` the error can still get a status code; after it, the client got an `error` or `abort` event
+      if (!res.headersSent) res.writeHead(500);
+      res.end();
+    } finally {
+      clearInterval(heartbeat);
+    }
+  });
+}
+```
+
+Show `finish.text`, the final reply after the middleware, in place of what the deltas built up, check `finish.reason` (`content-filter` means a filter stopped the reply), and ignore event types you do not know. When a middleware that may change the reply is registered, text is held back until it has run.
+
+This server is a starting point, not production code. It does not limit how much it buffers for a slow client, does not allow only one generation per session at a time, and does not guard against a payload that cannot be serialised. The [express-streaming example](https://github.com/MoC-OSS/LOFT/tree/main/examples/express-streaming) does all of that, with tool progress events, a disconnect policy and a checklist for production. Also read the [streaming guide](https://github.com/MoC-OSS/LOFT/blob/main/docs/guides/streaming.md), which explains the events, the options and the providers, and how to size the call manager's `concurrency`: by default one model serves one call at a time per process.
+
 ## Main exports
 
 | Export | What it is |
@@ -89,7 +189,7 @@ The [quickstart](https://github.com/MoC-OSS/LOFT/blob/main/docs/getting-started/
 | `LoftConstructor` 4th, optional | `Strategy.Tracer.TracerFactory` | Tracer, for example a `LangfuseTracer` |
 | `LoftConstructor` 5th, optional | `Interface.LoggerStrategy` | Where logs go; default Pino to stdout |
 | `ManifestManagerConstructor` 2nd | `{ manifestPath, errorPath, cacheExpirationTime }` | Manifest file, file for validation errors, cache time in milliseconds |
-| `ChatConstructor` 5th, optional | `{ mcp?: { toolCacheTtl?, maxCallsPerGenerate? } }` | MCP tool cache time in milliseconds (default 60000), and the most LLM calls one `generate()` makes while running tools (default 10) |
+| `ChatConstructor` 5th, optional | `{ mcp?: { toolCacheTtl?, maxCallsPerGenerate? }, streaming?: Chat.StreamOptions }` | MCP tool cache time in milliseconds (default 60000), and the most LLM calls one `generate()` makes while running tools (default 10). `streaming` (experimental): the defaults of every `generate()` call that passes `onEvent`, which a call's `streamOptions` override key by key |
 
 ## Documentation
 

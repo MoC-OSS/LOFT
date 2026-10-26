@@ -9,6 +9,41 @@ import { createGeminiToolsConfig } from './adapters/toolDeclaration';
 import { GeminiStream } from './GeminiStream';
 import { GeminiValidatingSchema } from './GeminiValidatingSchema';
 
+type GeminiConfig = NonNullable<GeminiRequest['config']>;
+
+// The preset keys sent in the request config, each with the snake_case alias older manifests use, if it has one
+const PRESET_CONFIG_KEYS: ReadonlyArray<readonly [keyof GeminiConfig, string?]> = [
+  ['maxOutputTokens', 'max_output_tokens'],
+  ['temperature'],
+  ['topP', 'top_p'],
+  ['topK', 'top_k'],
+  ['stopSequences', 'stop_sequences'],
+  ['candidateCount', 'candidate_count'],
+  ['presencePenalty'],
+  ['frequencyPenalty'],
+  ['responseLogprobs'],
+  ['logprobs'],
+  ['safetySettings'],
+  ['toolConfig'],
+  ['responseMimeType'],
+  ['responseSchema'],
+  ['thinkingConfig'],
+  ['seed']
+];
+
+/**
+ * The generation settings of a model preset as the request config; the camelCase key wins over its alias, and a key
+ * the preset leaves out is not sent
+ */
+function presetToConfig(modelPreset: Type.LLMManifestProps['modelPreset']): GeminiConfig {
+  const config: Record<string, unknown> = {};
+  for (const [key, alias] of PRESET_CONFIG_KEYS) {
+    const value = modelPreset[key] ?? (alias ? modelPreset[alias] : undefined);
+    if (value !== undefined) config[key] = value;
+  }
+  return config as GeminiConfig;
+}
+
 export class GeminiLoftStrategy extends Strategy.LLM.AbstractLoftLLM<GeminiRequest, GeminiResponse> {
   public readonly llmName: string;
   protected readonly log = new Logger('LLMStrategy:Gemini');
@@ -39,12 +74,7 @@ export class GeminiLoftStrategy extends Strategy.LLM.AbstractLoftLLM<GeminiReque
         parts: [{ text: computedSystemMessage }]
       },
       config: {
-        maxOutputTokens: modelPreset.max_output_tokens as number | undefined,
-        temperature: modelPreset.temperature as number | undefined,
-        topP: modelPreset.top_p as number | undefined,
-        topK: modelPreset.top_k as number | undefined,
-        stopSequences: modelPreset.stop_sequences as string[] | undefined,
-        candidateCount: modelPreset.candidate_count as number | undefined,
+        ...presetToConfig(modelPreset),
         ...toolsConfig
       }
     };
@@ -67,6 +97,10 @@ export class GeminiLoftStrategy extends Strategy.LLM.AbstractLoftLLM<GeminiReque
     });
   }
 
+  /**
+   * @deprecated Use chat.generate({ onEvent }) instead.
+   * Removed in the next major release.
+   */
   async generateStream(llmRequest: Strategy.LLM.LLMRequest<GeminiRequest>): Promise<GeminiStream> {
     if (!this.callManagerStrategy) throw new Error('CallManagerStrategy is not defined');
     const res = await this.callManagerStrategy.streamCall(llmRequest);

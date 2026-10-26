@@ -12,8 +12,8 @@ Every LLM provider implements the `LoftLLM` interface (via `Strategy.LLM.Abstrac
 |--------|---------|
 | `formatToLLMRequest()` | Convert unified messages + system message + model preset to provider-specific request format |
 | `formatToUnifiedLLMResponse()` | Convert provider response back to LOFT's `UnifiedLLMResponse` |
-| `generate(request)` | Make a synchronous LLM API call (through the call manager) |
-| `generateStream(request)` | Make a streaming LLM API call |
+| `generate(request, options?)` | Make an LLM API call through the call manager. `options` carries the abort `signal` and, when the chat streams, an event sink (`onEvent`) |
+| `generateStream(request)` | Deprecated: use `chat.generate({ onEvent })` instead. Removed in the next major release |
 | `generateQueued(request)` | Enqueue an LLM call for deferred processing (via queue strategy). **Incomplete — see note below.** |
 | `generateModelPresetSchema()` | Return a Zod schema for validating the `modelPreset` in manifests |
 | `generateResponseSchema()` | Return a Zod schema for validating the LLM response |
@@ -32,7 +32,7 @@ Each LLM integration is composed of three layers:
 │  Knows how to:                                    │
 │  - Format messages to/from provider format        │
 │  - Build model preset validation schema           │
-│  - Handle streaming responses                     │
+│  - Run the strategy's own middleware              │
 │                                                   │
 │  Constructor: ({ llmName }, callManagerStrategy)   │
 └──────────────────────┬───────────────────────────┘
@@ -61,8 +61,8 @@ Each LLM integration is composed of three layers:
 │                                                   │
 │  Makes the actual HTTP call to the LLM API.       │
 │  Implements Strategy.LLM.LLMApi:                  │
-│  - generate<Req, Res>(request): Promise<Res>      │
-│  - generateStream<Req, Res>(request): Promise<Res>│
+│  - generate<Req, Res>(request, options?)          │
+│    (streams when options.onEvent is set)          │
 │  - tokenRateLimiter: LlmTokenRateLimiter          │
 │  - llmTokenizer: LlmTokenizer                     │
 └──────────────────────────────────────────────────┘
@@ -189,11 +189,16 @@ The call manager controls how LLM API calls are executed:
 
 ```typescript
 interface CallManager {
-  call(llmRequest: LLMRequest<any>): Promise<LlmResponse<any>>;
+  // options: the abort signal and, when the chat streams, the event sink (onEvent)
+  call(llmRequest: LLMRequest<any>, options?: CallOptions): Promise<LlmResponse<any>>;
+  /** @deprecated Use chat.generate({ onEvent }) instead. Removed in the next major release. */
   streamCall(llmRequest: LLMRequest<any>): Promise<any>;
   getHealthCheckStatus(): Promise<boolean>;
+  stop?(): void;                     // Stops background timers; called on shutdown
 }
 ```
+
+A call manager passes `options` on to the provider's `generate()`. One that drops `onEvent` still works: the chat's events arrive, and each step's text comes in one piece after the call. `HttpCallManagerStrategy` sends only the signal, so its calls never stream.
 
 ### Available Implementations
 
@@ -210,17 +215,22 @@ interface CallManager {
 
 The `GenerateCallManager` (from `@moc-global/loft-llm-call-manager`) handles the actual call management:
 
-- **Priority queuing** via `p-queue` (single concurrency by default)
-- **Retry with backoff** on 408, 429, 5xx and network failures (configurable `retryDelay` and `retryAttemptsLimit`)
+- **Priority queuing** via `p-queue` (one call at a time by default; `concurrency` raises it)
+- **Token reservation**: the predicted tokens are taken from the rate limiter before the call and settled to the actual usage after it (`reserveTokens`, on by default)
+- **Retry with backoff** on 408, 429, 5xx, network failures and status-less stream errors of type `overloaded_error`, `api_error` or `server_error` (configurable `retryDelay` and `retryAttemptsLimit`)
 - **High-priority task limit** to prevent queue saturation
+- **Streamed calls** (experimental): a `request-start` event before each attempt, no retry once an event reached the caller, and the `streamIdleTimeoutMs` (default 60 s) and `streamFirstEventTimeoutMs` (default 10 minutes) timeouts; see [Streaming](../guides/streaming.md#retries-timeouts-and-concurrency)
 
 ```typescript
 const callManager = new GenerateCallManager<OpenAiRequest, OpenAiResponse>(
   'gpt-4o-mini',                          // name (for logging)
   {
-    highPriorityTasksLimit: 10,            // max concurrent high-priority tasks
+    highPriorityTasksLimit: 10,            // max high-priority tasks waiting in the queue
     retryDelay: 1000,                      // backoff base in ms, doubled for each retry
-    retryAttemptsLimit: 3                  // max attempts, the first one included
+    retryAttemptsLimit: 3,                 // max attempts, the first one included
+    concurrency: 1,                        // optional: calls of this model at once (default 1)
+    reserveTokens: true,                   // optional: reserve tokens before the call (default true)
+    streamIdleTimeoutMs: 60_000            // optional: silence allowed between stream events (default 60000, 0 off)
   },
   openAiCallStrategy                       // the actual API caller
 );
@@ -268,6 +278,37 @@ To add a custom session or chat history storage backend (e.g., for a non-Postgre
 1. A class implementing `Repository.Session` or `Repository.ChatHistory` (from `@moc-global/loft-definitions`)
 2. A constructor class extending `BaseComponentConstructor<Repository.Session>` or `BaseComponentConstructor<Repository.ChatHistory>`
 3. Pass your constructors to `ChatConstructor` in place of the PostgreSQL ones
+
+## Supporting Streaming in a Provider Strategy
+
+A provider strategy streams inside the `generate(request, options)` it already has; there is no separate method. When a chat call passes `onEvent`, LOFT gives the call strategy an event sink in `options.onEvent`. A strategy that ignores it still works: the chat's events arrive, and each step's text is sent in one piece after the call. This part of the contract is experimental.
+
+```typescript
+// packages/loft-definitions/src/strategies/llm/LlmStreamEvent.ts
+type LlmStreamEvent =
+  | { type: 'text-delta'; delta: string }
+  | { type: 'reasoning-delta'; delta: string }
+  | { type: 'usage'; usage: Partial<StreamUsage> }  // running totals: a later value replaces an earlier one
+  | { type: 'activity' }                             // a non-empty chunk whose content is kept back
+  | { type: 'request-start' };                       // sent by the call manager before each attempt, never by a provider
+
+type LlmStreamSink = (event: LlmStreamEvent) => boolean | void;
+```
+
+The rules a streaming strategy follows (the OpenAI, Anthropic and Gemini strategies are the reference, in their `streaming/` directories):
+
+1. **The same result.** With `onEvent`, `generate()` resolves with a value of the same type and meaning as without it, so `formatToUnifiedLLMResponse` and `extractUsedTokens` work unchanged. Build it from the chunks with an accumulator. A request whose streamed result could differ is sent without streaming: the OpenAI strategies do not stream a `json_schema` response format or a `strict` tool.
+2. **Honour the signal.** Pass `options.signal` to the SDK. An aborted call rejects as it does without streaming, also when the last chunk had already arrived.
+3. **Ask for the usage** in the stream where the API needs that (OpenAI's `stream_options.include_usage`), and send it as `usage` events. Each `usage` event is a running total for the request so far; never send increments.
+4. **Nothing private leaves.** Send only the answer's text as `text-delta` and its reasoning as `reasoning-delta`, and only for the first choice or candidate. Never send tool-call arguments, reasoning signatures, raw chunks or the text of other choices.
+5. **Empty chunks.** Skip empty deltas. Send one `activity` for each non-empty chunk whose content rule 4 keeps back, so the call manager's idle timeout knows the stream is alive. A chunk with only usage sends only `usage`. A `usage` event does not start the call manager's idle timer and does not end its first-event timer, so a provider that reports usage at the start of a stream does not hide a long silent wait; the first text, reasoning or `activity` does start it.
+6. **Errors.** An error in the middle of the stream rejects with the SDK's error, as a failed request would, so the call manager's retry policy and the chat's error codes see the same error. A stream that ends before the reply is complete (before the provider's completion marker, or inside an event) rejects with a retryable connection-type error (when the SDK raised an error, it is the `cause`): the built-in strategies use `APIConnectionError` for OpenAI and Anthropic and a 502 `ApiError` that says no HTTP error occurred for Gemini. A strategy may resolve with what arrived when every choice had already finished and only the tail was cut, as the OpenAI and Gemini strategies do.
+7. **A sink that throws** must not break the stream: catch it and go on building the result. Never log the deltas, arguments or chunks; log a failed stream's error class, status, `type` and `code`, not its message.
+8. **Let users opt out** with a constructor option, as the built-in strategies' `streaming: false` does.
+
+The sink's return value tells the call manager whether the event reached the chat's caller; once one did, the call is not retried. Test a strategy against recorded streams: the built-in strategies replay captured provider streams from `src/__tests__/fixtures/stream/` and compare what they build with the expected final response, and the events they send with the expected text.
+
+`LLMApi.generateStream` and `extractContentFromChunk` are deprecated but stay required members until the next major release; a new strategy may implement them by throwing.
 
 ## See It in Action
 

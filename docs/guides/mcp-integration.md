@@ -100,13 +100,15 @@ During `generate()`, LOFT automatically:
 4. Tool results are added to the context and the LLM is called again
 5. This loop continues until the LLM returns a response without tool calls (or the loop limit is hit)
 
-The loop limit is configurable via `ChatConfig.mcp.maxCallsPerGenerate` or the `LOFT_MCP_MAX_CALLS_PER_GENERATE` environment variable (default: 10). It counts LLM calls, not tool calls. When it is reached, the response is a message saying the tool call limit was reached, with `usage.finishReason` set to `max_loops_exceeded`.
+The loop limit is configurable via `ChatConfig.mcp.maxCallsPerGenerate` or the `LOFT_MCP_MAX_CALLS_PER_GENERATE` environment variable (default: 10). It counts LLM calls, not tool calls. When it is reached, the response is a message saying the tool call limit was reached, with `usage.finishReason` set to `max_loops_exceeded` (`Strategy.LLM.LoftFinishReason.MAX_LOOPS_EXCEEDED`).
 
 If the LLM asks for a tool that no registered client offers, LOFT answers that call with an error tool result (`Tool "…" is not supported by any registered tool source`) and the loop goes on.
 
 Every registered MCP tool is offered in every `generate()` call, whatever the manifest. To limit a tool to some manifests, refuse the call in an interceptor (see [Returning your own result](#returning-your-own-result)).
 
 LOFT does not pass its context (session, history, user) to tools; a tool receives only the arguments the LLM wrote. To add context, use a tool interceptor.
+
+Every MCP call receives, in its request options, a signal of its own that aborts with the `generate()` call's signal (so the MCP SDK's abort listener does not stay on a long-lived signal), also when an interceptor runs the call through `executeToolFn`, so cancelling `generate()` cancels a slow tool. For tools that run in your own process, see [Additional Tools](./tools.md).
 
 ## Tool Interceptors
 
@@ -191,7 +193,7 @@ chatConstructor.registerToolInterceptor('book_meeting', async ({ toolRequest, ex
 });
 ```
 
-The tool's result stays in the response's `usedTools`. The response has `usage.finishReason` `interceptor_override`, zero token usage and `originalResponse.generatedByToolInterceptor` set to `true`. If the LLM asked for several tools in the same turn, the ones after this call do not run.
+The tool's result stays in the response's `usedTools`. The response has `usage.finishReason` `interceptor_override` (`Strategy.LLM.LoftFinishReason.INTERCEPTOR_OVERRIDE`), zero token usage and `originalResponse.generatedByToolInterceptor` set to `true`. If the LLM asked for several tools in the same turn, the ones after this call do not run.
 
 ## Tool Cache TTL
 

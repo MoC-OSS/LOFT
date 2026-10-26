@@ -3,6 +3,7 @@ import { InteractiveOutputMessage, Strategy, Type } from '@moc-global/loft-defin
 
 import { thoughtSignatureField, thoughtSignatureMeta } from './thoughtSignature';
 import { convertGeminiFunctionCallToUnifiedToolCall } from './toolResponse';
+import { geminiUsageToUnified } from './usage';
 
 export interface ResponseConversionOptions {
   correlatorIds: string[];
@@ -84,12 +85,11 @@ export function formatGeminiResponseToUnified(
 ): Strategy.LLM.UnifiedLLMResponse {
   const unifiedMessage = convertGeminiResponseToUnifiedMessage(response, options);
 
-  const usage: Strategy.LLM.UnifiedUsage = {
-    inputTokens: response.usageMetadata?.promptTokenCount || 0,
-    outputTokens: response.usageMetadata?.candidatesTokenCount || 0,
-    totalTokens: response.usageMetadata?.totalTokenCount || 0,
-    model: response.modelVersion || undefined
-  };
+  const usage: Strategy.LLM.UnifiedUsage = geminiUsageToUnified(
+    response.usageMetadata,
+    response.modelVersion,
+    response.candidates?.[0]?.finishReason
+  );
 
   return {
     choices: [unifiedMessage],

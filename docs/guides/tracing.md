@@ -77,11 +77,11 @@ Generations include:
 - Token usage (prompt, completion, total)
 - Cost tracking
 - Finish reason
-- Latency (via `completionStartTime`)
+- Latency (via `completionStartTime`): the time of the first output when the call [streamed](./streaming.md), otherwise the time of the request
 
 ### Flushing
 
-`generate()` flushes the tracer before it returns, and waits for the flush, so with Langfuse each request includes the time to send its trace. If `generate()` fails, LOFT also flushes, and a failed flush there is only logged. A flush that throws after a successful generation fails the request, so a custom tracer's `flushAsync()` must not throw.
+`generate()` flushes the tracer before it returns, and waits for the flush, so with Langfuse each request includes the time to send its trace. If `generate()` fails, LOFT also flushes. A flush that fails is only logged, with the error's name and code and not its text, after a successful generation as well as after a failure: the reply was generated, so `generate()` still resolves, and a streamed call has already sent its `finish` event, which comes before the flush. Still, a custom tracer's `flushAsync()` should not throw, because the trace is lost when it does.
 
 ### Graceful Shutdown
 

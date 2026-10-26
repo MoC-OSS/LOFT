@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { InteractiveOutputMessage, Logger, Strategy, Type } from '@moc-global/loft-definitions';
 
+import { anthropicUsageToUnified } from './usage';
+
 const log = new Logger('AnthropicStrategy');
 
 /**
@@ -95,14 +97,11 @@ export function formatAnthropicResponseToUnified(
   const unifiedMessage = convertAnthropicContentToUnifiedMessage(responseContent, options);
 
   // Extract usage in Anthropic format (always provide values, use 0 if missing)
-  const usage: Strategy.LLM.UnifiedUsage = {
-    inputTokens: originalResponse.usage?.input_tokens || 0,
-    outputTokens: originalResponse.usage?.output_tokens || 0,
-    totalTokens: (originalResponse.usage?.input_tokens || 0) + (originalResponse.usage?.output_tokens || 0),
-    cacheTokens: originalResponse.usage?.cache_read_input_tokens || undefined,
-    model: originalResponse.model,
-    finishReason: originalResponse.stop_reason || undefined
-  };
+  const usage: Strategy.LLM.UnifiedUsage = anthropicUsageToUnified(
+    originalResponse.usage,
+    originalResponse.model,
+    originalResponse.stop_reason
+  );
 
   return {
     choices: [unifiedMessage],

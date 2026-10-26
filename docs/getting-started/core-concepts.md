@@ -71,8 +71,7 @@ LOFT uses the Strategy Pattern to make LLM providers, storage backends, and call
 
 Every LLM provider implements the `LoftLLM` interface (defined in `@moc-global/loft-definitions`). The key methods:
 
-- `generate()` — Make a synchronous LLM call
-- `generateStream()` — Optional streaming call; LOFT does not expose streaming through `loft.chat` yet
+- `generate()` — Make an LLM call; when the chat call passes `onEvent`, the provider streams inside it (see [Streaming](../guides/streaming.md))
 - `formatToLLMRequest()` — Convert LOFT's unified message format to provider-specific format
 - `formatToUnifiedLLMResponse()` — Convert provider response back to LOFT's unified format
 - `generateModelPresetSchema()` — Return a Zod schema for validating model presets

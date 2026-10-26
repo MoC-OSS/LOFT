@@ -120,7 +120,44 @@ export async function registerAzureOpenAi(loftConstructor: LoftConstructor<Chat.
 | `apiVersion` | `string` | `2024-10-01-preview` with a deployment name, else `2024-10-21` |
 | `auth` | `{ type: 'api-key', apiKey }` or `{ type: 'azure-ad', scope? }` | Required. `azure-ad` signs in with `DefaultAzureCredential` from `@azure/identity`; the default scope is `https://cognitiveservices.azure.com/.default` |
 
-`OpenAiCallStrategy` takes the API key as its first argument. Both take an `LlmTokenRateLimiter` and an `LlmTokenizer`; the [call manager README](https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-llm-call-manager#configuration) describes their settings.
+`OpenAiCallStrategy` takes the API key as its first argument. Both take an `LlmTokenRateLimiter` and an `LlmTokenizer`; the [call manager README](https://github.com/MoC-OSS/LOFT/tree/main/packages/loft-llm-call-manager#configuration) describes their settings. Both also take an optional last argument, `OpenAiStrategyOptions` (experimental):
+
+| Option | Type | Default | Effect |
+| --- | --- | --- | --- |
+| `streaming` | `boolean` | `true` | `false` never streams; LOFT then sends the reply text once the call returns |
+| `streamUsage` | `boolean` | `true` | Asks the API to send the usage at the end of a stream (`stream_options.include_usage`). With `false` the usage of a streamed call is unknown, and token accounting falls back to 500 tokens |
+| `clientOptions` | `{ timeout?: number; maxRetries?: number }` | The SDK defaults (10 minutes, 2 retries) | Passed to the `OpenAI` or `AzureOpenAI` client |
+
+```typescript
+import { LlmTokenizer, LlmTokenRateLimiter } from '@moc-global/loft-llm-call-manager';
+import { OpenAiCallStrategy } from '@moc-global/loft-openai-strategy';
+
+const callStrategy = new OpenAiCallStrategy(
+  process.env.OPENAI_API_KEY!,
+  new LlmTokenRateLimiter({
+    newTokensPerSecond: 50_000,
+    newRequestsPerSecond: 100,
+    maxTokens: 2_000_000,
+    maxRequests: 500,
+    maxAwaitSeconds: 300
+  }),
+  new LlmTokenizer(),
+  { streamUsage: true, clientOptions: { timeout: 60_000, maxRetries: 0 } }
+);
+```
+
+## Streaming
+
+When a chat is generated with `onEvent`, LOFT passes an event sink to the call, and both call strategies stream the request (experimental):
+
+- The request goes out with `stream: true`, and with `stream_options.include_usage` unless `streamUsage` is `false`.
+- The text and refusal of the first choice reach the sink as they arrive. Tool-call arguments and the text of other choices are never sent; their chunks only report activity, so LOFT knows the stream is alive. The usage arrives at the end.
+- `generate()` resolves with the same `ChatCompletion` the request returns without streaming: the chunks are merged per choice, tool calls by their index, and provider fields such as Azure's `prompt_filter_results` and `content_filter_results` are kept.
+- A finish on the content filter is returned like every other finish, so check the finish reason. An error in the middle of the stream rejects with the SDK's error, as a failed request would. Aborting the call's signal rejects with the SDK's `APIUserAbortError`, as without streaming.
+- Requests with a `json_schema` response format or a `strict` tool are not streamed, because the SDK can return a different result for them. They take the usual path, and LOFT sends the reply text once the call returns. `streaming: false` does the same for every request.
+- A stream that ends before every choice finished, between events or inside one, rejects with the SDK's `APIConnectionError` (when it ends inside an event, with the SDK's parse error as its `cause`), which the call manager may retry while nothing was delivered. Once every choice has finished, a stream cut short (in the `[DONE]` line or before the usage chunk) resolves with what arrived; without its usage, token accounting falls back to 500 tokens. The provider logs a failed streamed call with the error's class, status, `type` and `code` only: the provider's own failure log never includes the error message. The call manager and the chat still log the error as before.
+
+`generateStream` and `extractContentFromChunk` of both call strategies, and the `generateStream` method of `OpenAiLoftStrategy` and `AzureOpenAiLoftStrategy` are deprecated and are removed in the next major release. Use `chat.generate({ onEvent })` instead; the [streaming guide](https://github.com/MoC-OSS/LOFT/blob/main/docs/guides/streaming.md) explains the events.
 
 ## Documentation
 

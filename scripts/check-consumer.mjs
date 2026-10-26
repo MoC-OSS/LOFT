@@ -85,6 +85,11 @@ export async function useOwnLibraries(manifests: Interface.ManifestManager): Pro
   new SQSStrategy(new SQSClient({ region: 'us-east-1' }), 'https://smoke');
 }
 
+// The experimental streaming types come through the packages' declarations
+export async function streamEvents(chat: ReturnType<ChatConstructor['getInstance']>, sessionId: string): Promise<void> {
+  await chat.generate({ sessionId, onEvent: (e) => void e.type });
+}
+
 export function buildLoft() {
   const rateLimit = { newTokensPerSecond: 1, newRequestsPerSecond: 1, maxTokens: 1, maxRequests: 1, maxAwaitSeconds: 1 };
   const call = new OpenAiCallStrategy('key', new LlmTokenRateLimiter(rateLimit), new LlmTokenizer());

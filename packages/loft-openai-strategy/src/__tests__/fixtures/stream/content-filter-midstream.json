@@ -1,0 +1,60 @@
+{
+  "id": "chatcmpl-AzCf0001",
+  "object": "chat.completion",
+  "created": 1761130000,
+  "model": "gpt-4o-2024-11-20",
+  "prompt_filter_results": [
+    {
+      "prompt_index": 0,
+      "content_filter_results": {
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": false,
+          "severity": "safe"
+        }
+      }
+    }
+  ],
+  "choices": [
+    {
+      "index": 0,
+      "content_filter_results": {
+        "hate": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "self_harm": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "sexual": {
+          "filtered": false,
+          "severity": "safe"
+        },
+        "violence": {
+          "filtered": true,
+          "severity": "medium"
+        }
+      },
+      "message": {
+        "role": "assistant",
+        "content": "The battle began",
+        "refusal": null
+      },
+      "logprobs": null,
+      "finish_reason": "content_filter"
+    }
+  ],
+  "system_fingerprint": "fp_ee1d74bde0"
+}

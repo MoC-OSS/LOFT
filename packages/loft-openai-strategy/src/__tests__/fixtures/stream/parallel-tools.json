@@ -1,0 +1,43 @@
+{
+  "id": "chatcmpl-CPar0001",
+  "object": "chat.completion",
+  "created": 1761130000,
+  "model": "gpt-4o-mini-2024-07-18",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": null,
+        "refusal": null,
+        "tool_calls": [
+          {
+            "id": "call_Pa1",
+            "type": "function",
+            "function": {
+              "name": "get_weather",
+              "arguments": "{\"city\": \"Paris\"}"
+            }
+          },
+          {
+            "id": "call_Pa2",
+            "type": "function",
+            "function": {
+              "name": "get_time",
+              "arguments": "{\"zone\": \"Europe/Paris\"}"
+            }
+          }
+        ]
+      },
+      "logprobs": null,
+      "finish_reason": "tool_calls"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 120,
+    "completion_tokens": 44,
+    "total_tokens": 164
+  },
+  "service_tier": "default",
+  "system_fingerprint": "fp_560af6e559"
+}
