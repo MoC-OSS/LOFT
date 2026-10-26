@@ -1,5 +1,19 @@
 # @moc-global/loft-anthropic-strategy
 
+## 1.2.0
+
+### Minor Changes
+
+- 9da30fb: `AnthropicLoftStrategy` gets `hasOutputMiddleware()` (experimental), which reports whether a middleware that may change the reply text is registered. LOFT asks it when a `generate()` call passes `onEvent`: a strategy without the method would count as having such middleware and hold text back until the end. With it, text is sent as it arrives unless such a middleware is registered.
+
+  `useMiddleware(name, middleware, options?)` now passes the optional `{ transformsOutput?: boolean }` (experimental) on, so a middleware registered with `transformsOutput: false` does not hold text back. Its `middleware` parameter is now typed as an LLM response middleware instead of `any`, so a function of another shape no longer compiles.
+
+- 9da30fb: `AnthropicCallStrategy` streams inside `generate()` when LOFT passes an `onEvent` sink in the call options. The request is sent with the SDK's `messages.stream`, the text of the answer's text blocks reaches the sink as it arrives, and `generate()` resolves with the same `Message` the request returns without streaming, so `formatToUnifiedLLMResponse`, `extractUsedTokens`, tool calls and thinking blocks with their signatures work unchanged. Thinking deltas are sent as reasoning, which reaches the chat's clients only when the chat opts in to reasoning. Thinking signatures, redacted thinking, tool calls and their input JSON, citations and server tool blocks are never sent to the sink; they only report activity. The usage is sent when the message starts and when it ends, each count a total for the whole message so far. A stop on `max_tokens` is returned as it is, as without streaming. An error in the middle of the stream, such as an `overloaded_error` event, rejects with the SDK's error. A stream that ends before `message_stop`, between events or inside one, rejects with the SDK's retryable `APIConnectionError`, with the SDK's own error as its `cause`; once `message_stop` has arrived, a connection that fails after it resolves with the message. An abort of the call's signal rejects with the SDK's `APIUserAbortError`, as it does without streaming, even when the last event had already arrived. The provider logs a failed streamed call with the error's class, status, `type` and `code` only: the provider's own failure log never includes the error message. The call manager and the chat still log the error as before. Without `onEvent` nothing changes.
+
+  `AnthropicCallStrategy` takes an optional, experimental last constructor argument, `AnthropicStrategyOptions`, with `streaming` (default `true`): `false` never streams, even when LOFT passes `onEvent`.
+
+  Deprecated, with nothing removed now: `AnthropicCallStrategy.generateStream` and `extractContentFromChunk`, and the `generateStream` method of `AnthropicLoftStrategy`. Use `chat.generate({ onEvent })` instead. They are removed in the next major release.
+
 ## 1.1.1
 
 ### Patch Changes
