@@ -221,7 +221,7 @@ importers:
         version: 6.2.2(reflect-metadata@0.2.2)
       openai:
         specifier: ^7.34.0
-        version: 7.34.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
+        version: 7.39.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
       pg:
         specifier: ^8.11.4
         version: 8.23.1
@@ -419,7 +419,7 @@ importers:
         version: 6.2.2(reflect-metadata@0.2.2)
       openai:
         specifier: ^7.34.0
-        version: 7.34.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
+        version: 7.39.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
       pg:
         specifier: ^8.11.4
         version: 8.23.1
@@ -489,7 +489,7 @@ importers:
         version: 6.2.2(reflect-metadata@0.2.2)
       openai:
         specifier: ^7.34.0
-        version: 7.34.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
+        version: 7.39.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
       pg:
         specifier: ^8.11.4
         version: 8.23.1
@@ -608,13 +608,13 @@ importers:
         version: 1.32.1(zod@4.6.7)
       '@nestjs/common':
         specifier: ^12.1.2
-        version: 12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: 12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core':
         specifier: ^12.1.2
-        version: 12.1.3(@nestjs/common@12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@12.1.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: 12.2.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@12.2.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/platform-express':
         specifier: ^12.1.2
-        version: 12.1.3(@nestjs/common@12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.3)
+        version: 12.2.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.2.0)
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
@@ -623,7 +623,7 @@ importers:
         version: 6.2.2(reflect-metadata@0.2.2)
       openai:
         specifier: ^7.34.0
-        version: 7.34.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
+        version: 7.39.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
       pg:
         specifier: ^8.11.4
         version: 8.23.1
@@ -690,7 +690,7 @@ importers:
         version: 6.2.2(reflect-metadata@0.2.2)
       openai:
         specifier: ^7.34.0
-        version: 7.34.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
+        version: 7.39.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
       pg:
         specifier: ^8.11.4
         version: 8.23.1
@@ -769,7 +769,7 @@ importers:
         version: 3.39.2
       openai:
         specifier: ^7.34.0
-        version: 7.34.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
+        version: 7.39.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
       pg:
         specifier: ^8.11.4
         version: 8.23.1
@@ -1128,7 +1128,7 @@ importers:
         version: 1.32.1(zod@4.6.7)
       openai:
         specifier: ^7.34.0
-        version: 7.34.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
+        version: 7.39.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7)
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -2308,8 +2308,8 @@ packages:
       webpack-node-externals:
         optional: true
 
-  '@nestjs/common@12.1.3':
-    resolution: {integrity: sha512-A9grrnTGNE+sD77bwkHw89LNsrtsIv/tbnmzRsy3dlI5H4WgT6I4wiLSc4JLv8B5pOZttVi5iF/RW/5iZe997w==}
+  '@nestjs/common@12.2.0':
+    resolution: {integrity: sha512-xC4tUL31tQ2eoZcHheHIjnCrhnqyAEDRMGGHMUrYsOdh0Kg1DvDlLn7zelisErMcpaNanSIApJH6m9AcnK3fQQ==}
     peerDependencies:
       class-transformer: '>=0.4.1'
       class-validator: '>=0.13.2'
@@ -2321,8 +2321,8 @@ packages:
       class-validator:
         optional: true
 
-  '@nestjs/core@12.1.3':
-    resolution: {integrity: sha512-uHv2LPVewOnt5ZxSsDI11Vku9Gt1mdL0OWy/JOfXH1D5pV/HaPRGfreHPfYsO/bsyvZxdWVqFfAaFxvop6mFhw==}
+  '@nestjs/core@12.2.0':
+    resolution: {integrity: sha512-OTNlRALw/xlSJ/cXeIo7HzY/TqE9RSyv6uFS+OY41dDelDwMqnAjpRFiN5RVGOI/R4wAhaD0TJVjsfOrpZJCjA==}
     engines: {node: '>= 20'}
     peerDependencies:
       '@nestjs/common': ^12.0.0
@@ -2339,8 +2339,8 @@ packages:
       '@nestjs/websockets':
         optional: true
 
-  '@nestjs/platform-express@12.1.3':
-    resolution: {integrity: sha512-3C9tjF2VJOTAjl4ATZXksMFIbH4dwyX5EyZA+9SK3CreFr8FwOSMyha+YgAMSKECLlOIBhHUeYmTwT761iKlOQ==}
+  '@nestjs/platform-express@12.2.0':
+    resolution: {integrity: sha512-ZG4nRgFicwfFKnzz9CfmX6GhSL1Ov6ch25L+7yDFoPeOBZ0EoytsttyURQaDJPRigcIJXQ1E+Z5zWDwUGc9Yyg==}
     peerDependencies:
       '@nestjs/common': ^12.0.0
       '@nestjs/core': ^12.0.0
@@ -3336,10 +3336,6 @@ packages:
     resolution: {integrity: sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA==}
     engines: {node: ^14.18.0 || >=16.10.0}
 
-  content-disposition@1.1.0:
-    resolution: {integrity: sha512-5jRCH9Z/+DRP7rkvY83B+yGIGX96OYdJmzngqnw2SBSxqCFPd0w2km3s5iawpGX8krnwSGmF0FW5Nhr0Hfai3g==}
-    engines: {node: '>=18'}
-
   content-disposition@2.0.1:
     resolution: {integrity: sha512-e+H0ZXHSWYrENhQzw1LPuP4oF5MzVKmDU6d3hxlvaPEYLLg62MxtQNPRx4SYSuYJSBUgnQIG4HIN2tEtNv7Dog==}
     engines: {node: '>=18'}
@@ -3725,10 +3721,6 @@ packages:
     engines: {node: '>= 16'}
     peerDependencies:
       express: '>= 4.11'
-
-  express@5.2.1:
-    resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
-    engines: {node: '>= 18'}
 
   express@5.3.0:
     resolution: {integrity: sha512-qCqy1xSoaugxOD4IVHb1ZWdkvCF2W3aE2okKouWj8VwJ+ztskSiXoBnCSJqfKT+cVPJhuJqe9YLbY425+Zh00g==}
@@ -4725,8 +4717,8 @@ packages:
     resolution: {integrity: sha512-++Zlftm0kVLPmzC06t6epuWmcRMDbI4z5P3NNX979WA/k23+NtSOynEGzsVfZwguKw2mi5umVgnBlJQMwRz4Pg==}
     engines: {node: '>=20'}
 
-  openai@7.34.0:
-    resolution: {integrity: sha512-PMwuTQ/3cVyWZJOVpb6bzlrQj17uImlnUGQWqh5zHlN/snwK5ww4ZUHW8NYGtH6f9PQOEPxyD/f8WJVIHp1q2A==}
+  openai@7.39.0:
+    resolution: {integrity: sha512-iEA9ndbrj32vhYZwJg2v9BQVuztGUOb2SBQU16ZcWNkQHWEBjtarxjqR9c6d5PbWMG0Eyfhk66OZ0iJ8XpFjyw==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
@@ -5034,10 +5026,6 @@ packages:
 
   range-parser@1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
-    engines: {node: '>= 0.6'}
-
-  range-parser@1.3.0:
-    resolution: {integrity: sha512-hek2mFQpPuI4E1BBKrSto+BU3e3x4xuarsbiwr3+lf7p44juvFMV0XFWQAP3xUyqXA4RrXLIoaSUGbSt056ZMw==}
     engines: {node: '>= 0.6'}
 
   raw-body@3.0.2:
@@ -7138,7 +7126,7 @@ snapshots:
       - '@types/node'
       - prettier
 
-  '@nestjs/common@12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+  '@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
       '@standard-schema/spec': 1.1.0
       file-type: 22.1.1
@@ -7151,9 +7139,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@nestjs/core@12.1.3(@nestjs/common@12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@12.1.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+  '@nestjs/core@12.2.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@12.2.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
-      '@nestjs/common': 12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/common': 12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)
       fast-safe-stringify: 2.1.1
       iterare: 1.2.1
       path-to-regexp: 8.4.2
@@ -7162,14 +7150,14 @@ snapshots:
       tslib: 2.8.1
       uid: 2.0.2
     optionalDependencies:
-      '@nestjs/platform-express': 12.1.3(@nestjs/common@12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.3)
+      '@nestjs/platform-express': 12.2.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.2.0)
 
-  '@nestjs/platform-express@12.1.3(@nestjs/common@12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.3)':
+  '@nestjs/platform-express@12.2.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.2.0)':
     dependencies:
-      '@nestjs/common': 12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/core': 12.1.3(@nestjs/common@12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@12.1.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/common': 12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core': 12.2.0(@nestjs/common@12.2.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@12.2.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       cors: 2.8.6
-      express: 5.2.1
+      express: 5.3.0
       multer: 2.5.0
       path-to-regexp: 8.4.2
       tslib: 2.8.1
@@ -8135,8 +8123,6 @@ snapshots:
 
   consola@3.4.2: {}
 
-  content-disposition@1.1.0: {}
-
   content-disposition@2.0.1: {}
 
   content-type@1.0.5: {}
@@ -8609,39 +8595,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  express@5.2.1:
-    dependencies:
-      accepts: 2.0.0
-      body-parser: 2.4.0
-      content-disposition: 1.1.0
-      content-type: 1.0.5
-      cookie: 0.7.2
-      cookie-signature: 1.2.2
-      debug: 4.4.3
-      depd: 2.0.0
-      encodeurl: 2.0.0
-      escape-html: 1.0.3
-      etag: 1.8.1
-      finalhandler: 2.1.1
-      fresh: 2.0.0
-      http-errors: 2.0.1
-      merge-descriptors: 2.0.0
-      mime-types: 3.0.2
-      on-finished: 2.4.1
-      once: 1.4.0
-      parseurl: 1.3.3
-      proxy-addr: 2.0.8
-      qs: 6.16.1
-      range-parser: 1.3.0
-      router: 2.2.0
-      send: 1.2.1
-      serve-static: 2.2.1
-      statuses: 2.0.2
-      type-is: 2.1.0
-      vary: 1.1.2
-    transitivePeerDependencies:
-      - supports-color
-
   express@5.3.0:
     dependencies:
       accepts: 2.0.0
@@ -8680,7 +8633,7 @@ snapshots:
   extract-pg-schema@5.8.2(@electric-sql/pglite@0.5.10):
     dependencies:
       knex: 3.1.0(pg@8.17.2)
-      knex-pglite: 0.12.1(@electric-sql/pglite@0.5.10)(knex@3.1.0(pg@8.23.1))
+      knex-pglite: 0.12.1(@electric-sql/pglite@0.5.10)(knex@3.1.0(pg@8.17.2))
       pg: 8.17.2
       pg-query-emscripten: 5.1.0
       ramda: 0.31.3
@@ -9389,7 +9342,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knex-pglite@0.12.1(@electric-sql/pglite@0.5.10)(knex@3.1.0(pg@8.23.1)):
+  knex-pglite@0.12.1(@electric-sql/pglite@0.5.10)(knex@3.1.0(pg@8.17.2)):
     dependencies:
       '@electric-sql/pglite': 0.5.10
       knex: 3.1.0(pg@8.17.2)
@@ -9710,7 +9663,7 @@ snapshots:
       powershell-utils: 0.2.1
       wsl-utils: 1.0.1
 
-  openai@7.34.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7):
+  openai@7.39.0(@aws-sdk/credential-provider-node@3.972.88)(@smithy/signature-v4@5.7.4)(ws@8.21.3)(zod@4.6.7):
     optionalDependencies:
       '@aws-sdk/credential-provider-node': 3.972.88
       '@smithy/signature-v4': 5.7.4
@@ -9988,8 +9941,6 @@ snapshots:
   ramda@0.32.0: {}
 
   range-parser@1.2.1: {}
-
-  range-parser@1.3.0: {}
 
   raw-body@3.0.2:
     dependencies:
