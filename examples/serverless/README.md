@@ -27,7 +27,7 @@ AWS Lambda + LOFT + OpenAI serverless example with PGLite. Demonstrates how to u
 pnpm install
 
 # Build the example and all its LOFT dependencies
-turbo build --filter=@moc-global/example-serverless...
+pnpm turbo build --filter=@moc-global/example-serverless...
 
 # Set up environment
 cp examples/serverless/.env.example examples/serverless/.env
@@ -104,7 +104,6 @@ For production use:
 examples/serverless/
   manifest/
     manifest.json         # LLM manifest (my-assistant / gpt-4o-mini)
-    errors/error.json     # Error manifest (empty)
   src/
     handler.ts            # Lambda handler + local test
     config.ts             # Zod env validation
@@ -137,7 +136,7 @@ examples/serverless/
 To use this example outside the monorepo:
 
 1. Copy the `examples/serverless/` directory to a new project
-2. In `package.json`, replace `workspace:*` with published version numbers (e.g., `"@moc-global/loft": "^2.7.0"`)
+2. In `package.json`, replace `workspace:*` with published version numbers (e.g., `"@moc-global/loft": "^2.10.0"`)
 3. Replace the PGLite setup in `src/database.ts` with a real PostgreSQL connection (e.g., `pg` + RDS)
 4. Run `pnpm install` and follow the `.env.example`
 5. Deploy using your preferred framework (SAM, CDK, Serverless Framework)

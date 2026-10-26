@@ -86,7 +86,7 @@ await runSessionPgMigrations(
     databaseSsl: false,
     direction: 'to-latest',
     schemaName: 'loft_session',
-    libraryVersion: '1.2.5' // used by the 'to-current-lib-version' direction
+    libraryVersion: '2.0.0' // used by the 'to-current-lib-version' direction
   },
   pool  // optional — if omitted, creates a new pool from databaseUrl
 );
@@ -97,7 +97,7 @@ await runChatHistoryPgMigrations(
     databaseSsl: false,
     direction: 'to-latest',
     schemaName: 'loft_chat_history',
-    libraryVersion: '1.3.5'
+    libraryVersion: '2.0.0'
   },
   pool
 );

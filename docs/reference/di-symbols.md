@@ -105,7 +105,7 @@ The child container resolves from its parent when a binding isn't found locally.
 ### In LOFT source code (for contributors)
 
 ```typescript
-import { DI_TYPES, Interface } from '@moc-global/loft-definitions';
+import { DI_TYPES, Interface, Repository } from '@moc-global/loft-definitions';
 import { inject, injectable } from 'inversify';
 
 @injectable()

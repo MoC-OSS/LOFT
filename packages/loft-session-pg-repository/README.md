@@ -37,7 +37,7 @@ export async function migrateSessions(databaseUrl: string) {
     databaseUrl,
     direction: 'to-latest',
     schemaName: 'loft_session',
-    libraryVersion: '1.2.5' // used only by the to-current-lib-version direction
+    libraryVersion: '2.0.0' // used only by the to-current-lib-version direction
   });
 }
 ```

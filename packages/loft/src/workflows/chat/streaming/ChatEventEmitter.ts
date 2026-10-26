@@ -77,7 +77,8 @@ export class ChatEventEmitter implements Chat.GenerationEventSink {
         warnedMiddleware.add(key);
         this.log.warn(
           `Streamed text is held until the end of generation, because output middleware is registered: ${outputMiddleware.join(', ')}. ` +
-            "Set the text policy to 'all' to stream text as it arrives, or register the middleware with transformsOutput: false."
+            "To stream text as it arrives, set the text policy to 'all' or register the middleware with transformsOutput: false, " +
+            'but only when the middleware need not change what the user sees, such as by redaction: streamed text is sent unchanged.'
         );
       }
     }

@@ -15,9 +15,12 @@ This package solves the challenge of managing database migrations in a monorepo 
 ## API Reference
 
 ```typescript
-// Core exports
-createCLI<TEnv>(config: CLIConfig<TEnv>) -> () => Promise<void>
+// Root exports ('@moc-global/loft-kysely-pg-migrator')
 BaseMigrator(options: BaseMigrationOptions, pool?: Pool)
+// plus the env schemas, the types (such as MigrationContext and SchemaMigration) and the version helpers
+
+// CLI exports ('@moc-global/loft-kysely-pg-migrator/cli')
+createCLI<TEnv>(config: CLIConfig<TEnv>) -> () => Promise<void>
 initEnvConfig<T>(schema: ZodSchema<T>, path?: string) -> T
 getPackageVersion(packageDir: string) -> string
 ```
@@ -199,15 +202,17 @@ interface ClientMigrationOptions {
 
 ## Migration File Structure
 
-```javascript
-// migrations/1.0.0.js
-module.exports = {
-  async up(db) {
-    // Forward migration
-  },
-  async down(db) {
-    // Rollback migration
-  }
+```typescript
+// migrations/1.0.0.ts
+import type { MigrationContext } from '@moc-global/loft-kysely-pg-migrator';
+import type { Kysely } from 'kysely';
+
+export async function up(db: Kysely<unknown>, { schema }: MigrationContext): Promise<void> {
+  // Forward migration, in the package's schema
+}
+
+export async function down(db: Kysely<unknown>, { schema }: MigrationContext): Promise<void> {
+  // Rollback migration
 }
 ```
 

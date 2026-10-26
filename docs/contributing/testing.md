@@ -62,11 +62,13 @@ import { beforeEach, vi } from 'vitest';
 // Pure mock (no console output)
 const mockLogger = configureMockLoggerStrategy();
 
-// Spy (real console output + assertions)
+// Spy (assertions; real Pino output when LOFT_TEST_LOGS is set)
 const spyLogger = configureSpyLoggerStrategy();
 
 beforeEach(() => vi.clearAllMocks());
 ```
+
+Set `LOFT_TEST_LOGS=1` to print real Pino output from `configureSpyLoggerStrategy()`.
 
 ### Test File Location
 

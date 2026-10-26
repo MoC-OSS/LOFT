@@ -417,6 +417,23 @@ describe('BaseLoftChat', () => {
       expect(logged).toContainEqual(expect.arrayContaining(['addMessages() error:', { sessionId, messageCount: 1 }]));
       expect(JSON.stringify(logged)).not.toContain('PRIVATE-USER-TEXT');
     });
+
+    it('logs the messages it adds by count, without their content', async () => {
+      const sessionId = 'test-session-id';
+      const messages = [createValidMessage({ content: [{ type: 'text' as const, text: 'PRIVATE-USER-TEXT' }] })];
+      mockContextProvider.get.mockResolvedValue(createMockContext());
+      mockInputMiddlewareManager.executeChain.mockResolvedValue({
+        payload: { augmentedContext: [], directMessages: messages }
+      });
+      mockChatHistoryManager.addMessages.mockResolvedValue(undefined);
+      vi.mocked(spyLoggerStrategy.trace).mockClear();
+
+      await baseLoftChat.addMessages(sessionId, ['correlator'], messages);
+
+      const logged = vi.mocked(spyLoggerStrategy.trace).mock.calls;
+      expect(JSON.stringify(logged)).toContain('"messagesCount":1');
+      expect(JSON.stringify(logged)).not.toContain('PRIVATE-USER-TEXT');
+    });
   });
 
   describe('generate', () => {
@@ -466,6 +483,30 @@ describe('BaseLoftChat', () => {
       assertSuccessfulGenerateResponse(result, sessionId, correlatorIds, messageIds);
       // This is a safe assertion as it's testing a property of the response, not implementation
       expect(result.messages.llmResponse.topChoice.content).toEqual([{ type: 'text', text: 'test response' }]);
+    });
+
+    it('records the request in the trace metadata by count, without the raw messages', async () => {
+      const { sessionId, correlatorIds, augmentedContext } = setupGenerateTest();
+      const directMessages = [createValidMessage({ content: [{ type: 'text' as const, text: 'PRIVATE-USER-TEXT' }] })];
+      const tracer = new NoOpTracerStrategy().createTracer({ traceId: 'trace', name: 'trace', sessionId });
+      const update = vi.spyOn(tracer, 'update');
+      setupMocksForGenerate({
+        contextProvider: mockContextProvider,
+        inputMiddlewareManager: mockInputMiddlewareManager,
+        beforeGenerateMiddlewareManager: mockBeforeGenerateMiddlewareManager,
+        llmManager: mockLlmManager,
+        afterGenerateMiddlewareManager: mockAfterGenerateMiddlewareManager,
+        mockContext: createMockContext(sessionId, { tracer }),
+        mockLlmResponse: createMockLlmResponse(),
+        directMessages,
+        augmentedContext
+      });
+
+      await baseLoftChat.generate({ sessionId, directMessages, augmentedContext, correlatorIds });
+
+      const metadata = update.mock.calls.at(-1)?.[0].metadata;
+      expect(metadata?.requestOptions).toMatchObject({ directMessagesCount: 1, augmentedContextCount: 0 });
+      expect(JSON.stringify(metadata)).not.toContain('PRIVATE-USER-TEXT');
     });
 
     it('should pass the signal to the LLM manager', async () => {

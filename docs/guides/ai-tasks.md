@@ -176,7 +176,7 @@ const textPart = result.topChoice.content.find(
 const classification = textPart?.text;  // e.g., 'complaint'
 ```
 
-The response shape is the same as what you get from `generate()` inside `result.messages.llmResponse` — a `UnifiedLLMResponse` with `topChoice`, `choices`, `usage`, and `usedTools` fields.
+The response shape is the same as what you get from `generate()` inside `result.messages.llmResponse` — a `UnifiedLLMResponse` with `topChoice`, `choices` and `usage` (no `usedTools`: AI tasks run no tools).
 
 ## Common Use Cases
 
@@ -323,7 +323,7 @@ import {
 // Create constructors
 const manifestManagerConstructor = new ManifestManagerConstructor(
   new FsRepositoryConstructor(),
-  { manifestPath: 'manifest/manifest.json', errorPath: 'manifest/errors', cacheExpirationTime: 60000 }
+  { manifestPath: 'manifest/manifest.json', errorPath: 'manifest/errors/error.json', cacheExpirationTime: 60000 }
 );
 
 const chatConstructor = new ChatConstructor(

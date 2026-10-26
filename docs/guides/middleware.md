@@ -41,7 +41,7 @@ async (context, payload, chain) => {
 - **Names must be unique** — registering a duplicate name throws an error
 - **Sequential execution** — middleware runs in registration order
 - **Immutable between steps** — the payload is deep-copied (via `fast-copy`) before the first middleware, and each return value before it passes to the next one, so a middleware never changes the caller's object
-- **Errors stop the request** — if a middleware throws, the chain stops and throws `Forced failure in middleware: <name>`, with your error as its `cause`. `generate()` wraps that error in a `GenerateError` (as its `cause`); `addMessages()` throws it as is (see [Error handling](./error-handling.md#common-causes)). For optional steps, catch errors yourself (see [Optional steps](#optional-steps-that-must-not-fail-the-request))
+- **Errors stop the request** — if a middleware throws, the chain stops and throws `Forced failure in middleware: <name>`, with your error as its `cause`. `generate()` wraps that error in a `GenerateError` (as its `cause`) for BeforeGenerate and AfterGenerate middleware; an Input middleware error reaches the caller of `generate()` or `addMessages()` as it is (see [Error handling](./error-handling.md#common-causes)). For optional steps, catch errors yourself (see [Optional steps](#optional-steps-that-must-not-fail-the-request))
 - **Every step adds latency** — middleware runs one step at a time and each return value is deep-copied, so keep steps light. An LLM call in Input middleware runs twice in the multi-turn pattern (see below)
 
 ## Input Middleware
@@ -265,7 +265,7 @@ context.getPrompt(promptName, llmName)       // Retrieve a computed prompt
 
 Changes to `context.session` (`currentLlmName`, `currentManifestName`, `ctx`) stay in memory until you call `await context.session.update()`. With no argument it saves the in-memory values; `update({ ctx })` replaces the whole `ctx`, so spread the old one in. Inside `generate()`, an in-memory change still applies to the current request.
 
-`chain.ctx` holds a copy of the context that `chain.updateCtx(partial)` merges into. Later middleware in the same stage can read it through `chain.ctx`; the `context` argument they receive does not change.
+`chain.ctx` starts as the context itself, not a copy. `chain.updateCtx(partial)` replaces it with a plain object spread from it and merged with `partial`; that object has no `request` and none of the context's methods (`generate`, `aiTask`, `getPrompt`). Later middleware in the same stage can read it through `chain.ctx`, nothing outside the stage reads it, and the `context` argument middleware receive does not change. To keep data with a message across requests, set `message.ctx` (see [Tagging messages with metadata](#tagging-messages-with-metadata)).
 
 ## Tracing in Middleware
 
@@ -297,7 +297,7 @@ chatConstructor.registerBeforeGenerateMiddleware(
 
 ## See It in Action
 
-The **[express-full](../../examples/express-full/)** example demonstrates all three middleware stages (Input, BeforeGenerate, AfterGenerate) with logging and a dynamic system message via GM Computer.
+The **[express-full](../../examples/express-full/)** example demonstrates all three middleware stages (Input, BeforeGenerate, AfterGenerate) with logging and a dynamic system message via GM Computer. The **[middleware](../../examples/middleware/)** example has one-file recipes (logging counts, tagging messages, blocking topics) and an offline demo of the guard middleware.
 
 ## Common Patterns
 
@@ -322,7 +322,7 @@ chatConstructor.registerBeforeGenerateMiddleware(
 
 ### Redacting personal data
 
-Input middleware can rewrite the user's text before it is stored or sent to the LLM. Input middleware runs on both `addMessages()` and `generate()`, so make the change safe to apply twice, as this one is. Add patterns for phone numbers, card numbers or your own ID formats the same way:
+Input middleware can rewrite the user's text before it is stored or sent to the LLM. Input middleware runs on both `addMessages()` and `generate()`, so make the change safe to apply twice, as this one is:
 
 ```typescript
 const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/g;
@@ -338,7 +338,9 @@ chatConstructor.registerInputMiddleware('redact-emails', async (context, payload
 });
 ```
 
-Redaction in middleware does not keep the original text out of traces: each middleware span records the payload it received, and the `generate()` trace records the request as it arrived. If you send traces to Langfuse, redact before calling LOFT, or leave the tracer out for that data. Log that something was redacted, not the value.
+This covers the request only. Personal data also reaches tool outputs, which the model reads inside the tool loop, and traces: each middleware span records the payload it received, so the original text stays in the trace. Log that something was redacted, not the value.
+
+The guard middleware package in this repository, `@moc-global/loft-middleware` (experimental, not yet published to npm), covers those places too and also detects prompt injection. See the [Guard middleware guide](./guard-middleware.md).
 
 For middleware that calls an LLM to classify or route messages, see the [AI Tasks guide](./ai-tasks.md).
 

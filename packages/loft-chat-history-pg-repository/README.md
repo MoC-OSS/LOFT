@@ -37,7 +37,7 @@ export async function migrateChatHistory(databaseUrl: string) {
     databaseUrl,
     direction: 'to-latest',
     schemaName: 'loft_chat_history',
-    libraryVersion: '1.3.5' // used only by the to-current-lib-version direction
+    libraryVersion: '2.0.0' // used only by the to-current-lib-version direction
   });
 }
 ```

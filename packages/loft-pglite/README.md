@@ -8,7 +8,7 @@ In-memory PostgreSQL for tests with automatic port allocation.
 Usually `@moc-global/loft-pglite` is already in the root `package.json` as a dev dependency, so you can just import and use it:
 
 ```typescript
-import { PGLiteSocketManager } from '@moc-global/loft-pglite';
+import { PGLiteInstanceFactory, PGLiteUtils } from '@moc-global/loft-pglite';
 ```
 
 If not installed:
@@ -20,42 +20,50 @@ pnpm add -D @moc-global/loft-pglite
 ## Quick Start
 
 ```typescript
-import { PGLiteSocketManager } from '@moc-global/loft-pglite';
+import { PGLiteInstanceFactory, PGLiteUtils } from '@moc-global/loft-pglite';
 
-// Create instance
-const db = await PGLiteSocketManager.createInstance();
+// Create an instance and a pool on it
+const instance = await PGLiteInstanceFactory.create();
+const pool = PGLiteUtils.createPool(instance); // max: 1 connection
 
 // Use it
-const client = await db.pool.connect();
-await client.query('SELECT NOW()');
-client.release();
+await pool.query('SELECT NOW()');
 
 // Clean up
-await db.close();
+await pool.end();
+await instance.close();
 ```
 
 ## Testing Example
 
 ```typescript
-import { PGLiteSocketManager } from '@moc-global/loft-pglite';
-import { beforeAll, afterAll } from 'vitest';
+import { PGLiteInstanceFactory, PGLiteUtils, type PGLiteInstance } from '@moc-global/loft-pglite';
+import type { Pool } from 'pg';
+import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 
 describe('My Tests', () => {
-  let testDb;
+  let instance: PGLiteInstance;
+  let pool: Pool;
 
   beforeAll(async () => {
-    testDb = await PGLiteSocketManager.createInstance();
+    instance = await PGLiteInstanceFactory.create();
+    pool = PGLiteUtils.createPool(instance);
+    await PGLiteUtils.createExtensions(pool); // uuid-ossp
+    await PGLiteUtils.createSchemas(pool, ['loft_session']);
     // Run your migrations here
   });
 
+  beforeEach(async () => {
+    await PGLiteUtils.truncateTables(pool, [{ schema: 'loft_session', table: 'session' }]);
+  });
+
   afterAll(async () => {
-    await testDb.close();
+    await pool.end();
+    await instance.close();
   });
 
   it('works', async () => {
-    const client = await testDb.pool.connect();
-    // Your test logic
-    client.release();
+    await pool.query('SELECT 1');
   });
 });
 ```
@@ -68,18 +76,23 @@ describe('My Tests', () => {
 
 ## API
 
-### `PGLiteSocketManager.createInstance()`
+### `PGLiteInstanceFactory.create(instanceConfig?, socketConfig?)`
 
-Returns `PGLiteInstance` with:
+Returns a `PGLiteInstance` with:
 
-- `pool` - PostgreSQL pool (max: 1)
-- `connectionString` - for external tools
+- `db` - the PGLite database
+- `server` - the socket server for external connections
+- `connectionString` - for external tools and `pg` clients
+- `port` - the port the socket server listens on
 - `close()` - cleanup function
 
-### `PGLiteSocketManager.cleanTables(pool, tables)`
+### `PGLiteUtils`
 
-Clean tables between tests:
+- `createPool(instance)` - a `pg` pool on the instance (max: 1)
+- `createSchemas(pool, schemas)` - creates the schemas
+- `createExtensions(pool, extensions?)` - creates the extensions, `uuid-ossp` by default
+- `truncateTables(pool, tables)` - empties tables between tests, such as `[{ schema: 'public', table: 'users' }]`
 
-```typescript
-await PGLiteSocketManager.cleanTables(db.pool, [{ schema: 'public', table: 'users' }]);
-```
+### `PortManager`
+
+Allocates free ports for the socket servers; `PGLiteInstanceFactory.create()` uses it.

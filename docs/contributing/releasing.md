@@ -20,7 +20,7 @@ It creates a markdown file in `.changeset/` describing the version bump.
 ### When to Create a Changeset
 
 - **Always** when changing published package source code
-- **Never** for changes to private packages (`loft-base-tsconfig`, `loft-pglite`, `loft-test-suite`, `loft-kysely-pg-migrator`, `loft-integration-tests`)
+- **Never** for changes to private packages (`loft-base-tsconfig`, `loft-pglite`, `loft-test-suite`, `loft-kysely-pg-migrator`, `loft-middleware`, `loft-integration-tests`)
 - **Never** for documentation, CI, or tooling changes that don't affect published packages
 
 > **A peer's major release needs major changesets for its dependents.** When a package gets a major release, Changesets bumps each package that has it as a peer dependency (most packages have `@moc-global/loft-definitions` as one) by `patch` only, although their published peer range moves to the new major. Moving a peer range to a new major is a major change under the [versioning policy](#versioning-and-deprecation-policy), so add a `major` changeset for each of those packages by hand.
@@ -38,7 +38,7 @@ It creates a markdown file in `.changeset/` describing the version bump.
 - **Internal deps:** `updateInternalDependencies: "patch"` — a patch bump on internal dependency updates
 - **Peer dependents:** `onlyUpdatePeerDependentsWhenOutOfRange: true` — a package that has a bumped package as a peer dependency is bumped only when the new version leaves its peer range, and then by `patch` (see the note above)
 - **Ignored packages:** none (`"ignore": []`)
-- **Private packages:** `"privatePackages": false` — private packages (`"private": true`, such as `loft-base-tsconfig`, `loft-pglite`, `loft-test-suite`, `loft-kysely-pg-migrator`, `loft-integration-tests` and the examples) are not versioned or tagged
+- **Private packages:** `"privatePackages": false` — private packages (`"private": true`, such as `loft-base-tsconfig`, `loft-pglite`, `loft-test-suite`, `loft-kysely-pg-migrator`, `loft-middleware`, `loft-integration-tests` and the examples) are not versioned or tagged
 
 ## Versioning and Deprecation Policy
 
@@ -73,7 +73,7 @@ pnpm run versions:align
 ```
 
 Rules:
-- All internal dependencies must use `workspace:*` protocol
+- All internal dependencies must use the `workspace:` protocol (`workspace:*` for dependencies, `workspace:^` for peers)
 - External dependencies referenced by multiple packages must use the same version
 - These checks run in the pre-commit hook
 
@@ -105,4 +105,4 @@ Some dependencies are pinned across all packages:
 | Package | Version | Reason |
 |---------|---------|--------|
 | `zod` | `3.25.67` (exact) | Consistency across packages; MCP SDK compatibility: from 3.25.68, registering an MCP server tool fails to compile with TS2589 under `moduleResolution: node` |
-| `@modelcontextprotocol/sdk` | `^1.25.0` | MCP protocol compatibility |
+| `@modelcontextprotocol/sdk` | `^1.31.0` (peer) | MCP protocol compatibility |

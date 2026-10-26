@@ -52,7 +52,7 @@ LOFT keeps chat content out of the default logs. Prompts, user messages, tool ar
 | `DEBUG` | Adds tool arguments, tool results, failed tool results and the steps of the tool loop. **May contain user data.** |
 | `TRACE` | Adds per-call details such as the tool calls the LLM requested. **May contain user data.** |
 
-At every level, the default `PinoLoggerStrategy` replaces credentials with `[Redacted]`: the `authorization`, `apiKey`, `api_key`, `password`, `token`, `accessToken` and `secret` fields, and the `authorization`, `x-api-key`, `api-key` and `cookie` headers (lower-case or capitalised) of a logged object. A custom `LoggerStrategy` must do its own redaction.
+At every level, the default `PinoLoggerStrategy` replaces credentials with `[Redacted]`: the `authorization`, `apiKey`, `api_key`, `password`, `token`, `accessToken` and `secret` fields, and the `authorization`, `x-api-key`, `api-key` and `cookie` headers (lower-case or capitalised), at the top level of the logged error and of each extra argument, and in their `headers`. A credential nested deeper (for example `{ config: { apiKey } }`) is not redacted, so do not log such objects. A custom `LoggerStrategy` must do its own redaction.
 
 ## ChatConstructor Configuration
 

@@ -404,7 +404,7 @@ Each phase is a self-contained unit of work, designed to be proposed and impleme
 
 **Scope — what to build:**
 
-1. **Package scaffolding** — `packages/loft-agents/`, tsup config, dual ESM/CJS output, package.json with `@moc-global/loft-agents` name. Follow existing packages (e.g. `loft-base-package`) as template for config.
+1. **Package scaffolding** — `packages/loft-agents/`, tsup config, dual ESM/CJS output, package.json with `@moc-global/loft-agents` name. Follow an existing package, such as `loft-agents` itself, as the template for its config.
 
 2. **Types** — `Message` (role, content, data map for node-to-node structured data), `TransitionDef` (name, description, target), `Transition` (discriminated union: `TransitionSingle` | `TransitionFanOut` | `TransitionTerminal`), `NodeResult` (output Message + Transition).
 
@@ -423,7 +423,7 @@ Each phase is a self-contained unit of work, designed to be proposed and impleme
 9. **Unit tests** — sequential chain (A → B → C → terminal), parallel FanOut (A → [B, C] → D → terminal), SharedContext isolation (namespaced writes don't collide), max depth exceeded, build-time validation errors, LoftAgentNode with mocked LOFT instance.
 
 **Acceptance criteria:**
-- `pnpm install` and `turbo build --filter=@moc-global/loft-agents` succeed
+- `pnpm install` and `pnpm turbo build --filter=@moc-global/loft-agents` succeed
 - Sequential orchestration: 3 nodes pass data through SharedContext to produce final output
 - Parallel orchestration: FanOut to 2+ nodes, results available to next node via SharedContext
 - Builder rejects invalid graphs at build time
@@ -465,8 +465,7 @@ packages/loft-agents/
 **Existing LOFT code to reference:**
 - `packages/loft/src/LOFT.ts` — LOFT class that LoftAgentNode wraps
 - `packages/loft/src/workflows/chat/BaseLoftChat.ts` — `generate()` method signature and GenerateOptions/GenerateResult types
-- `packages/loft-definitions/src/shared/components/chat/Chat.ts` — ChatInterface types
-- `packages/loft-base-package/` — template for package scaffolding
+- `packages/loft-definitions/src/shared/components/Chat.ts` — ChatInterface types
 - `packages/loft-base-tsconfig/` — shared tsconfig to extend
 
 ---
@@ -492,13 +491,13 @@ packages/loft-agents/
 
 5. **AdditionalTools in LOFT core** — `Chat.AdditionalTool` type, `GenerateOptions.additionalTools`, LlmManager merges definitions with MCP tools, routes tool calls to local handlers.
 
-6. **LoftAgentNode Focus integration** — constructor validates focus/focusStateStore pairing, `run()` injects Focus prompt + tools, post-generate checks `FocusStatus.ready` and overrides transition via `onComplete`.
+6. **LoftAgentNode Focus integration** — Focus runs inside `generate()` (the session's Focus, or the node's `focusName`); after the call, when `focusStatus.ready` is true and the node has `onFocusComplete`, the node writes `focus:<agentName>` to the SharedContext and overrides the transition with `onFocusComplete`.
 
-7. **Build-time validation** — `OrchestratorBuilder.validateFanOutFocusTargets()` rejects FanOut transitions targeting `FocusAware` nodes.
+7. **Build-time validation** — `build()` checks the entry node and every transition target, and warns about unreachable nodes.
 
 8. **Unit tests** — 93 tests across 9 test files (FocusStatusComputer, FocusTypeCoercion, FocusTools, FocusPromptGenerator, InMemoryFocusStateStore, FocusStateStorePg, LoftAgentNode Focus integration, OrchestratorBuilder FanOut validation).
 
-**Key files created/modified:**
+**Key files created/modified** (the Focus files have since moved to `packages/loft/src/focus/`, without the `Focus` prefix in their names):
 ```
 packages/loft-agents/src/focus/
   InMemoryFocusStateStore.ts         — In-memory FocusStateStore

@@ -29,7 +29,7 @@ Express + LOFT + OpenAI example that streams a chat reply over Server-Sent Event
 pnpm install
 
 # Build the example and all its LOFT dependencies
-turbo build --filter=@moc-global/example-express-streaming...
+pnpm turbo build --filter=@moc-global/example-express-streaming...
 
 # Set up environment
 cp examples/express-streaming/.env.example examples/express-streaming/.env

@@ -9,13 +9,16 @@ When you call `loft.chat.generate()`, the request passes through this pipeline:
 ```
 generate({ sessionId, directMessages, ... })
   │
-  ├── 1. Load session from SessionRepository
+  ├── 1. Load session from SessionRepository (unless a ctx is passed in)
   ├── 2. Build ContextInterface (session, chatHistory, request, tracer)
   │
   ├── 3. Validate directMessages and augmentedContext (Zod schema)
   │
   ├── 4. INPUT MIDDLEWARE CHAIN
   │      Transform incoming messages
+  │
+  ├──    FOCUS (when active)
+  │      Add the focus prompt and the focus tools
   │
   ├── 5. BEFORE-GENERATE MIDDLEWARE CHAIN
   │      Pre-process (can prevent LLM call and return custom response)
@@ -24,20 +27,21 @@ generate({ sessionId, directMessages, ... })
   │      ├── Resolve LLM strategy by name
   │      ├── Load manifest (system message + model preset)
   │      ├── Apply prompt computers
-  │      ├── Get MCP tools
+  │      ├── Get tools: MCP, additional and Focus tools
   │      ├── ┌─── TOOL EXECUTION LOOP ───┐
   │      │   │ Call LLM                   │
   │      │   │ If LLM requests tools:     │
-  │      │   │   Execute via MCP          │
+  │      │   │   Run them, one by one     │
   │      │   │   Add results to context   │
   │      │   │   Call LLM again           │
   │      │   └── Until no tools needed ───┘
+  │      ├── Strategy output middleware (once)
   │      └── Return UnifiedLLMResponse
   │
   ├── 7. AFTER-GENERATE MIDDLEWARE CHAIN
   │      Post-process LLM response
   │
-  └── 8. Return GenerateResult
+  └── 8. Return GenerateResult (nothing is stored until result.messages.save())
 ```
 
 ## Step-by-Step Walkthrough
@@ -56,7 +60,7 @@ The `ContextInterface` contains:
 | Field | Type | Description |
 |-------|------|-------------|
 | `session` | `Type.Entity.Session` | The session object with `currentLlmName`, `currentManifestName`, `ctx` |
-| `chatHistory` | `{ messages: Message[] }` | All previous messages in this session |
+| `chatHistory` | `{ messages: Message[] }` | The session's stored messages (the latest `ChatConfig.historyLimit` when set) |
 | `request` | `RequestContext` | Current request: `correlatorIds`, `messageIds`, `messages` (direct + augmented) |
 | `tracer` | `Strategy.Tracer.Tracer` | Tracing/observability interface |
 
@@ -91,6 +95,8 @@ const { payload: processedInput } = await this.inputMiddlewareManager.executeCha
 );
 ```
 
+Input middleware also runs in `addMessages()`, before the messages are stored, so in the `addMessages()` → `generate()` pattern it runs twice. While it runs, `context.request.messages` is still empty: the request is in the payload.
+
 Each middleware function receives `(context, payload, chain)`, returns the payload, and calls `chain.next()` to let the next middleware run:
 
 ```typescript
@@ -123,12 +129,13 @@ This is the core of the pipeline. The `LlmManager.generate()` method:
 1. **Resolves the LLM strategy** by name (from session or temporary override)
 2. **Loads the manifest** via `ManifestManager.getLlmManifest(manifestName, llmName)` — returns `{ systemMessage, modelPreset }`
 3. **Applies prompt computers** via `ComputerManager.compute()` — allows dynamic system message modification
-4. **Gets MCP tools** via `MCPManager.listTools()`
-5. **Enters the tool execution loop** (see below)
+4. **Gets the tools**: MCP tools via `MCPManager.listTools()`, plus the `additionalTools` passed to `generate()` and the tools of an active Focus
+5. **Enters the tool execution loop** (see below), with the chat history, the augmented context and the direct messages. Messages that agents, the orchestrator and Focus stored are left out of the history
+6. **Runs the strategy's output middleware** (`useMiddleware` on the LLM strategy) once, on the final response
 
 ### 6. Tool Execution Loop
 
-When the LLM requests tool calls (MCP tools), LOFT enters an execution loop:
+When the LLM requests tool calls, LOFT enters an execution loop. Additional and Focus tools run in process; MCP tools run through `MCPManager`, and a tool interceptor registered for the tool name can wrap the call:
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -145,8 +152,8 @@ When the LLM requests tool calls (MCP tools), LOFT enters an execution loop:
 │     │                          │            │
 │     No                         Yes          │
 │     ↓                          ↓            │
-│  Exit loop              Execute each tool   │
-│                         via MCPManager      │
+│  Exit loop              Execute each tool,  │
+│                         one after another   │
 │                                ↓            │
 │                         Add assistant msg   │
 │                         + tool results to   │
@@ -193,14 +200,17 @@ The final `GenerateResult` returned to your application:
 
 ```typescript
 interface GenerateResult {
-  ctx: ContextInterface;          // The final context (with updated request state)
+  ctx: ContextInterface;            // The final context (with updated request state)
   sessionId: string;
   correlatorIds: string[];
-  messageIds: { all: string[] };
-  status: Chat.Status;            // SUCCESS, ERROR, ALREADY_GENERATED
+  messageIds: { augmentedContext: string[]; directMessages: string[]; all: string[] };
+  status: Chat.Status;              // Always SUCCESS; failures (ERROR, ALREADY_GENERATED) are thrown as GenerateError.status
   messages: GenerateResultMessages;
+  focusStatus?: Agent.FocusStatus;  // When a Focus is active
 }
 ```
+
+`generate()` stores no messages. Call `result.messages.save()` to store the direct messages, the augmented context, the tool calls and results, and the reply, as the AfterGenerate middleware left them. Focus state is stored as the Focus tools run, and a completed Focus is cleared from the store during `generate()`, and, when it is the session's own Focus, from the session too (see [Agent Orchestration](../guides/agents.md#4-focus--structured-data-collection)).
 
 With `onEvent`, the same call also reports its progress as events while it runs: `start` after the BeforeGenerate middleware, a step for each LLM call with its text and tool calls, and a final `finish` after the AfterGenerate middleware, or `error` or `abort`. The result is the same. See [Streaming](../guides/streaming.md).
 
@@ -218,9 +228,14 @@ With `onEvent`, the same call also reports its progress as events while it runs:
 
 LOFT creates tracer spans at multiple levels:
 - One span per `generate()` call (`chat/generate`)
+- One span per middleware run (`middleware/{type}/{name}`), with the payload it received
 - One span per LLM operation (`llm-operation/{manifestName}/{llmName}`)
+- One span per prompt computer run (`computer/{type}/{name}`)
 - One generation per LLM API call (with model, usage, cost tracking)
 - One span per MCP tool execution (`mcp-tool-{toolName}`)
+- One span per additional tool call (`additional-tool-{toolName}`)
+
+See [Tracing](../guides/tracing.md) for the full list.
 
 All spans are nested — tool spans are children of the generation span, which is a child of the LLM operation span.
 

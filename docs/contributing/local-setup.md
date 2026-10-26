@@ -27,7 +27,7 @@ corepack enable
 pnpm install
 
 # Build all packages (required before type-checking)
-turbo build
+pnpm turbo build
 
 # Verify everything works
 pnpm test:unit
@@ -38,22 +38,22 @@ pnpm test:unit
 ```bash
 # After pulling new changes
 pnpm install
-turbo build
+pnpm turbo build
 
 # Work on a specific package
 # Edit files in packages/loft-definitions/src/...
 
 # Rebuild just that package and its dependents
-turbo build --filter=@moc-global/loft-definitions
+pnpm turbo build --filter=@moc-global/loft-definitions
 
 # Run unit tests
 pnpm test:unit
 
 # Lint all packages
-turbo lint
+pnpm turbo lint
 
 # Type-check (requires packages to be built)
-turbo check-types
+pnpm turbo check-types
 ```
 
 ## Key Commands
@@ -61,10 +61,10 @@ turbo check-types
 | Command | Description |
 |---------|-------------|
 | `pnpm install` | Install all dependencies |
-| `turbo build` | Build all packages (respects dependency order) |
-| `turbo build --filter=<pkg>` | Build a specific package and its deps |
-| `turbo lint` | Lint all packages |
-| `turbo check-types` | Type-check all packages (requires build) |
+| `pnpm turbo build` | Build all packages (respects dependency order) |
+| `pnpm turbo build --filter=<pkg>` | Build a specific package and its deps |
+| `pnpm turbo lint` | Lint all packages |
+| `pnpm turbo check-types` | Type-check all packages (requires build) |
 | `pnpm test:unit` | Run all unit tests (no Docker needed) |
 | `pnpm test:integration` | Run the integration tests on the sources (PGlite, no keys needed) |
 | `pnpm test:integration:esm`, `pnpm test:integration:cjs` | Run them on the built ES module or CommonJS packages |
@@ -84,13 +84,13 @@ pnpm add -D some-tool --workspace-root
 pnpm add @moc-global/loft-definitions --filter=@moc-global/loft --workspace
 ```
 
-Internal dependencies use the `workspace:*` protocol (enforced by Manypkg).
+Internal dependencies use the `workspace:` protocol (`workspace:*` for dependencies, `workspace:^` for peers), enforced by Manypkg.
 
 ## Workspace Structure
 
 ```
 LOFT/
-├── packages/                  # 17 packages (pnpm workspace)
+├── packages/                  # 18 packages (pnpm workspace)
 │   ├── loft/                  # Core framework
 │   ├── loft-definitions/      # Types, interfaces, DI symbols
 │   └── ...                    # See reference/packages.md for full list
@@ -98,6 +98,10 @@ LOFT/
 │   ├── express-basic/         # Stateless single-turn chat
 │   ├── express-history/       # Multi-turn with persistent sessions
 │   ├── express-full/          # Production-like: middleware, Docker PG
+│   ├── express-focus-basic/   # Focus: collect an order over several turns
+│   ├── express-agents/        # Agent graphs, fan-out and teams
+│   ├── express-streaming/     # A reply streamed over SSE
+│   ├── middleware/            # Middleware recipes and guard middleware, offline
 │   ├── nestjs/                # NestJS module integration
 │   └── serverless/            # AWS Lambda handler
 ├── integration/               # Integration test suite (pnpm workspace)
@@ -114,18 +118,18 @@ LOFT/
 
 **"Cannot find module" after pulling changes:**
 ```bash
-pnpm install && turbo build
+pnpm install && pnpm turbo build
 ```
 Internal packages resolve via `workspace:*` symlinks — they need `lib/` output to exist.
 
 **Type errors in `check-types` but not in IDE:**
 ```bash
-turbo build    # check-types depends on ^build
-turbo check-types
+pnpm turbo build    # check-types depends on ^build
+pnpm turbo check-types
 ```
 
 **`manypkg check` fails:**
 ```bash
 pnpm run versions:align
 ```
-All internal deps must use `workspace:*` protocol.
+All internal deps must use the `workspace:` protocol (`workspace:*` for dependencies, `workspace:^` for peers).

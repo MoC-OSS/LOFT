@@ -30,6 +30,7 @@ Task-oriented how-to guides for specific goals.
 
 - [LLM Strategies](./guides/llm-strategies.md) — Register OpenAI, Anthropic, and Gemini providers
 - [Middleware](./guides/middleware.md) — Write and register custom middleware
+- [Guard Middleware](./guides/guard-middleware.md) — Redact personal data and detect prompt injection across requests, tools and traces (experimental)
 - [Manifests](./guides/manifests.md) — Configure system prompts and model presets
 - [AI Tasks](./guides/ai-tasks.md) — Standalone LLM calls for classification, summarization, and more
 - [Chat Persistence](./guides/chat-persistence.md) — Set up PostgreSQL session and chat history storage
@@ -73,6 +74,7 @@ Runnable reference applications — copy, configure, and run:
 | [express-focus-basic](../examples/express-focus-basic/) | Focus: collect a pizza order over several turns   | Docker + API key |
 | [express-agents](../examples/express-agents/)           | Multi-agent orchestration (Focus, FAN_OUT, Teams) | Docker + API key |
 | [express-streaming](../examples/express-streaming/)     | Streamed replies over SSE, with tool progress     | API key only     |
+| [middleware](../examples/middleware/)                   | Middleware recipes; PII and injection guards demo | None (offline)   |
 | [nestjs](../examples/nestjs/)                           | NestJS module integration                         | API key only     |
 | [serverless](../examples/serverless/)                   | AWS Lambda handler                                | API key only     |
 

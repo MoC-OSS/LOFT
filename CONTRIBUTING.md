@@ -46,7 +46,7 @@ Releases are made with [Changesets](https://github.com/changesets/changesets). I
 pnpm changeset
 ```
 
-Use `patch` for fixes, `minor` for new features that keep compatibility, and `major` for breaking changes; the [versioning and deprecation policy](./docs/contributing/releasing.md#versioning-and-deprecation-policy) says what counts as breaking and how to deprecate an API. Changes to documentation, tests, examples, CI or the private packages (`loft-base-tsconfig`, `loft-kysely-pg-migrator`, `loft-pglite`, `loft-test-suite`) need no changeset. [Releasing](./docs/contributing/releasing.md) describes the rest of the process.
+Use `patch` for fixes, `minor` for new features that keep compatibility, and `major` for breaking changes; the [versioning and deprecation policy](./docs/contributing/releasing.md#versioning-and-deprecation-policy) says what counts as breaking and how to deprecate an API. Changes to documentation, tests, examples, CI or the private packages (`loft-base-tsconfig`, `loft-kysely-pg-migrator`, `loft-middleware`, `loft-pglite`, `loft-test-suite`) need no changeset. [Releasing](./docs/contributing/releasing.md) describes the rest of the process.
 
 ## Sign off your commits (DCO)
 

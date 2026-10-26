@@ -189,7 +189,7 @@ This server is a starting point, not production code. It does not limit how much
 | `LoftConstructor` 4th, optional | `Strategy.Tracer.TracerFactory` | Tracer, for example a `LangfuseTracer` |
 | `LoftConstructor` 5th, optional | `Interface.LoggerStrategy` | Where logs go; default Pino to stdout |
 | `ManifestManagerConstructor` 2nd | `{ manifestPath, errorPath, cacheExpirationTime }` | Manifest file, file for validation errors, cache time in milliseconds |
-| `ChatConstructor` 5th, optional | `{ mcp?: { toolCacheTtl?, maxCallsPerGenerate? }, streaming?: Chat.StreamOptions }` | MCP tool cache time in milliseconds (default 60000), and the most LLM calls one `generate()` makes while running tools (default 10). `streaming` (experimental): the defaults of every `generate()` call that passes `onEvent`, which a call's `streamOptions` override key by key |
+| `ChatConstructor` 5th, optional | `{ shutdownTimeout?, historyLimit?, mcp?: { toolCacheTtl?, maxCallsPerGenerate? }, streaming?: Chat.StreamOptions }` | `shutdownTimeout`: how long `shutdown()` waits for requests in flight, in milliseconds (no limit when unset). `historyLimit`: the most stored messages a request loads, the latest ones (default all). MCP tool cache time in milliseconds (default 60000), and the most LLM calls one `generate()` makes while running tools (default 10). `streaming` (experimental): the defaults of every `generate()` call that passes `onEvent`, which a call's `streamOptions` override key by key |
 
 ## Documentation
 

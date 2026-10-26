@@ -19,7 +19,7 @@ Multi-agent orchestration layer on top of LOFT. Agents share a single LOFT insta
 - **Agent graph**: Nodes connected by transitions. The orchestrator walks the graph based on transition resolvers.
 - **SharedContext**: Key-value store passed through all nodes. Agents read upstream data and write results for downstream agents.
 - **Focus**: Structured data collection across multiple turns. Fields are validated, coerced, and tracked. Available standalone from `@moc-global/loft` (no orchestrator required).
-- **Teams**: Encapsulated sub-graphs with their own isolated SharedContext. The parent graph sees the team as a single node.
+- **Teams**: Sub-graphs that run on their own copy of the SharedContext; keys they add are copied back to the parent as `team:<team name>:<key>`. The parent graph sees the team as a single node.
 
 ## Quick Reference
 
@@ -143,7 +143,7 @@ const orchestrator = new OrchestratorBuilder()
   .setEntry('writer')
   .build();
 
-// Parent SharedContext is fully isolated from team internals
+// The team runs on a copy of the parent's SharedContext; keys it adds come back to the parent as team:<team name>:<key>
 const result = await orchestrator.run(message, sessionId);
 ```
 

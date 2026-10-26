@@ -33,7 +33,7 @@ pnpm install
 cd examples && docker compose up -d && cd ..
 
 # Build the migration CLIs and all LOFT dependencies
-turbo build --filter=@moc-global/example-express-full...
+pnpm turbo build --filter=@moc-global/example-express-full...
 
 # Run database migrations
 DATABASE_URL=postgresql://loft_example:loft_example_pass@localhost:5433/loft_examples \
@@ -211,7 +211,7 @@ examples/express-full/
     database.ts         # pg.Pool creation from env config
     middleware.ts       # All 3 middleware functions (input, before-generate, after-generate)
     loft.ts             # LOFT wiring (Anthropic strategy, middleware, GM computer)
-    index.ts            # Express server, 5 endpoints, shutdown
+    index.ts            # Express server, 6 endpoints, shutdown
   .env.example          # Environment template
   test-chat.sh          # Quick test script
   package.json
@@ -259,7 +259,7 @@ To use a different Anthropic model, update three places:
 To use this example outside the monorepo:
 
 1. Copy the `examples/express-full/` directory to a new project
-2. In `package.json`, replace `workspace:*` with published version numbers (e.g., `"@moc-global/loft": "^2.7.0"`)
+2. In `package.json`, replace `workspace:*` with published version numbers (e.g., `"@moc-global/loft": "^2.10.0"`)
 3. Set up your own PostgreSQL (or use the Docker Compose from `examples/`)
 4. Run `pnpm install` and follow the `.env.example`
 

@@ -150,7 +150,7 @@ sequenceDiagram
         IN->>FS: set "year" = 2020 (coerced from string)
         IN->>FS: set "coverage" = "premium" (validated against enum)
         IN->>FS: getAll → { vehicleType, year, coverage }
-        Note over IN: FocusStatus: ready=true → onComplete fires
+        Note over IN: FocusStatus: ready=true → the node's onFocusComplete fires
         Note over IN: Transition overridden: Terminal → Single("quote")
         IN-->>O: { output, transition: Single("quote") }
         O->>Q: run(output, sharedContext, sessionId)
@@ -286,7 +286,7 @@ flowchart TD
     AMBIGUOUS[Multiple transitions, no resolver<br/>→ throw InvalidGraphError]:::error
 
     FOCUS_POST{Focus configured<br/>and ready?}:::decision
-    FOCUS_OVERRIDE[Override transition<br/>with onComplete.target]:::focus
+    FOCUS_OVERRIDE[Override transition<br/>with the node's onFocusComplete.target]:::focus
 
     RETURN([Return NodeResult:<br/>output AgentMessage + Transition]):::orch
 
@@ -325,9 +325,6 @@ flowchart TD
     V3{All transition targets<br/>reference existing nodes?}:::decision
     E3[throw InvalidGraphError]:::error
 
-    V4{FanOut targets any<br/>FocusAware node?}:::decision
-    E4[throw InvalidGraphError<br/>Focus nodes cannot be<br/>FanOut targets]:::error
-
     V5{Any unreachable nodes?}:::decision
     W1[Log warning per<br/>unreachable node]:::warn
 
@@ -339,9 +336,7 @@ flowchart TD
     V2 -->|No| E2
     V2 -->|Yes| V3
     V3 -->|No| E3
-    V3 -->|Yes| V4
-    V4 -->|Yes| E4
-    V4 -->|No| V5
+    V3 -->|Yes| V5
     V5 -->|Yes| W1 --> OK
     V5 -->|No| OK
 

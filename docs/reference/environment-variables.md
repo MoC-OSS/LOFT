@@ -51,17 +51,18 @@ Used by the strategies of the live tests, whatever the provider (the `OPENAI` in
 
 Individual packages that have Docker-based integration tests use a different naming convention:
 
-### Session / Chat History Repository Tests
+### Session Repository Tests
+
+The chat history repository tests run on PGlite in process and read none of these.
 
 | Variable | Example | Used by |
 |----------|---------|---------|
-| `DATABASE_NAME` | `loft_db` | Session + ChatHistory repo tests |
-| `DATABASE_HOST` | `localhost` | Session + ChatHistory repo tests |
-| `DATABASE_USER` | `postgres` | Session + ChatHistory repo tests |
-| `DATABASE_PASSWORD` | `postgres` | Session + ChatHistory repo tests |
-| `DATABASE_PORT` | `5432` | Session + ChatHistory repo tests |
+| `DATABASE_NAME` | `loft_db` | Session repo tests |
+| `DATABASE_HOST` | `localhost` | Session repo tests |
+| `DATABASE_USER` | `postgres` | Session repo tests |
+| `DATABASE_PASSWORD` | `postgres` | Session repo tests |
+| `DATABASE_PORT` | `5432` | Session repo tests |
 | `DATABASE_SESSION_SCHEMA_NAME` | `loft_session` | Session repo tests |
-| `DATABASE_CHAT_HISTORY_SCHEMA_NAME` | `loft_chat_history` | ChatHistory repo tests |
 | `POSTGRES_CONTAINER_NAME` | `test-postgres` | Docker container name |
 | `DATABASE_POSTGRES_IMAGE` | `postgres:16-alpine` | Docker image |
 
@@ -96,6 +97,7 @@ The CLI migration tools (`loft-session-pg-migrate`, `loft-chat-history-pg-migrat
 | `DATABASE_URL` | Full PostgreSQL connection string (e.g., `postgresql://user:pass@localhost:5432/dbname`) |
 | `DATABASE_SESSION_SCHEMA_NAME` | Schema name for session migrations |
 | `DATABASE_CHAT_HISTORY_SCHEMA_NAME` | Schema name for chat history migrations |
+| `DATABASE_SSL` | `true` to connect over SSL; default `false` |
 
 ## Notes
 
