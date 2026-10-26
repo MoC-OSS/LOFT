@@ -55,13 +55,13 @@
     "@anthropic-ai/sdk": ">=0.39.0 <1",
     "@moc-global/loft-definitions": "workspace:^",
     "@modelcontextprotocol/sdk": "^1.31.0",
-    "zod": "^3.25.67"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.134.0",
     "@moc-global/loft-definitions": "workspace:*",
     "@moc-global/loft-test-suite": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",
-    "zod": "3.25.67"
+    "zod": "4.6.7"
   }
 }

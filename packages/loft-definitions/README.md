@@ -5,7 +5,7 @@ Shared types, interfaces, Zod schemas, dependency injection symbols and the logg
 ## Install
 
 ```bash
-npm install @moc-global/loft-definitions inversify@^6 zod@^3.25.67 @modelcontextprotocol/sdk
+npm install @moc-global/loft-definitions inversify@^6 zod@^4.6.6 @modelcontextprotocol/sdk
 ```
 
 It is a peer dependency of the other LOFT packages, so your application installs one copy and shares it with them.

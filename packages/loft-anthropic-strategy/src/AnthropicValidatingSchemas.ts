@@ -155,7 +155,7 @@ const OutputConfigSchema = z
     format: z
       .object({
         type: z.literal('json_schema'),
-        schema: z.record(z.unknown())
+        schema: z.record(z.string(), z.unknown())
       })
       .strict()
       .nullable()

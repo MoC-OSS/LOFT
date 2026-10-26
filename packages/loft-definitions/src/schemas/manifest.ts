@@ -21,6 +21,6 @@ export const Prompt = z.record(RECORD_KEY, z.string());
 
 export const LoftManifest = z.object({
   llmManifests: Manifests,
-  prompts: z.record(Prompt),
+  prompts: z.record(z.string(), Prompt),
   aiTasks: Manifests
 });

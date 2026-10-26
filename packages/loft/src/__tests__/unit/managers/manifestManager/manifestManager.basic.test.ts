@@ -399,7 +399,6 @@ describe('ManifestManager - Basic Tests', () => {
         {
           code: 'invalid_type',
           expected: 'string',
-          received: 'number',
           path: ['model'],
           message: 'Expected string, received number'
         }

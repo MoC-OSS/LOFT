@@ -8,7 +8,7 @@ The Anthropic Claude provider for [LOFT](https://github.com/MoC-OSS/LOFT). It tu
 npm install @moc-global/loft-anthropic-strategy @anthropic-ai/sdk @moc-global/loft-llm-call-manager
 ```
 
-`@anthropic-ai/sdk` is a peer dependency: any 0.x release from 0.39.0. Its other peers, `@moc-global/loft-definitions`, `zod` 3 and `@modelcontextprotocol/sdk`, are already in a LOFT application.
+`@anthropic-ai/sdk` is a peer dependency: any 0.x release from 0.39.0. Its other peers, `@moc-global/loft-definitions`, `zod` 4 and `@modelcontextprotocol/sdk`, are already in a LOFT application.
 
 ## Usage
 

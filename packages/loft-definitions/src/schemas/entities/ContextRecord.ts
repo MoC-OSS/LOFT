@@ -4,10 +4,17 @@ import { z, ZodType } from 'zod';
 
 // Any JSON value: ctx is stored as JSON, so lists and null are as valid as strings, numbers and objects
 export const RecursiveValue: ZodType<unknown> = z.lazy(() =>
-  z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(RecursiveValue), z.record(RecursiveValue)])
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(RecursiveValue),
+    z.record(z.string(), RecursiveValue)
+  ])
 );
 
-export const Record: ZodType<Record<string, any>> = z.record(RecursiveValue);
+export const Record: ZodType<Record<string, any>> = z.record(z.string(), RecursiveValue);
 
 export const ContextRecord = z.custom<Record<string, any>>(
   (data) => {

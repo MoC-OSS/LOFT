@@ -67,6 +67,6 @@
     "@moc-global/loft-definitions": "workspace:*",
     "inversify": "^6.2.2",
     "reflect-metadata": "^0.2.2",
-    "zod": "3.25.67"
+    "zod": "4.6.7"
   }
 }

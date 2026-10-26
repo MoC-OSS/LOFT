@@ -103,14 +103,6 @@ const openAiV7: ClientFactory = async (fetch) => {
   return (body, options) => client.chat.completions.create(body, options);
 };
 
-const openAiV4: ClientFactory = async (fetch) => {
-  const OpenAiV4 = (await import('openai-v4')).default;
-  const client = new OpenAiV4({ apiKey: 'x', fetch: fetch as never, maxRetries: 0 });
-  // The v4 types differ from v7 only in fields these requests and chunks do not use
-  return (body, options) =>
-    client.chat.completions.create(body as never, options) as unknown as ReturnType<CreateChatCompletionStream>;
-};
-
 const REQUEST: OpenAiRequest = { model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'Hi' }] };
 
 interface StreamOptions {
@@ -304,35 +296,9 @@ describe('streamChatCompletion events', () => {
     ).rejects.toThrow(APIConnectionError);
     expect(create).toHaveBeenCalledWith(expect.objectContaining({ stream: true }), { signal });
   });
-
-  it.each(COMPLETED_FIXTURES)('same results on openai-v4: %s', async (name) => {
-    const v7 = await stream(name);
-    const v4 = await stream(name, { client: openAiV4 });
-
-    expect(await v4.result).toEqual(await v7.result);
-    expect(v4.events).toEqual(v7.events);
-    expect(v4.requests[0]?.body).toEqual(v7.requests[0]?.body);
-  });
-
-  it('same results on openai-v4: utf8-split in byte chunks and mid-stream-error', async () => {
-    const chunks = byteChunks(readSse('utf8-split'), 5);
-    const v4 = await stream('utf8-split', { client: openAiV4, chunks });
-    expect(await v4.result).toEqual(readProjection('utf8-split'));
-
-    const failed = await stream('mid-stream-error', { client: openAiV4 });
-    const error = await failed.result.catch((caught: unknown) => caught);
-    expect(error).toMatchObject({
-      status: undefined,
-      error: readProjection<{ error: object }>('mid-stream-error').error
-    });
-    expect(textOf(failed.events)).toBe('Partial');
-  });
 });
 
-describe.each([
-  ['openai', openAiV7],
-  ['openai-v4', openAiV4]
-])('an aborted stream on %s', (_name, client) => {
+describe.each([['openai', openAiV7]])('an aborted stream on %s', (_name, client) => {
   // The SDK ends the chunks quietly on an abort; the call must still reject like a non-streamed one
   const expectAbortError = (error: unknown) => {
     expect(error).toBeInstanceOf(APIUserAbortError);
@@ -383,14 +349,12 @@ describe('a stream cut short', () => {
   });
 
   it('rejects with a retryable APIConnectionError when it ends between events, before the finish', async () => {
-    for (const client of [openAiV7, openAiV4]) {
-      const { result } = await stream('usage-last', { client, chunks: upTo(2) });
+    const { result } = await stream('usage-last', { chunks: upTo(2) });
 
-      const error = await result.catch((caught: unknown) => caught);
+    const error = await result.catch((caught: unknown) => caught);
 
-      expect(error).toBeInstanceOf(APIConnectionError);
-      expect(isRetryableError(error)).toBe(true);
-    }
+    expect(error).toBeInstanceOf(APIConnectionError);
+    expect(isRetryableError(error)).toBe(true);
   });
 
   it('resolves with the full result when it ends inside the [DONE] line', async () => {

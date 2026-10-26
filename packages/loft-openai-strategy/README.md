@@ -8,7 +8,7 @@ The OpenAI and Azure OpenAI provider for [LOFT](https://github.com/MoC-OSS/LOFT)
 npm install @moc-global/loft-openai-strategy openai@^7 @moc-global/loft-llm-call-manager
 ```
 
-`openai` 7 (from 7.34.0) or 4 (from 4.91.1) is a peer dependency; openai 5 and 6 are not tested, so the range leaves them out. Its other peers, `@moc-global/loft-definitions`, `zod` 3 and `@modelcontextprotocol/sdk`, are already in a LOFT application.
+`openai` 7 (from 7.34.0) is a peer dependency. openai 4 and 5 need zod 3, which LOFT no longer supports, and openai 6 is not tested. Its other peers, `@moc-global/loft-definitions`, `zod` 4 and `@modelcontextprotocol/sdk`, are already in a LOFT application.
 
 ## Usage
 

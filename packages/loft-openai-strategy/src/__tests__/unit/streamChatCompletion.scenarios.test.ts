@@ -196,14 +196,6 @@ const openAiV7: ClientFactory = async (fetch) => {
   return (body, options) => client.chat.completions.create(body, options);
 };
 
-const openAiV4: ClientFactory = async (fetch) => {
-  const OpenAiV4 = (await import('openai-v4')).default;
-  const client = new OpenAiV4({ apiKey: 'x', fetch: fetch as never, maxRetries: 0 });
-  // The v4 types differ from v7 only in fields these requests and chunks do not use
-  return (body, options) =>
-    client.chat.completions.create(body as never, options) as unknown as ReturnType<CreateChatCompletionStream>;
-};
-
 const REQUEST: OpenAiRequest = { model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'Hi' }] };
 
 interface RunOptions {
@@ -358,23 +350,6 @@ describe(`random network splits of each fixture (seed ${BASE_SEED})`, () => {
     expect(insideCodePoint).toBeGreaterThan(ITERATIONS / 4);
   });
 
-  it('the same splits on openai-v4 give the same result', async () => {
-    for (const name of COMPLETED_FIXTURES) {
-      const bytes = readSse(name);
-      const baseline = await run(eventChunks(bytes));
-      await forEachSeed(
-        `openai-v4 split ${name}`,
-        async (random) => {
-          const { completion, events } = await run(randomSplit(bytes, random), { client: openAiV4 });
-
-          expect(completion).toEqual(baseline.completion);
-          expect(events).toEqual(baseline.events);
-        },
-        20
-      );
-    }
-  });
-
   it('CRLF line ends give the same result', async () => {
     for (const name of COMPLETED_FIXTURES) {
       const crlf = encoder.encode(new TextDecoder().decode(readSse(name)).replace(/\n/g, '\r\n'));
@@ -433,8 +408,7 @@ describe(`a connection that closes early (seed ${BASE_SEED})`, () => {
 
       await forEachSeed(`openai socket drop ${name}`, async (random) => {
         const chunks = randomSplit(bytes, random);
-        const client = random.chance(0.5) ? openAiV7 : openAiV4;
-        const { completion, error } = await run(chunks, { client, failAt: random.int(chunks.length) });
+        const { completion, error } = await run(chunks, { failAt: random.int(chunks.length) });
 
         expect(completion).toBeUndefined();
         expect(isRetryableError(error), errorText(error)).toBe(true);
@@ -499,24 +473,6 @@ describe(`a connection that closes early (seed ${BASE_SEED})`, () => {
 
       expect(isRetryableError(error), `closed at byte ${cut}: ${errorText(error)}`).toBe(true);
     });
-  });
-
-  it('on openai-v4 a stream closed inside an event rejects with a retryable error', async () => {
-    for (const name of COMPLETED_FIXTURES) {
-      const { bytes, ends, finishedAfter } = eventLayout(name);
-      await forEachSeed(
-        `openai-v4 close inside event ${name}`,
-        async (random) => {
-          const event = random.int(finishedAfter + 1);
-          const from = event === 0 ? 0 : ends[event - 1]!;
-          const cut = from + 7 + random.int(ends[event]! - from - 8);
-          const { error } = await run(randomSplit(bytes.slice(0, cut), random), { client: openAiV4 });
-
-          expect(isRetryableError(error), `closed at byte ${cut}: ${errorText(error)}`).toBe(true);
-        },
-        20
-      );
-    }
   });
 
   // Every choice has finished, so the reply stands without its usage, and token accounting falls back to 500 tokens
@@ -775,10 +731,7 @@ describe(`empty and usage-only chunks (seed ${BASE_SEED})`, () => {
   });
 });
 
-describe.each([
-  ['openai', openAiV7],
-  ['openai-v4', openAiV4]
-])(`an abort at a random point on %s (seed ${BASE_SEED})`, (clientName, client) => {
+describe.each([['openai', openAiV7]])(`an abort at a random point on %s (seed ${BASE_SEED})`, (clientName, client) => {
   const expectAbort = (error: unknown) => {
     expect(error).toBeInstanceOf(APIUserAbortError);
     expect(isRetryableError(error)).toBe(false);
@@ -788,48 +741,40 @@ describe.each([
     const bytes = readSse(name);
     const fullText = textOf((await run(eventChunks(bytes))).events);
 
-    await forEachSeed(
-      `${clientName} abort chunk ${name}`,
-      async (random) => {
-        const chunks = randomSplit(bytes, random);
-        const abortAt = random.int(chunks.length + 1);
-        const controller = new AbortController();
-        const { error, completion, events } = await run(chunks, {
-          client,
-          signal: controller.signal,
-          beforeChunk: (index) => index === abortAt && controller.abort()
-        });
+    await forEachSeed(`${clientName} abort chunk ${name}`, async (random) => {
+      const chunks = randomSplit(bytes, random);
+      const abortAt = random.int(chunks.length + 1);
+      const controller = new AbortController();
+      const { error, completion, events } = await run(chunks, {
+        client,
+        signal: controller.signal,
+        beforeChunk: (index) => index === abortAt && controller.abort()
+      });
 
-        expect(completion).toBeUndefined();
-        expectAbort(error);
-        expect(fullText.startsWith(textOf(events))).toBe(true);
-      },
-      clientName === 'openai' ? ITERATIONS : 20
-    );
+      expect(completion).toBeUndefined();
+      expectAbort(error);
+      expect(fullText.startsWith(textOf(events))).toBe(true);
+    });
   });
 
   it.each(COMPLETED_FIXTURES)('on a random event of %s rejects with the SDK abort error', async (name) => {
     const bytes = readSse(name);
     const baseline = await run(eventChunks(bytes));
 
-    await forEachSeed(
-      `${clientName} abort event ${name}`,
-      async (random) => {
-        const abortOn = random.int(baseline.events.length);
-        const controller = new AbortController();
-        let seen = 0;
-        const { error, events } = await run(randomSplit(bytes, random), {
-          client,
-          signal: controller.signal,
-          sink: () => seen++ === abortOn && controller.abort()
-        });
+    await forEachSeed(`${clientName} abort event ${name}`, async (random) => {
+      const abortOn = random.int(baseline.events.length);
+      const controller = new AbortController();
+      let seen = 0;
+      const { error, events } = await run(randomSplit(bytes, random), {
+        client,
+        signal: controller.signal,
+        sink: () => seen++ === abortOn && controller.abort()
+      });
 
-        expectAbort(error);
-        expect(events).toEqual(baseline.events.slice(0, events.length));
-        expect(events.length).toBeGreaterThan(abortOn);
-      },
-      clientName === 'openai' ? ITERATIONS : 20
-    );
+      expectAbort(error);
+      expect(events).toEqual(baseline.events.slice(0, events.length));
+      expect(events.length).toBeGreaterThan(abortOn);
+    });
   });
 });
 
