@@ -1,6 +1,6 @@
 {
   "name": "@moc-global/loft-openai-strategy",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "OpenAI and Azure OpenAI strategy for the LOFT framework",
   "keywords": [
     "loft",
