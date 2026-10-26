@@ -42,7 +42,7 @@
     "lint:check": "npx eslint ./src --max-warnings=0"
   },
   "dependencies": {
-    "dotenv": "^16.4.5",
+    "dotenv": "^18.0.8",
     "kysely": "^0.29.6",
     "pg": "^8.11.4",
     "yargs": "^17.7.2",
