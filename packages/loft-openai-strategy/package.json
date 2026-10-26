@@ -57,15 +57,14 @@
   "peerDependencies": {
     "@moc-global/loft-definitions": "workspace:^",
     "@modelcontextprotocol/sdk": "^1.31.0",
-    "openai": "^4.91.1 || ^7.34.0",
-    "zod": "^3.25.67"
+    "openai": "^7.34.0",
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@moc-global/loft-definitions": "workspace:*",
     "@moc-global/loft-test-suite": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "openai": "^7.34.0",
-    "openai-v4": "npm:openai@4.104.0",
-    "zod": "3.25.67"
+    "zod": "4.6.7"
   }
 }

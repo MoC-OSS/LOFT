@@ -24,10 +24,9 @@ updates:
           - minor
           - patch
     ignore:
-      # Pinned on purpose; see Pinned Dependencies in docs/contributing/releasing.md
-      # zod 3.25.68 and later make MCP tool registration hit TS2589 under moduleResolution node
+      # A zod major changes the peer range of the published packages, which needs a major release
       - dependency-name: zod
-        versions: ['>3.25.67']
+        update-types: ['version-update:semver-major']
       - dependency-name: inversify
         update-types: ['version-update:semver-major']
       # A new kysely minor can break while it is 0.x, and the migrator imports from its kysely/migration subpath

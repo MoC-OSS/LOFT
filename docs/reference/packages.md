@@ -42,7 +42,7 @@ LOFT is modular — you install only what you need:
 | **Directory** | `packages/loft/` |
 | **Purpose** | Core framework: constructors, managers, workflows |
 | **Key exports** | `LoftConstructor`, `ChatConstructor`, `ManifestManagerConstructor`, `FsRepositoryConstructor`, `LOFT`, `LlmManager`, `ManifestManager`, `ChatHistoryManager`, `MCPManager`, `ToolInterceptorManager`, `BaseLoftChat`, `LangfuseTracer`, `NoOpTracerStrategy`, `LlmContextWindowCropper`, `FocusRegistry`, `computeFocusStatus`, `generateFocusPrompt`, `generateFocusTools`, `InMemoryFocusStateStore`, `coerceValue`, `validateField` |
-| **Peer deps** | `@moc-global/loft-definitions`, `inversify` 6, `reflect-metadata`, `zod` 3, `@modelcontextprotocol/sdk`; `langfuse` 3 (optional, for `LangfuseTracer`) |
+| **Peer deps** | `@moc-global/loft-definitions`, `inversify` 6, `reflect-metadata`, `zod` 4, `@modelcontextprotocol/sdk`; `langfuse` 3 (optional, for `LangfuseTracer`) |
 
 #### `@moc-global/loft-definitions`
 
@@ -263,7 +263,7 @@ The following dependency versions are pinned across all packages:
 
 | Package | Pinned Version | Reason |
 |---------|---------------|--------|
-| `zod` | `3.25.67` (exact, in development); `^3.25.67` for users (peer) | One Zod copy in the workspace, so schemas from different packages are compatible |
+| `zod` | `4.6.7` (exact, in development); `^4.6.6` for users (peer) | One Zod copy in the workspace, so schemas from different packages are compatible; 4.6.6 is the first version without the GHSA-mrhx-c7xc-m3w5 memory exhaustion |
 | `@modelcontextprotocol/sdk` | `^1.31.0` (peer) | MCP protocol compatibility |
 
 ## Supported Provider SDK Versions
@@ -272,10 +272,10 @@ The LLM and queue strategies take their provider SDK as a peer dependency, so yo
 
 | Package | Peer dependency | Supported range | Note |
 |---------|-----------------|-----------------|------|
-| `@moc-global/loft-openai-strategy` | `openai` | `^4.91.1 \|\| ^7.34.0` | openai 5 and 6 are not tested, so they are left out |
+| `@moc-global/loft-openai-strategy` | `openai` | `^7.34.0` | openai 4 and 5 need zod 3; openai 6 is not tested |
 | `@moc-global/loft-anthropic-strategy` | `@anthropic-ai/sdk` | `>=0.39.0 <1` | Every 0.x release from 0.39.0; tested with 0.39.0 and 0.134.0 |
 | `@moc-global/loft-gemini-strategy` | `@google/genai` | `^1.30.0 \|\| ^2.30.0` | |
 | `@moc-global/loft-queue-sqs-strategy` | `@aws-sdk/client-sqs` | `^3.1140.0` | |
-| All packages with Zod schemas | `zod` | `^3.25.67` | Zod 4 is not supported |
+| All packages with Zod schemas | `zod` | `^4.6.6` | Zod 3 is not supported |
 
 LOFT is built and CI-tested with the newest version of each range. The oldest and newest version of each range were tested when the range was last changed.

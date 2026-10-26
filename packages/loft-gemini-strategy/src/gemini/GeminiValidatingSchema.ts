@@ -184,6 +184,6 @@ export const GeminiRequestBodySchema = z.object({
   llmName: z.string(),
   requestType: z.nativeEnum(Strategy.LLM.LLMRequestType),
   llmBody: GeminiValidatingSchema.generateRequestValidationSchema(),
-  callContext: z.record(z.any()).optional(),
+  callContext: z.record(z.string(), z.any()).optional(),
   priority: z.number().optional()
 });

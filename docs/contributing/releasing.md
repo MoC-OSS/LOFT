@@ -104,5 +104,5 @@ Some dependencies are pinned across all packages:
 
 | Package | Version | Reason |
 |---------|---------|--------|
-| `zod` | `3.25.67` (exact) | Consistency across packages; MCP SDK compatibility: from 3.25.68, registering an MCP server tool fails to compile with TS2589 under `moduleResolution: node` |
+| `zod` | `4.6.7` (exact) | One copy across packages, so schemas from different packages are compatible. Users get `^4.6.6` as a peer: the first version without GHSA-mrhx-c7xc-m3w5 |
 | `@modelcontextprotocol/sdk` | `^1.31.0` (peer) | MCP protocol compatibility |

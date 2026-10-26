@@ -37,10 +37,7 @@ function openAiMessageToContentParts(message: ChatCompletionMessage): Type.Entit
     if (toolCall.type === 'function') {
       parts.push(toolCallToContentPart(toolCall));
     } else {
-      // openai 4 knows only function calls, so the type is read without its types
-      log.warn(
-        `Skipped an OpenAI tool call of type "${(toolCall as { type: string }).type}"; LOFT supports only function tool calls`
-      );
+      log.warn(`Skipped an OpenAI tool call of type "${toolCall.type}"; LOFT supports only function tool calls`);
     }
   }
   if (parts.length === 0 && toolCalls.length > 0) {

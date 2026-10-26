@@ -99,15 +99,15 @@ export async function streamChatCompletion(
       for (const event of eventsOf(chunk, accumulator)) emit(event);
     }
   } catch (error) {
-    // The SDK fails to parse an event the body cut short (v7 parses the partial event at its end, v4 drops it). Every
-    // other error, the API's error events among them, rejects as it is
+    // The SDK fails to parse an event the body cut short, as it parses the partial event at its end. Every other error,
+    // the API's error events among them, rejects as it is
     if (!(error instanceof SyntaxError)) throw error;
     if (signal?.aborted) throw new APIUserAbortError();
     // Once every choice has finished, only the tail was lost (the [DONE] line, or the usage chunk), so the reply stands
     if (accumulator.finished) return accumulator.result();
     throw new APIConnectionError({ message: 'The stream ended inside an event', cause: error });
   }
-  // Both SDKs end the chunks without an error when the signal aborts; reject as a non-streamed request does. The class
+  // The SDK ends the chunks without an error when the signal aborts; reject as a non-streamed request does. The class
   // comes from the `openai` package this strategy imports, the SDK that made the request
   if (signal?.aborted) throw new APIUserAbortError();
   return accumulator.result();

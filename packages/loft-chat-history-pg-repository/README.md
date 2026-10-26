@@ -8,7 +8,7 @@ Stores the chat history of [LOFT](https://github.com/MoC-OSS/LOFT) sessions in P
 npm install @moc-global/loft-chat-history-pg-repository pg
 ```
 
-Its peers, `@moc-global/loft-definitions`, `inversify` 6, `reflect-metadata` and `zod` 3, are already in a LOFT application. It uses [Kysely](https://kysely.dev) with the `pg` driver.
+Its peers, `@moc-global/loft-definitions`, `inversify` 6, `reflect-metadata` and `zod` 4, are already in a LOFT application. It uses [Kysely](https://kysely.dev) with the `pg` driver.
 
 ## Set up the database
 

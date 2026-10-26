@@ -38,10 +38,10 @@ LOFT needs Node.js 22 or later, and 22.12 or later for the PostgreSQL storage an
 npm install @moc-global/loft @moc-global/loft-definitions @moc-global/loft-llm-call-manager \
   @moc-global/loft-openai-strategy \
   @moc-global/loft-session-pg-repository @moc-global/loft-chat-history-pg-repository \
-  reflect-metadata inversify@^6 zod@^3.25.67 @modelcontextprotocol/sdk openai@^7 pg
+  reflect-metadata inversify@^6 zod@^4.6.6 @modelcontextprotocol/sdk openai@^7 pg
 ```
 
-inversify, reflect-metadata, zod, the MCP SDK and the provider SDK are peer dependencies, so your project and LOFT share one copy of each. LOFT needs inversify 6 and zod 3, not the latest majors. npm 7 or later and pnpm install missing peers; with Yarn, list them as above.
+inversify, reflect-metadata, zod, the MCP SDK and the provider SDK are peer dependencies, so your project and LOFT share one copy of each. LOFT needs inversify 6, not the latest major, and zod 4. npm 7 or later and pnpm install missing peers; with Yarn, list them as above.
 
 ## Quickstart
 
@@ -222,8 +222,8 @@ The [documentation index](./docs/README.md) lists every page.
 | Node.js | 22 or later, and 22.12 or later for the PostgreSQL storage and the call manager; CI tests 22.12, 22, 24 and 26 |
 | Module formats | ES modules and CommonJS, each with its own types |
 | TypeScript | 5.x |
-| inversify, zod | 6, 3 |
-| Provider SDKs | `openai` 4 and 7, `@anthropic-ai/sdk` 0.39 and later 0.x, `@google/genai` 1 and 2 ([details](./docs/reference/packages.md#supported-provider-sdk-versions)) |
+| inversify, zod | 6, 4 |
+| Provider SDKs | `openai` 7, `@anthropic-ai/sdk` 0.39 and later 0.x, `@google/genai` 1 and 2 ([details](./docs/reference/packages.md#supported-provider-sdk-versions)) |
 
 ## Contributing
 

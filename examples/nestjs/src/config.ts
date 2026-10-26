@@ -8,9 +8,9 @@ const envSchema = z.object({
   LOFT_CHAT_HISTORY_SCHEMA: z.string().default('loft_chat_history'),
   LOFT_MANIFEST_PATH: z.string().default('manifest/manifest.json'),
   LOFT_MANIFEST_ERROR_PATH: z.string().default('manifest/errors/error.json'),
-  LOFT_MANIFEST_CACHE_EXPIRATION: z.string().transform(Number).default('3600000'),
+  LOFT_MANIFEST_CACHE_EXPIRATION: z.string().transform(Number).default(3600000),
   LOFT_LOG_LEVEL: z.enum(['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', 'NONE']).default('INFO'),
-  PORT: z.string().transform(Number).default('3004')
+  PORT: z.string().transform(Number).default(3004)
 });
 
 export const env = envSchema.parse(process.env);

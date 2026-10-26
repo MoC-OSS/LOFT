@@ -33,7 +33,7 @@ const chatCompletionToolSchema = z.object({
   function: z.object({
     name: z.string(),
     description: z.string().optional(),
-    parameters: z.record(z.any()).optional()
+    parameters: z.record(z.string(), z.any()).optional()
   }),
   type: z.literal('function')
 });
@@ -70,7 +70,7 @@ const responseFormatJSONObjectSchema = z.object({
 
 const responseFormatJSONSchemaSchema = z.object({
   type: z.literal('json_schema'),
-  json_schema: z.record(z.any())
+  json_schema: z.record(z.string(), z.any())
 });
 
 const responseFormatSchema = z.union([
@@ -158,7 +158,7 @@ export class OpenAiValidatingSchemas {
       presence_penalty: z.number().optional(),
       frequency_penalty: z.number().optional(),
       logit_bias: z
-        .record(z.number())
+        .record(z.string(), z.number())
         .refine(
           (data) => {
             return Object.keys(data).every((k) => !isNaN(+k));
@@ -172,7 +172,7 @@ export class OpenAiValidatingSchemas {
       audio: chatCompletionAudioParamSchema,
       logprobs: z.boolean().optional(),
       max_completion_tokens: z.number().optional(),
-      metadata: z.record(z.string()).optional(),
+      metadata: z.record(z.string(), z.string()).optional(),
       modalities: z.array(z.enum(['text', 'audio'])).optional(),
       parallel_tool_calls: z.boolean().optional(),
       prediction: chatCompletionPredictionContentSchema.optional(),
@@ -237,7 +237,7 @@ export class OpenAiValidatingSchemas {
       best_of: z.number().optional().nullable(),
       echo: z.boolean().optional().nullable(),
       frequency_penalty: z.number().optional().nullable(),
-      logit_bias: z.record(z.number()).optional().nullable(),
+      logit_bias: z.record(z.string(), z.number()).optional().nullable(),
       logprobs: z.number().optional().nullable(),
       max_tokens: z.number().optional().nullable(),
       n: z.number().optional().nullable(),
@@ -266,7 +266,7 @@ export class OpenAiValidatingSchemas {
       text_offset: z.array(z.number()).optional(),
       token_logprobs: z.array(z.number()).optional(),
       tokens: z.array(z.string()).optional(),
-      top_logprobs: z.array(z.record(z.number())).optional()
+      top_logprobs: z.array(z.record(z.string(), z.number())).optional()
     });
 
     const completionChoiceSchema = z.object({
@@ -299,6 +299,6 @@ export const OpenAiRequestBodySchema = z.object({
   llmName: z.string(),
   requestType: z.nativeEnum(Strategy.LLM.LLMRequestType),
   llmBody: OpenAiValidatingSchemas.generateRequestValidationSchema(),
-  callContext: z.record(z.any()).optional(),
+  callContext: z.record(z.string(), z.any()).optional(),
   priority: z.number().optional()
 });

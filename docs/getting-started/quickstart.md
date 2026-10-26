@@ -20,7 +20,7 @@ Both variants need the core packages plus a storage layer for sessions and chat 
 ```bash
 # Core framework and the libraries it shares with your code (peer dependencies)
 npm install @moc-global/loft @moc-global/loft-definitions
-npm install reflect-metadata inversify@^6 zod@^3.25.67 @modelcontextprotocol/sdk
+npm install reflect-metadata inversify@^6 zod@^4.6.6 @modelcontextprotocol/sdk
 
 # PostgreSQL repositories (the OOTB option for sessions and chat history)
 npm install @moc-global/loft-session-pg-repository @moc-global/loft-chat-history-pg-repository

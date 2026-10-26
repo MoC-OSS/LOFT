@@ -5,7 +5,7 @@ The core of [LOFT](https://github.com/MoC-OSS/LOFT), a TypeScript framework for 
 ## Install
 
 ```bash
-npm install @moc-global/loft @moc-global/loft-definitions reflect-metadata inversify@^6 zod@^3.25.67 @modelcontextprotocol/sdk
+npm install @moc-global/loft @moc-global/loft-definitions reflect-metadata inversify@^6 zod@^4.6.6 @modelcontextprotocol/sdk
 ```
 
 You also need a provider strategy, such as [`@moc-global/loft-openai-strategy`](https://www.npmjs.com/package/@moc-global/loft-openai-strategy), and storage for sessions and chat history, such as [`@moc-global/loft-session-pg-repository`](https://www.npmjs.com/package/@moc-global/loft-session-pg-repository) and [`@moc-global/loft-chat-history-pg-repository`](https://www.npmjs.com/package/@moc-global/loft-chat-history-pg-repository). For `LangfuseTracer`, also install `langfuse@^3`.

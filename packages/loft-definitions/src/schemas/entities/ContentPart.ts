@@ -224,7 +224,7 @@ export const ToolCallContentSchema = RequestSchema.extend({
   _meta: z.optional(z.object({}).passthrough()),
   params: BaseRequestParamsSchema.extend({
     name: z.string(),
-    arguments: z.optional(z.record(z.unknown()))
+    arguments: z.optional(z.record(z.string(), z.unknown()))
   })
 });
 
