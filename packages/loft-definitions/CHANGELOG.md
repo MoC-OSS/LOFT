@@ -1,5 +1,29 @@
 # @moc-global/loft-definitions
 
+## 1.10.0
+
+### Minor Changes
+
+- 9da30fb: The rate limiter interface, `Strategy.LLM.LlmTokenRateLimiter`, gains an optional `acquire(tokens, signal?)`, which waits until the tokens and one request are available and takes both in one synchronous step, checking again after every wait; when `signal` aborts during a wait, it rejects at once and takes nothing. A rate limiter without `acquire` is still used through `awaitBeforeCall`, `setUsedTokens` and `setUsedRequest`. The interface now documents that `setUsedTokens` takes a negative value to refund tokens.
+- 9da30fb: Adds the experimental types for streaming a chat reply. `Strategy.LLM.LlmStreamEvent`, `LlmStreamSink` and `StreamUsage` describe what a provider reports while it streams, and `CallOptions.onEvent` lets LOFT pass a sink to a provider. `Chat.ChatStreamEvent`, `ChatStreamEventBase`, `ChatStreamErrorCode` and `StreamOptions` describe the events of a streamed `generate()` call, and `Chat.GenerateOptions` gets the optional `onEvent` and `streamOptions`. Existing code is unaffected.
+
+  Middleware can now declare that it does not change the reply text: `registerAfterGenerateMiddleware`, `AbstractLoftLLM.useMiddleware` and `MiddlewareManager.use` take an optional `{ transformsOutput?: boolean }` (default `true`, the current behaviour). `MiddlewareManager` exposes `transformingCount` and `transformingNames`, and `LoftLLM` gets the optional `hasOutputMiddleware()`, which `AbstractLoftLLM` implements.
+
+  Adds `StreamIdleTimeoutError`, for a model stream that stays silent for too long. The last parameter of `Interface.LlmManager.generate` is now `Interface.LlmGenerateOptions`, which extends `CallOptions`. Both it and `Chat.GenerationEventSink` are internal and may change in any release.
+
+  Deprecated, with nothing removed now: `Strategy.LLM.LLMApi.generateStream` and `extractContentFromChunk`, `Strategy.CallManager.streamCall` (and the `streamCall` methods of the call manager strategies), `Strategy.LLM.LoftLLM.generateStream`, `Strategy.LLM.UnifiedLLMStream`, `Strategy.LLM.UnifiedLLMChunkResponse`, `Interface.LlmManager.generateStream` and `Chat.Status.SUCCESS_STREAM`. Use `chat.generate({ onEvent })` instead. They stay on the interfaces as required members and are removed in the next major release.
+
+  `step-finish` and `finish` events carry `reason`, the finish reason normalized across providers (`Chat.ChatFinishReason`: `'stop' | 'length' | 'content-filter' | 'tool-calls' | 'error' | 'other'`, a union that may gain values), beside `finishReason`, which stays the provider's raw value. The `abort` event carries `reason: 'timeout' | 'cancelled'`, and an `error` event with `code: 'rate_limited'` may carry `retryAfterMs`.
+
+- 9da30fb: New `Strategy.LLM.LoftFinishReason` enum names the finish reasons LOFT sets on a response that no provider call produced: `interceptor_override` (a tool interceptor replaced the reply), `middleware_override` (BeforeGenerate middleware prevented the generation) and `max_loops_exceeded` (the tool loop reached its limit). The values are the strings LOFT already wrote to `usage.finishReason`; nothing changes for code that compares against them.
+- 9da30fb: `isRetryableError` now also treats an error without an HTTP status as retryable when its `type` or `error.type` is `overloaded_error`, `api_error` (Anthropic) or `server_error` (OpenAI), as the provider errors that arrive in the middle of a stream do. An error with a status is still judged by the status alone.
+
+  New `providerErrorSummary(error)` returns what a log may say about a failed provider request: the error's class name, HTTP `status`, `type` and `code`, never its message or body. The OpenAI, Anthropic and Gemini strategies use it for their streamed-request logs.
+
+  New `guardedStreamSink(onEvent, warn)` wraps a provider strategy's stream sink so a sink that throws cannot break the stream; only its first failure is reported, with the event type only. The three strategies use it.
+
+- 9da30fb: The tool handler type takes an optional second argument, `context` (`Chat.AdditionalToolContext`), with the `generate()` abort signal (`context.signal`) and an `emit(name, data)` function. `emit` is experimental. The handler is declared method-style, so handlers that take only the arguments, or that declare a required `context`, still type-check.
+
 ## 1.9.0
 
 ### Minor Changes
