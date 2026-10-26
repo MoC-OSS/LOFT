@@ -64,7 +64,7 @@
     "@moc-global/loft-definitions": "workspace:*",
     "@moc-global/loft-test-suite": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",
-    "@types/node": "^20.14.2",
+    "@types/node": "^26.6.5",
     "zod": "4.6.7"
   }
 }
