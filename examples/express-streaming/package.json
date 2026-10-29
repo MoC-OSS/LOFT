@@ -13,8 +13,8 @@
     "test": "node --test --test-timeout=20000 --import tsx src/*.test.ts"
   },
   "dependencies": {
-    "@electric-sql/pglite": "0.5.10",
-    "@electric-sql/pglite-socket": "0.2.13",
+    "@electric-sql/pglite": "0.5.11",
+    "@electric-sql/pglite-socket": "0.2.14",
     "@moc-global/loft": "workspace:*",
     "@moc-global/loft-chat-history-pg-repository": "workspace:*",
     "@moc-global/loft-definitions": "workspace:*",
