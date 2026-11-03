@@ -61,7 +61,7 @@
   "dependencies": {
     "axios": "^1.20.0",
     "fast-copy": "^3.1.0",
-    "json-colorizer": "^2.2.2",
+    "json-colorizer": "^3.0.1",
     "pino": "^10.4.0"
   },
   "peerDependencies": {
