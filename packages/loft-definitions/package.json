@@ -1,6 +1,6 @@
 {
   "name": "@moc-global/loft-definitions",
-  "version": "1.10.0",
+  "version": "2.0.0",
   "description": "Shared types, interfaces and dependency injection symbols for the LOFT framework",
   "keywords": [
     "loft",

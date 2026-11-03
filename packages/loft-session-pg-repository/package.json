@@ -1,6 +1,6 @@
 {
   "name": "@moc-global/loft-session-pg-repository",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "PostgreSQL session repository for the LOFT framework, with a migration CLI",
   "keywords": [
     "loft",
