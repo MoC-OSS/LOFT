@@ -57,8 +57,8 @@ importers:
         specifier: ^4.1.11
         version: 4.1.12(vitest@4.1.12)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
@@ -144,8 +144,8 @@ importers:
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.7)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       express:
         specifier: ^5.3.0
         version: 5.3.0
@@ -211,8 +211,8 @@ importers:
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.7)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       express:
         specifier: ^5.3.0
         version: 5.3.0
@@ -278,8 +278,8 @@ importers:
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.7)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       express:
         specifier: ^5.3.0
         version: 5.3.0
@@ -342,8 +342,8 @@ importers:
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.7)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       express:
         specifier: ^5.3.0
         version: 5.3.0
@@ -409,8 +409,8 @@ importers:
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.7)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       express:
         specifier: ^5.3.0
         version: 5.3.0
@@ -479,8 +479,8 @@ importers:
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.7)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       express:
         specifier: ^5.3.0
         version: 5.3.0
@@ -616,8 +616,8 @@ importers:
         specifier: ^12.1.2
         version: 12.1.3(@nestjs/common@12.1.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.3)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       inversify:
         specifier: ^6.2.2
         version: 6.2.2(reflect-metadata@0.2.2)
@@ -683,8 +683,8 @@ importers:
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.7)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       inversify:
         specifier: ^6.2.2
         version: 6.2.2(reflect-metadata@0.2.2)
@@ -759,8 +759,8 @@ importers:
         specifier: ^1.32.1
         version: 1.32.1(zod@4.6.7)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       inversify:
         specifier: ^6.2.2
         version: 6.2.2(reflect-metadata@0.2.2)
@@ -904,8 +904,8 @@ importers:
   packages/loft-chat-history-pg-repository:
     dependencies:
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       kysely:
         specifier: ^0.29.6
         version: 0.29.7
@@ -1002,8 +1002,8 @@ importers:
   packages/loft-kysely-pg-migrator:
     dependencies:
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       kysely:
         specifier: ^0.29.6
         version: 0.29.7
@@ -1168,8 +1168,8 @@ importers:
   packages/loft-session-pg-repository:
     dependencies:
       dotenv:
-        specifier: ^16.4.5
-        version: 16.6.1
+        specifier: ^18.0.8
+        version: 18.0.8
       kysely:
         specifier: ^0.29.6
         version: 0.29.7
@@ -3471,9 +3471,10 @@ packages:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
     engines: {node: '>=6.0.0'}
 
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+  dotenv@18.0.8:
+    resolution: {integrity: sha512-2KDeoFoK/zRtcnbunCDlLG5VWVMcyqeQc6iK65o231nfNAcuGrKoqUQfJFUtBI+QlShk5HKIHxwebBtUl3rEfA==}
     engines: {node: '>=12'}
+    hasBin: true
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -8237,7 +8238,7 @@ snapshots:
     dependencies:
       esutils: 2.0.3
 
-  dotenv@16.6.1: {}
+  dotenv@18.0.8: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -8680,7 +8681,7 @@ snapshots:
   extract-pg-schema@5.8.2(@electric-sql/pglite@0.5.10):
     dependencies:
       knex: 3.1.0(pg@8.17.2)
-      knex-pglite: 0.12.1(@electric-sql/pglite@0.5.10)(knex@3.1.0(pg@8.23.1))
+      knex-pglite: 0.12.1(@electric-sql/pglite@0.5.10)(knex@3.1.0(pg@8.17.2))
       pg: 8.17.2
       pg-query-emscripten: 5.1.0
       ramda: 0.31.3
@@ -9389,7 +9390,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knex-pglite@0.12.1(@electric-sql/pglite@0.5.10)(knex@3.1.0(pg@8.23.1)):
+  knex-pglite@0.12.1(@electric-sql/pglite@0.5.10)(knex@3.1.0(pg@8.17.2)):
     dependencies:
       '@electric-sql/pglite': 0.5.10
       knex: 3.1.0(pg@8.17.2)
