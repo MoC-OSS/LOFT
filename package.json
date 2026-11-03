@@ -38,7 +38,7 @@
     "@moc-global/loft-kysely-pg-migrator": "workspace:*",
     "@moc-global/loft-pglite": "workspace:*",
     "@moc-global/loft-test-suite": "workspace:*",
-    "@types/node": "^20.14.2",
+    "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "@types/yargs": "^17.0.32",
     "@typescript-eslint/eslint-plugin": "^8.71.2",

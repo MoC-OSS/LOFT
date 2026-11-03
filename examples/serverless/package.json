@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.164",
-    "@types/node": "^20.14.2",
+    "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "tsup": "^8.5.1",
     "tsx": "^4.23.15",

@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@moc-global/loft-pglite": "workspace:*",
-    "@types/node": "^20.14.2",
+    "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "@types/yargs": "^17.0.32"
   }
