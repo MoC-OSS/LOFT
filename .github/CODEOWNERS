@@ -3,5 +3,9 @@
 
 *                   @andrii-borodin-moc @andrii-smahin-moc
 
+# The Claude Code marketplace and its plugins
+/.claude-plugin/    @andrii-borodin-moc @andrii-smahin-moc
+/plugins/           @andrii-borodin-moc @andrii-smahin-moc
+
 # Workflows build, test and publish the packages
 /.github/workflows/ @andrii-borodin-moc @andrii-smahin-moc
