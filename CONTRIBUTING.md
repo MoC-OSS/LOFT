@@ -46,7 +46,22 @@ Releases are made with [Changesets](https://github.com/changesets/changesets). I
 pnpm changeset
 ```
 
-Use `patch` for fixes, `minor` for new features that keep compatibility, and `major` for breaking changes; the [versioning and deprecation policy](./docs/contributing/releasing.md#versioning-and-deprecation-policy) says what counts as breaking and how to deprecate an API. Changes to documentation, tests, examples, CI or the private packages (`loft-base-tsconfig`, `loft-kysely-pg-migrator`, `loft-middleware`, `loft-pglite`, `loft-test-suite`) need no changeset. [Releasing](./docs/contributing/releasing.md) describes the rest of the process.
+Use `patch` for fixes, `minor` for new features that keep compatibility, and `major` for breaking changes; the [versioning and deprecation policy](./docs/contributing/releasing.md#versioning-and-deprecation-policy) says what counts as breaking and how to deprecate an API. Changes to documentation, tests, examples, CI, the [Claude Code plugin](#claude-code-plugin) or the private packages (`loft-base-tsconfig`, `loft-kysely-pg-migrator`, `loft-middleware`, `loft-pglite`, `loft-test-suite`) need no changeset. [Releasing](./docs/contributing/releasing.md) describes the rest of the process.
+
+## Claude Code plugin
+
+The repository is also a Claude Code marketplace: [`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json) lists the [`loft-integration`](./plugins/loft-integration/) plugin in `plugins/`. The plugin is not an npm package, so it needs no changeset. When you change it:
+
+1. Follow the [plugin authoring guide](./docs/contributing/claude-plugin-authoring.md).
+2. Bump `version` in `plugins/loft-integration/.claude-plugin/plugin.json` and `metadata.version` in its `SKILL.md`, and add an entry to its [CHANGELOG](./plugins/loft-integration/CHANGELOG.md). Users only receive a change when the version changes.
+3. Run the checks that the `claude-plugin` CI job runs:
+
+```bash
+claude plugin validate . --strict
+claude plugin validate ./plugins/loft-integration --strict
+python3 scripts/lint_skills.py --strict   # needs PyYAML
+python3 -m pytest scripts/                # needs pytest
+```
 
 ## Sign off your commits (DCO)
 
