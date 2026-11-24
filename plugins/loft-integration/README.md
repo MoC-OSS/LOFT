@@ -49,7 +49,7 @@ The plugin uses a three-tier documentation strategy:
 
 ## Supported LOFT Version
 
-The embedded references were verified against loft 2.7.3. With a newer LOFT version, the plugin checks your installed packages and the latest docs before relying on them.
+The embedded references were verified against loft 3.0.0. With a different LOFT version, the plugin checks your installed packages and the latest docs before relying on them.
 
 ## Contributing
 

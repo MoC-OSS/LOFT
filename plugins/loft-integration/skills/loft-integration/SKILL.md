@@ -3,7 +3,7 @@ name: loft-integration
 description: "Generates LOFT (@moc-global/loft) setup code, modifies providers/middleware/manifests/sessions, explains LOFT concepts, and audits existing LOFT integrations. Use when the user works with the LOFT TypeScript LLM orchestration framework: initial setup in any HTTP framework or serverless environment, adding or switching LLM providers, configuring the middleware pipeline, manifests, sessions, chat history, MCP tools, rate limiting, storage backends, LOFT-related errors, @moc-global/* package questions, DI container wiring (LoftConstructor, ChatConstructor, ManifestManagerConstructor), or code importing from @moc-global/* packages."
 metadata:
   author: Master of Code Global
-  version: "1.4.0"
+  version: "1.5.0"
 ---
 
 # LOFT Integration Skill
@@ -27,7 +27,7 @@ If ambiguous, ask the user which mode they need.
 
 ## Version Anchor
 
-References verified against loft 2.7.3 (see `package-map.md`). If `node_modules/@moc-global/loft/package.json` reports a different version, confirm via Tier 3 / Tier 2 before relying on Key Facts or the references.
+References verified against loft 3.0.0 (see `package-map.md`). If `node_modules/@moc-global/loft/package.json` reports a different version, confirm via Tier 3 / Tier 2 before relying on Key Facts or the references.
 
 ---
 
@@ -65,10 +65,10 @@ Use this three-tier strategy to find information. Always start with embedded ref
 
 Read these files from `${CLAUDE_PLUGIN_ROOT}/references/`:
 
-- `${CLAUDE_PLUGIN_ROOT}/references/package-map.md` — All 17 packages, selection guide, install commands, name mismatches
+- `${CLAUDE_PLUGIN_ROOT}/references/package-map.md` — All 13 published and 5 private packages, selection guide, install commands, peer dependencies, name mismatches
 - `${CLAUDE_PLUGIN_ROOT}/references/setup-patterns.md` — Per-provider, per-framework, per-storage boilerplate code
-- `${CLAUDE_PLUGIN_ROOT}/references/common-gotchas.md` — 24 verified pitfalls with symptoms, causes, and fixes
-- `${CLAUDE_PLUGIN_ROOT}/references/interfaces-quick-ref.md` — Key type signatures for middleware, strategies, repositories, chat API
+- `${CLAUDE_PLUGIN_ROOT}/references/common-gotchas.md` — 25 verified pitfalls with symptoms, causes, and fixes
+- `${CLAUDE_PLUGIN_ROOT}/references/interfaces-quick-ref.md` — Key type signatures for middleware, strategies, repositories, chat API, streaming events, tools and DI symbols
 
 ### Tier 2: GitHub Repository (latest source, `gh` CLI or `curl`)
 
@@ -93,13 +93,13 @@ gh api "repos/MoC-OSS/LOFT/contents/docs/getting-started/quickstart.md?ref=main"
 
 **Documentation structure (`docs/`):**
 - `getting-started/` — Quickstart, core concepts, introduction
-- `guides/` — LLM strategies, middleware, MCP integration, manifests, chat persistence, streaming, tracing, database migrations, error handling, context window, AI tasks
-- `concepts/` — Architecture, processing pipeline, strategy pattern, dependency injection
+- `guides/` — LLM strategies, middleware, guard middleware, MCP integration, tools, agents, manifests, chat persistence, streaming, tracing, database migrations, error handling, context window, AI tasks
+- `concepts/` — Architecture, processing pipeline, strategy pattern, dependency injection, agents
 - `reference/` — Configuration, DI symbols, environment variables, packages
-- `contributing/` — Local setup, build system, code style, testing, releasing (monorepo contributors only)
+- `contributing/` — Local setup, build system, code style, testing, releasing, Claude plugin authoring (monorepo contributors only)
 
 **Additional sources:**
-- `examples/` — Runnable example applications (express-basic, express-full, express-history, nestjs, serverless)
+- `examples/` — Runnable example applications (express-basic, express-full, express-history, express-streaming, express-agents, express-focus-basic, middleware, nestjs, serverless)
 - `packages/*/README.md` — Per-package documentation
 
 **Fetching example code:**
@@ -171,9 +171,10 @@ Using the research brief, generate:
 
 The research brief includes relevant gotchas. Cross-check generated code against them:
 - Is `reflect-metadata` the first import?
-- Are all six message fields included?
+- Does every message include `sessionId`, `role`, `author`, `llmName`, `manifestName`, `content`, `ctx` and `llmIgnore`? (All are required by the `CreateMessage` TypeScript type; only `id` is optional.)
 - Is `registerLlmStrategy` awaited?
 - Do LLM names match across strategy, manifest, and session?
+- Are the peer dependencies at LOFT's majors (zod 4, inversify 6, openai 7)?
 
 Then run `npx tsc --noEmit` in the user's project; fix any errors and re-run until clean.
 
@@ -223,7 +224,7 @@ Map the user's question to documentation sources:
 | LLM strategies | `${CLAUDE_PLUGIN_ROOT}/references/setup-patterns.md` § Per-LLM-Provider | `gh api` → strategy source in `packages/loft-*-strategy/` |
 | Database/persistence | `${CLAUDE_PLUGIN_ROOT}/references/setup-patterns.md` § Database | `gh api` → `packages/loft-session-pg-repository/README.md` |
 | MCP tools | `${CLAUDE_PLUGIN_ROOT}/references/common-gotchas.md` § MCP | `gh api` → source: `packages/loft/src/managers/MCPManager.ts` |
-| Streaming | `StreamLoftConstructor` is not implemented in the verified version (see Key Facts) | `gh api` → strategy `generateStream()` methods |
+| Streaming | `${CLAUDE_PLUGIN_ROOT}/references/interfaces-quick-ref.md` § Streaming Events, and `${CLAUDE_PLUGIN_ROOT}/references/common-gotchas.md` gotcha 5 | `gh api` → `docs/guides/streaming.md`, `examples/express-streaming/` |
 | Error handling | `${CLAUDE_PLUGIN_ROOT}/references/common-gotchas.md` | Explain from common patterns |
 | DI symbols | `${CLAUDE_PLUGIN_ROOT}/references/interfaces-quick-ref.md` § DI Symbols | `gh api` → `packages/loft-definitions/src/DITypes.ts` |
 | Config types | `${CLAUDE_PLUGIN_ROOT}/references/interfaces-quick-ref.md` § Constructors | `gh api` → `packages/loft/src/types/config.ts` |
@@ -264,8 +265,9 @@ Dispatch `loft-integration:loft-analyzer` via the Agent tool (`subagent_type: "l
 3. **LLM name must match** in three places: strategy registration, manifest key, session config
 4. **Message `content` is an array** of `{ type: 'text', text: '...' }` parts, never a plain string
 5. **Three npm names don't match directories:** S3 (`loft-aws-s3-repository`), GCS (`loft-gcp-storage-repository`), Azure (`loft-azure-blob-storage-repository`)
-6. **Middleware registration order:** after `new LoftConstructor()`, before `getInstance()`
-7. **`StreamLoftConstructor` and `QueuedLoftConstructor` are not implemented in loft 2.7.3** — use `LoftConstructor`
+6. **Middleware is registered on the `ChatConstructor`** with a unique name, before `getInstance()`; AfterGenerate middleware receives `Chat.GenerateResultMessages` (read usage from `payload.llmResponse.usage`)
+7. **Streaming is `chat.generate({ onEvent })`** (experimental) — there is no stream or queued constructor, strategy `generateStream()` is deprecated, and queued generation has no public API
 8. **Payloads are deep-copied** between middleware steps
-9. **MCP clients must be registered sequentially** — no `Promise.all()`
-10. **Zod must be pinned to `3.25.67`** when using MCP tools (as of loft 2.7.3)
+9. **MCP clients must be registered sequentially** — `await` each `useMcpClient()`; concurrent calls throw
+10. **Peer dependencies follow LOFT's majors:** zod `^4.6.6` (zod 3 is unsupported), inversify 6 (not the latest major), openai 7 for the OpenAI strategy; Node.js 22.12+ for the PostgreSQL repositories and the call manager
+11. **Shut down with `loft.shutdown()`** — it rejects new operations, waits for in-flight work to finish, then stops strategy timers and flushes the tracer; `gracefulShutdown()` is deprecated

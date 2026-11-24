@@ -1,7 +1,7 @@
 {
   "name": "loft-integration",
   "description": "Guided LOFT framework integration — setup, configuration, documentation access, and codebase analysis for @moc-global/loft",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": {
     "name": "Master of Code Global",
     "url": "https://github.com/MoC-OSS"

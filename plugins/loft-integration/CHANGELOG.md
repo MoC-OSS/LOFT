@@ -2,6 +2,23 @@
 
 All notable changes to the loft-integration plugin are documented in this file.
 
+## [1.5.0] - 2026-11-23
+
+### Changed
+- References, Key Facts, the analyzer checklist and evals re-verified against loft 3.0.0 (was 2.7.3); the version anchor is now 3.0.0
+- Peer dependencies: zod `^4.6.6` (zod 3 unsupported; the zod 3.25.67 pin is removed), inversify 6, openai 7, Node.js 22.12+ for the PostgreSQL repositories and the call manager
+- Streaming is documented as `chat.generate({ onEvent })` (experimental); `StreamLoftConstructor`/`QueuedLoftConstructor` references removed, strategy `generateStream()` marked deprecated
+- AfterGenerate middleware payload is `Chat.GenerateResultMessages` (usage at `payload.llmResponse.usage`), with the optional `transformsOutput` option
+- Shutdown uses `loft.shutdown()`; `gracefulShutdown()` is deprecated
+- CreateMessage: all fields except `id` are required by the TypeScript type (the schema defaults for `content`, `ctx` and `llmIgnore` apply only at runtime parsing); manifests require `llmManifests`, `prompts` and `aiTasks`
+- Gotcha 1/2: `Reflect.getMetadata is not a function` is attributed to `reflect-metadata` not being loaded, not to a missing `emitDecoratorMetadata`
+- Middleware `chain.next()` is synchronous; `loft.shutdown()` waits for in-flight work instead of stopping it
+- Docs structure and examples list in SKILL.md include agents, tools, guard middleware and the newer examples
+- `package-map.md`: 13 published packages with current versions, new Peer Dependencies section, `loft-agents` and `loft-middleware` added, dependency graph corrected
+- `setup-patterns.md`: new Install section; fixed Gemini, Azure OpenAI, Express multi-turn, NestJS and serverless snippets; migration CLI and programmatic migrations
+- `interfaces-quick-ref.md`: new Streaming Events and Tools sections; chat API, entities, middleware, strategy, repository, constructor and DI symbol signatures updated
+- `common-gotchas.md`: 25 gotchas (added peer dependencies and the AfterGenerate payload type; removed the zod pin; updated streaming, MCP, migrations and shutdown)
+
 ## [1.4.0] - 2026-11-23
 
 ### Changed
