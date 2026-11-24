@@ -1,0 +1,13 @@
+{
+  "name": "loft-integration",
+  "description": "Guided LOFT framework integration — setup, configuration, documentation access, and codebase analysis for @moc-global/loft",
+  "version": "1.4.0",
+  "author": {
+    "name": "Master of Code Global",
+    "url": "https://github.com/MoC-OSS"
+  },
+  "homepage": "https://github.com/MoC-OSS/LOFT/tree/main/plugins/loft-integration",
+  "repository": "https://github.com/MoC-OSS/LOFT",
+  "license": "MIT",
+  "keywords": ["loft", "llm", "typescript", "orchestration", "openai", "anthropic", "gemini", "mcp"]
+}
