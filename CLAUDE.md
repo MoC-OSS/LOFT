@@ -64,6 +64,6 @@ python3 scripts/lint_skills.py --plugin <name> --strict   # requires PyYAML
 python3 -m pytest scripts/                                 # requires pytest
 ```
 
-CI runs the same checks in the `claude-plugin` job.
+CI does not run these checks, so run them before every plugin change.
 
 When creating or refactoring a skill, command or agent, follow [docs/contributing/claude-plugin-authoring.md](./docs/contributing/claude-plugin-authoring.md).

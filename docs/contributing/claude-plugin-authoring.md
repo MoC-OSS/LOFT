@@ -241,7 +241,7 @@ claude plugin validate . --strict                                     # the mark
 claude plugin validate ./plugins/<dir> --strict                       # one plugin (manifest, skills, agents)
 ```
 The linter requires PyYAML (and pytest for its tests). Exit 1 on errors (and on warnings with `--strict`).
-CI runs all of these in the `claude-plugin` job of `.github/workflows/ci.yml`.
+CI does not run these checks; run them locally before opening a pull request.
 
 | Code | Level | Meaning |
 |---|---|---|

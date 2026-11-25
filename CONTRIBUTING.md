@@ -54,7 +54,7 @@ The repository is also a Claude Code marketplace: [`.claude-plugin/marketplace.j
 
 1. Follow the [plugin authoring guide](./docs/contributing/claude-plugin-authoring.md).
 2. Bump `version` in `plugins/loft-integration/.claude-plugin/plugin.json` and `metadata.version` in its `SKILL.md`, and add an entry to its [CHANGELOG](./plugins/loft-integration/CHANGELOG.md). Users only receive a change when the version changes.
-3. Run the checks that the `claude-plugin` CI job runs:
+3. Run the plugin checks (CI does not run them):
 
 ```bash
 claude plugin validate . --strict
