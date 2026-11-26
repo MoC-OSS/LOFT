@@ -61,6 +61,16 @@ For developers working on the LOFT monorepo itself. Start with [CONTRIBUTING.md]
 - [Build System](./contributing/build-system.md) — Turbo, tsup, TypeScript configuration
 - [Releasing](./contributing/releasing.md) — Changesets, versioning, publishing
 - [Code Style](./contributing/code-style.md) — ESLint, Prettier, import sorting
+- [Claude Code Plugin Authoring](./contributing/claude-plugin-authoring.md) — Skills, agents, evals, linting and versioning for the plugins in `plugins/`
+
+## Claude Code Plugin
+
+The [`loft-integration`](../plugins/loft-integration/) plugin brings LOFT setup, configuration help and integration reviews into Claude Code. This repository is its marketplace:
+
+```bash
+claude plugin marketplace add MoC-OSS/LOFT
+claude plugin install loft-integration@loft
+```
 
 ## Examples
 

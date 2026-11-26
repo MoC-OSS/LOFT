@@ -17,6 +17,11 @@ lerna-debug.log*
 # OS
 .DS_Store
 
+# Python (scripts/lint_skills.py and its tests)
+__pycache__/
+*.pyc
+.pytest_cache/
+
 # Tests
 coverage
 .nyc_output

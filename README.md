@@ -215,6 +215,28 @@ The [packages reference](./docs/reference/packages.md) lists the key exports and
 
 The [documentation index](./docs/README.md) lists every page.
 
+## Claude Code plugin
+
+The [`loft-integration`](./plugins/loft-integration/) plugin for [Claude Code](https://code.claude.com/docs) sets up LOFT in your project, adds providers, middleware and storage, explains LOFT concepts from the latest docs, and reviews existing integrations. This repository is its marketplace:
+
+```bash
+claude plugin marketplace add MoC-OSS/LOFT
+claude plugin install loft-integration@loft
+```
+
+Auto-update is off by default. To get a new version, run `claude plugin marketplace update loft` and then `claude plugin update loft-integration@loft`.
+
+To suggest the plugin to everyone working on your project, add it to the project's `.claude/settings.json`. The marketplace is registered once each person trusts the project folder in Claude Code, and each person still runs `claude plugin install loft-integration@loft --scope project` once:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "loft": { "source": { "source": "github", "repo": "MoC-OSS/LOFT" } }
+  },
+  "enabledPlugins": { "loft-integration@loft": true }
+}
+```
+
 ## Compatibility
 
 | | Supported |

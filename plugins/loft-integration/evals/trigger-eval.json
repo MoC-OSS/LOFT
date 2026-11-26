@@ -1,0 +1,82 @@
+[
+  {
+    "query": "I need to add @moc-global/loft to our express backend — we want to use Claude for our customer support chatbot. The project is TypeScript, we have postgres already, and we're on AWS. Can you walk me through the setup?",
+    "should_trigger": true
+  },
+  {
+    "query": "we have loft set up with openai but the team wants to switch to gemini for cost reasons. whats the least painful way to migrate? we have about 20 manifests",
+    "should_trigger": true
+  },
+  {
+    "query": "Getting this weird error in our LOFT app: 'An Llm Strategy with the name \"claude\" does not exists.' but I definitely registered it. The manifest has claude-sonnet as the key though, could that be the issue?",
+    "should_trigger": true
+  },
+  {
+    "query": "our loft middleware is running but the BeforeGenerate one doesn't seem to pass data to the next one in the chain. I'm modifying payload.directMessages but downstream middleware gets the original. what am i missing?",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you explain how LOFT's DI container works? I need to understand the constructor chain — LoftConstructor, ChatConstructor, ManifestManagerConstructor — and when each one binds its services",
+    "should_trigger": true
+  },
+  {
+    "query": "i need to add rate limiting to our loft setup. right now if we get a traffic spike the openai calls just fail. is there a built-in way to handle this with the call manager package?",
+    "should_trigger": true
+  },
+  {
+    "query": "Setting up a new NestJS project and the architect wants us to use @moc-global/loft for the AI features. I've never used it before. Where do I even start? We need multi-turn chat with history stored in postgres",
+    "should_trigger": true
+  },
+  {
+    "query": "our lambda function using loft has terrible cold start times — like 8 seconds. the pg pool setup and loft initialization happen on every invocation. is there a pattern for caching this across warm starts?",
+    "should_trigger": true
+  },
+  {
+    "query": "I want to add an AfterGenerate middleware that logs token usage to our analytics service. What's the type signature and how do I access the usage data from the response?",
+    "should_trigger": true
+  },
+  {
+    "query": "we're storing manifests in S3 but I keep getting the wrong package. I tried installing @moc-global/loft-manifest-s3-strategy but npm says it doesn't exist. what's the actual package name?",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you help me set up a basic Express API with OpenAI? I want to call GPT-4 and return the response. Just using the openai npm package directly, nothing fancy",
+    "should_trigger": false
+  },
+  {
+    "query": "I need to add Inversify dependency injection to my NestJS project. Can you show me how to set up the container with some basic services?",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I set up LangChain with Anthropic's Claude in a TypeScript project? I want to use their agent framework for tool calling",
+    "should_trigger": false
+  },
+  {
+    "query": "we need to migrate our postgresql database from RDS to Aurora Serverless. can you help with the migration plan? we're using kysely as the query builder",
+    "should_trigger": false
+  },
+  {
+    "query": "I'm building a middleware pipeline for our Express app — need before/after hooks for request logging, auth, and rate limiting. What's the best pattern?",
+    "should_trigger": false
+  },
+  {
+    "query": "Help me configure AWS S3 in my Node.js app — I need to upload and download files from a bucket using the v3 SDK",
+    "should_trigger": false
+  },
+  {
+    "query": "I want to build a chatbot with streaming responses using Server-Sent Events in Express. Can you show me the SSE setup with the Anthropic SDK?",
+    "should_trigger": false
+  },
+  {
+    "query": "our team is evaluating LLM orchestration frameworks — comparing LangChain, LlamaIndex, Semantic Kernel, and a few others. can you give me a comparison matrix?",
+    "should_trigger": false
+  },
+  {
+    "query": "I need to set up Zod validation for our API request/response types in a TypeScript project. What's the best practice for organizing schemas?",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I implement graceful shutdown in a Node.js Express app? I need to handle SIGTERM, drain connections, and close the database pool properly",
+    "should_trigger": false
+  }
+]

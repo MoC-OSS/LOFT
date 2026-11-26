@@ -1,0 +1,59 @@
+{
+  "skill_name": "loft-integration",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I'm starting a new Express project and need to add LLM capabilities using LOFT with Anthropic's Claude. We're deploying on AWS so I'll need S3 for manifests and PostgreSQL for persistence. Can you help me set this up from scratch?",
+      "expected_output": "Should produce: correct install commands (in the project's package manager) with @moc-global/loft, @moc-global/loft-definitions, @moc-global/loft-anthropic-strategy, @moc-global/loft-aws-s3-repository, @moc-global/loft-llm-call-manager, @moc-global/loft-session-pg-repository, @moc-global/loft-chat-history-pg-repository, plus the peers reflect-metadata, inversify@^6, zod@^4.6.6, @modelcontextprotocol/sdk and @anthropic-ai/sdk. Should include tsconfig.json decorator flags, reflect-metadata as first import, correct AnthropicCallStrategy with ClientOptions object (not plain string), manifest JSON with three-level nesting, S3 repository constructor, migration commands, and graceful shutdown.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "whats the quickest way to get loft working? i just want a basic setup with openai to try it out locally, nothing fancy. dont need persistence or anything — just want to send a message and get a response back",
+      "expected_output": "Should produce a minimal setup: only @moc-global/loft, @moc-global/loft-definitions, @moc-global/loft-openai-strategy, @moc-global/loft-llm-call-manager, and the peers reflect-metadata, inversify@^6, zod@^4.6.6, @modelcontextprotocol/sdk and openai@^7. Should use FsRepositoryConstructor (built-in, no S3). Still needs session and chat history repos (PostgreSQL or explain the limitation). Should show ephemeral session pattern: createSession, generate with directMessages, deleteSession. Should include reflect-metadata first import and tsconfig decorator flags. Should NOT over-engineer with middleware, MCP tools, or streaming.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need to set up LOFT in a serverless Lambda function on AWS. We'll use Gemini via Vertex AI as the LLM, S3 for manifests, and PostgreSQL (RDS) for sessions. The function will handle single-turn chat requests from our API Gateway.",
+      "expected_output": "Should produce: install commands including @moc-global/loft-gemini-strategy with GeminiStrategyConfig { mode: 'vertexai', project, location }. Should use the Lambda singleton pattern (module-level promise for warm invocations). Should NOT call shutdown() inside the handler. Should use AwsS3RepositoryConstructor for manifests. Should show ephemeral session with deleteSession in a finally block. Should warn about cold start times.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "We're building a NestJS backend that needs to support multi-turn conversations with Azure OpenAI. We need chat history persistence, and our manifests are stored in Azure Blob Storage. Can you set up the LOFT integration?",
+      "expected_output": "Should produce: NestJS module/service pattern with OnModuleInit/OnModuleDestroy. Should use AzureOpenAiLoftStrategy and AzureOpenAiCallStrategy (from the same @moc-global/loft-openai-strategy package, NOT a separate Azure package). Should show AzureOpenAiConfig with endpoint, deploymentName, auth type. Should use AzureBlobStorageRepositoryConstructor from @moc-global/loft-azure-blob-storage-repository. Should show addMessages + generate (session-based, no directMessages) + save pattern for multi-turn. Should include app.enableShutdownHooks().",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "We currently have LOFT set up with OpenAI gpt-4o-mini in our NestJS app. The team wants to add Anthropic Claude as a second provider so we can switch between them per-session. What do I need to change?",
+      "expected_output": "Should identify this as a Modify flow. Should provide: install command for @moc-global/loft-anthropic-strategy, the AnthropicCallStrategy factory function using ClientOptions object (NOT plain string like OpenAI), a second registerLlmStrategy call that is awaited, updated manifest.json with a new llm entry under existing manifest name, and note that createSession can now use either provider via currentLlmName. Should stress that registerLlmStrategy must be awaited before getInstance()/generate(); should NOT claim that Promise.all over distinct strategy names is unsafe.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "I keep getting 'Reflect.getMetadata is not a function' when my LOFT app starts. Everything compiles fine but crashes at runtime. My tsconfig has experimentalDecorators: true. What am I missing?",
+      "expected_output": "Should identify the cause as reflect-metadata not being loaded before decorated code runs: it is a peer dependency that may not be installed, and import 'reflect-metadata' must be the very first line of the entry point. Should provide the exact fix (install it, import it first). May recommend emitDecoratorMetadata: true alongside experimentalDecorators as part of the required tsconfig, but should NOT claim that the missing flag causes 'Reflect.getMetadata is not a function'. Should NOT suggest random unrelated debugging steps.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "How does the middleware pipeline work in LOFT? I want to understand the flow from when a message comes in to when the LLM response comes back, especially how I can intercept and modify things along the way.",
+      "expected_output": "Should explain the three middleware stages: InputMiddleware (processes incoming messages), BeforeGenerateMiddleware (before LLM call, can prevent generation), AfterGenerateMiddleware (after LLM response). Should mention: payloads are deep-copied between steps, chain.next() must be called to continue, BeforeGenerateMiddleware has preventGeneration() for short-circuiting. Should include type signatures and a code example.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "I need to add a BeforeGenerate middleware that checks if the user's message contains certain blocked topics and returns a canned response instead of calling the LLM. How do I wire this up?",
+      "expected_output": "Should provide a BeforeGenerateMiddleware implementation that: uses chain.preventGeneration() with content array and role, does NOT call chain.next() when blocking, uses Type.LLM.UnifiedMessageRole (not bare UnifiedMessageRole). Should show registration via chatConstructor.registerBeforeGenerateMiddleware() and note it must be registered after LoftConstructor creation but before getInstance().",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "I want to set up LOFT with streaming responses using StreamLoftConstructor. My frontend needs to receive chunks in real-time via SSE. Can you show me how to configure the StreamLoftConstructor with OpenAI and pipe the stream to an Express response?",
+      "expected_output": "Should NOT provide a StreamLoftConstructor setup — no such constructor exists. Should explain that streaming works through the normal LoftConstructor setup by passing an onEvent callback to loft.chat.generate(), and that this API is experimental. Should show an Express SSE handler that writes each Chat.ChatStreamEvent (e.g. text deltas) to the response and ends it on the final event, and should note that registered AfterGenerate middleware holds text back unless registered with transformsOutput: false (or textPolicy 'all'). Should NOT recommend the deprecated strategy-level generateStream() or fabricate a StreamLoftConstructor API.",
+      "files": []
+    }
+  ]
+}

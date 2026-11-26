@@ -1,7 +1,11 @@
 # Each pull request needs a review from a code owner. Later rules override earlier ones.
 # Code owners need write access to the repository.
 
-*                   @andrii-borodin-moc @andrii-smahin-moc
+*                   @andrii-borodin-moc @andrii-smahin-moc @amirammina
+
+# The Claude Code marketplace and its plugins
+/.claude-plugin/    @andrii-borodin-moc @andrii-smahin-moc @amirammina
+/plugins/           @andrii-borodin-moc @andrii-smahin-moc @amirammina
 
 # Workflows build, test and publish the packages
-/.github/workflows/ @andrii-borodin-moc @andrii-smahin-moc
+/.github/workflows/ @andrii-borodin-moc @andrii-smahin-moc @amirammina

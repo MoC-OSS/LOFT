@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "loft",
+  "description": "Claude Code plugins for LOFT, the LLM orchestration framework for TypeScript",
+  "owner": {
+    "name": "Master of Code Global",
+    "url": "https://github.com/MoC-OSS"
+  },
+  "plugins": [
+    {
+      "name": "loft-integration",
+      "source": "./plugins/loft-integration",
+      "description": "Guided LOFT integration: setup, configuration, documentation access and codebase review for @moc-global/loft",
+      "category": "development",
+      "tags": ["loft", "llm", "typescript"]
+    }
+  ]
+}
